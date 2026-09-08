@@ -109,6 +109,12 @@
     flex-basis: 100%;
   }
 
+  /* Las nueve secciones no entran en una fila de teléfono: sin JavaScript la
+     lista envuelve en vez de desbordar y sacar una barra horizontal. */
+  html:not(.js) .encabezado__nav ul {
+    flex-wrap: wrap;
+  }
+
   /* Navegación de escritorio: las nueve secciones más el CTA entran justo a
      1024px. De ahí el corte en 64rem. */
   .encabezado__nav {

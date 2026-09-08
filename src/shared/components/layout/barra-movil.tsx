@@ -35,6 +35,11 @@ const etiquetaDe = (id: NavSectionId) => NAV_SECTIONS.find((s) => s.id === id)?.
  * la sección actual a propósito: es un acceso, no un indicador de posición
  * -para eso está el encabezado- y saberlo obligaría a hacerla cliente.
  *
+ * Sus enlaces son anclas nativas: el salto es instantáneo en vez de suave, que
+ * es el precio de que esta barra no cargue nada de JavaScript. El destino es
+ * el mismo que el del resto, porque `scroll-margin-top` lo respeta también el
+ * navegador.
+ *
  * El texto va SIEMPRE escrito debajo del ícono. Un ícono solo no alcanza para
  * nombrar un destino.
  */
@@ -46,7 +51,10 @@ export function BarraMovil() {
           <li key={id}>
             <a href={`#${id}`}>
               <Icono size={20} aria-hidden="true" />
-              <span className="text-[0.7rem] font-semibold tracking-[0.12em] uppercase">
+              {/* Interletrado corto a propósito: con el de los rótulos del
+                  sistema, "Expositores" en mayúsculas no entra en una celda de
+                  106px, que es lo que queda en un teléfono de 320px. */}
+              <span className="text-center text-xs leading-none font-semibold tracking-[0.06em] uppercase">
                 {etiquetaDe(id)}
               </span>
             </a>

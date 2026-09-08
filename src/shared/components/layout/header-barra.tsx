@@ -81,7 +81,10 @@ export function HeaderBarra() {
           </a>
 
           <nav className="encabezado__nav" aria-label="Navegación principal">
-            <ul className="flex items-center gap-5">
+            {/* `gap-4` y no más: las nueve secciones más el CTA entran a
+                1024px justos, que es el ancho donde aparece esta barra. Cada
+                píxel de más acá empuja el CTA fuera del encabezado. */}
+            <ul className="flex items-center gap-4">
               {NAV_SECTIONS.map((seccion) => {
                 const esActivo = activo === seccion.id;
                 return (
@@ -94,7 +97,9 @@ export function HeaderBarra() {
                       // lo conozcan lo tratan como "true", que también sirve.
                       aria-current={esActivo ? "location" : undefined}
                       className={cn(
-                        "encabezado__link inline-block py-1 text-sm",
+                        // `py-2` lleva el objetivo táctil a 37px de alto, por
+                        // encima del mínimo del sistema, sin engordar el dibujo.
+                        "encabezado__link inline-block py-2 text-sm",
                         esActivo ? "text-text" : "text-text-muted hover:text-text",
                       )}
                     >

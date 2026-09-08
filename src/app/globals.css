@@ -7,8 +7,11 @@
    El orden entre ellas no importa porque cada una está acotada a las clases de
    su propio feature, y las custom properties se resuelven en el momento de uso,
    no en el de parseo, así que ninguna necesita ver el `@theme` de más abajo. */
+@import "../shared/components/layout/layout.css";
 @import "../features/about/styles.css";
 @import "../features/contact/styles.css";
+@import "../features/exhibitors/styles.css";
+@import "../features/faq/styles.css";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    SISTEMA DE DISEÑO - ExpoJuy 2026
