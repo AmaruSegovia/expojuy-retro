@@ -140,11 +140,12 @@
        volumen son los tres tonos de luz; la sombra solo asienta el bloque. */
     --plano-sombra: color-mix(in oklab, var(--color-surface-sunken) 72%, transparent);
 
-    /* Al soltar el arrastre las dos variables vuelven a su valor de hoja de
-       estilo y el navegador interpola. No hay animación escrita en JavaScript. */
-    transition:
-      --giro-z var(--duration-scene) var(--ease-out-expo),
-      --giro-x var(--duration-scene) var(--ease-out-expo);
+    /* La transición de la vuelta NO va acá, y las variables del giro tampoco se
+       escriben en este nodo. Estaban acá, que es el ancestro de los 783 del
+       plano, y eso hacía que el arrastre costara 151,4 ms por cuadro contra 51,7
+       escribiendo `transform` en los pocos elementos que lo necesitan. Cada
+       consumidor declara ahora su propia transición de `transform`. El detalle
+       de la medición está en `use-giro-maqueta.ts`. */
   }
 
   /* Solo con JavaScript hay algo que arrastrar. */
@@ -195,8 +196,14 @@
     width: calc(var(--cols) * var(--u));
     height: calc(var(--filas) * var(--u));
     translate: -50% -50%;
+    /* Estado de reposo. Durante el arrastre el hook pisa esta declaración con un
+       `transform` en línea, y al soltar lo quita: el navegador interpola de
+       vuelta con la transición de abajo. `transform` es interpolable de forma
+       nativa, así que la vuelta sigue sin una sola línea de animación en
+       JavaScript. */
     transform: rotateX(var(--giro-x)) rotateZ(var(--giro-z));
     transform-style: preserve-3d;
+    transition: transform var(--duration-scene) var(--ease-out-expo);
   }
 
   /* ─────────────────────────────────────────────────────────────────────────
@@ -450,6 +457,7 @@
     background: var(--color-accent);
     transform-origin: 50% 100%;
     transform: translate(-50%, -100%) rotateZ(calc(-1 * var(--giro-z))) rotateX(-90deg);
+    transition: transform var(--duration-scene) var(--ease-out-expo);
     transform-style: preserve-3d;
     opacity: var(--crece);
   }
@@ -507,6 +515,9 @@
     transform-style: preserve-3d;
     transform: translateZ(calc(var(--z) * var(--u))) rotateZ(calc(-1 * var(--giro-z)))
       rotateX(calc(-1 * var(--giro-x))) translateZ(1.5rem);
+    /* La vuelta interpola `transform`, que es nativo y barato, en lugar de las
+       dos propiedades registradas. Ver el comentario de `aplicar` en el hook. */
+    transition: transform var(--duration-scene) var(--ease-out-expo);
   }
 
   /* El cartel de pie. Aparece al señalar el lugar -con el puntero, con el foco

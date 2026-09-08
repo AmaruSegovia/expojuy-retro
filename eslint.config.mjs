@@ -64,7 +64,11 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   ...LAYER_BOUNDARIES,
-  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
+  // `.cache/` guarda perfiles de Chrome de los scripts de captura y auditoría, y
+  // `reports/` los informes de Lighthouse. Los dos traen JavaScript de terceros
+  // que no es código nuestro: sin ignorarlos, el lint pasa de cero a más de cinco
+  // mil hallazgos que no dicen nada del proyecto.
+  globalIgnores([".next/**", "out/**", "build/**", ".cache/**", "reports/**", "next-env.d.ts"]),
 ]);
 
 export default eslintConfig;

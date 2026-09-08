@@ -56,12 +56,21 @@ export function useGiroMaqueta() {
   /** La pista se va con el primer gesto, sea de puntero o de teclado. */
   const [usada, setUsada] = useState(false);
 
+  /**
+   * La vuelta sigue siendo una transición del navegador, no una animación
+   * escrita a mano: se quitan los valores en línea y cada elemento interpola
+   * hacia el valor de su hoja de estilos. Lo único que cambió respecto de la
+   * versión anterior es DÓNDE estaban esos valores, ver `aplicar`.
+   */
   const volver = useCallback(() => {
     const el = maqueta.current;
     if (!el) return;
     giro.current = { z: GIRO.z, x: GIRO.x };
-    el.style.removeProperty("--giro-z");
-    el.style.removeProperty("--giro-x");
+    for (const nodo of el.querySelectorAll<HTMLElement>(
+      ".plano-escena, .plano-hito, .plano-punto",
+    )) {
+      nodo.style.removeProperty("transform");
+    }
     setGirada(false);
   }, []);
 
@@ -78,10 +87,57 @@ export function useGiroMaqueta() {
     let origen: { x: number; y: number } | null = null;
     let movio = false;
 
+    // Los consumidores del ángulo, buscados una sola vez y no por cuadro.
+    const escena = el.querySelector<HTMLElement>(".plano-escena");
+
+    /**
+     * POR QUÉ SE ESCRIBE `transform` Y NO LAS VARIABLES. NO VOLVER ATRÁS.
+     *
+     * La versión anterior escribía `--giro-z` y `--giro-x` en la maqueta y
+     * dejaba que la cascada las repartiera. Se ve elegante y era lo que hacía
+     * lento el plano en celular: son propiedades REGISTRADAS con `@property`, y
+     * cada escritura obliga al navegador a resolverlas de nuevo y a rearmar
+     * todos los `transform` que dependen de ellas. La maqueta tiene 31 bloques,
+     * 186 caras y 783 nodos.
+     *
+     * Medido en Chrome headless, viewport 412x915 a 3x, arrastrando de verdad
+     * la maqueta durante 90 cuadros. Milisegundos por cuadro, menos es mejor:
+     *
+     *                                  CPU 6x        CPU 4x
+     *   variables en la maqueta      151,4 ms       75,5 ms
+     *   transform solo en la escena   82,4 ms       52,6 ms
+     *   transform en todos            51,7 ms       33,7 ms
+     *
+     * Son 2,9 veces a 6x. El segundo salto vino de acá abajo: mientras los
+     * nueve marcadores y el mástil seguían recibiendo el ángulo como variable
+     * se llevaban el 54 por ciento de lo que quedaba.
+     *
+     * Dos hipótesis se probaron y se descartaron con la misma medición, así que
+     * no vale la pena volver a intentarlas:
+     *
+     *   - El `filter: blur()` de las 31 sombras parecía el culpable obvio.
+     *     No lo es: sacar las sombras no cambia el número.
+     *   - Declarar las propiedades como `inherits: false` empeora, 103 ms
+     *     contra 82. El costo no está en la herencia sino en escribir una
+     *     propiedad registrada que alimenta un `transform`.
+     */
+    const hito = el.querySelector<HTMLElement>(".plano-hito");
+    const puntos = el.querySelectorAll<HTMLElement>(".plano-punto");
+
     const aplicar = (mostrarVuelta: boolean) => {
-      el.style.setProperty("--giro-z", `${giro.current.z}deg`);
-      el.style.setProperty("--giro-x", `${giro.current.x}deg`);
-      setGirada(mostrarVuelta && (giro.current.z !== GIRO.z || giro.current.x !== GIRO.x));
+      const { z, x } = giro.current;
+      if (escena) escena.style.transform = `rotateX(${x}deg) rotateZ(${z}deg)`;
+      // Los que se enderezan contra el giro reciben su transform completo, con
+      // el ángulo ya resuelto. La geometría propia de cada uno sigue viniendo de
+      // sus variables, que no cambian durante el arrastre: acá solo se sustituye
+      // el ángulo, no se duplica la fórmula.
+      if (hito) hito.style.transform = `translate(-50%, -100%) rotateZ(${-z}deg) rotateX(-90deg)`;
+      for (const punto of puntos) {
+        punto.style.transform =
+          `translateZ(calc(var(--z) * var(--u))) rotateZ(${-z}deg) ` +
+          `rotateX(${-x}deg) translateZ(1.5rem)`;
+      }
+      setGirada(mostrarVuelta && (z !== GIRO.z || x !== GIRO.x));
     };
 
     const alBajar = (e: PointerEvent) => {
