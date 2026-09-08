@@ -6,7 +6,13 @@ import { Reveal } from "@/shared/components/motion/reveal";
 import { useCarruselCircular } from "@/shared/hooks/use-carrusel-circular";
 import { PlaceholderVisual } from "@/shared/components/ui/placeholder-visual";
 import { MaquetaPredio } from "./maqueta-predio";
-import { ETIQUETA_CATEGORIA, PUNTOS, type Punto, calcularRuta } from "../constants/plano";
+import {
+  ETIQUETA_CATEGORIA,
+  PUNTOS,
+  type Punto,
+  calcularRuta,
+  medirRuta,
+} from "../constants/plano";
 
 const ACCESO = "acceso";
 
@@ -59,6 +65,7 @@ export function MapaPredio() {
 
   const punto = PUNTOS[activo];
   const ruta = punto.id !== ACCESO ? calcularRuta(ACCESO, punto.id) : null;
+  const medida = ruta ? medirRuta(ruta) : null;
 
   return (
     <>
@@ -68,6 +75,23 @@ export function MapaPredio() {
       <Reveal className="mt-12">
         <MaquetaPredio activo={punto.id} ruta={ruta} onElegir={irA} />
       </Reveal>
+
+      {/* CUÁNTO FALTA CAMINAR.
+          El recorrido no sale de una línea recta sino del grafo de circulación
+          del predio, así que su largo es lo que alguien camina de verdad y no la
+          distancia entre dos puntos. Mostrarlo convierte el dibujo en un dato
+          accionable: no es lo mismo "está allá" que "está a 200 metros".
+          La altura mínima evita que la sección salte cuando el lugar elegido es
+          el propio acceso y no hay nada que medir. */}
+      <p className="mt-4 min-h-5 text-center text-sm text-text-muted">
+        {medida && (
+          <>
+            Desde el acceso principal:{" "}
+            <strong className="font-semibold text-text">{medida.metros} m</strong>, unos{" "}
+            {medida.minutos} {medida.minutos === 1 ? "minuto" : "minutos"} a pie
+          </>
+        )}
+      </p>
 
       {/* ── RIEL DE LUGARES ─────────────────────────────────────────────── */}
       {/* `min-w-0` NO es decorativo. Un ítem de grid o de flex trae
@@ -127,7 +151,7 @@ export function MapaPredio() {
             lector de pantalla. */}
         <p aria-live="polite" className="sr-only-focusable">
           {punto.nombre}
-          {punto.id !== ACCESO && ", recorrido marcado desde el acceso"}
+          {medida && `, a ${medida.metros} metros del acceso, unos ${medida.minutos} minutos a pie`}
         </p>
       </div>
     </>

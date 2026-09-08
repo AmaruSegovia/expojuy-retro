@@ -240,6 +240,18 @@ export type Punto = {
   posicion: [number, number];
   /** Paleta del visual provisorio, hasta que existan fotografías. */
   paleta: 0 | 1 | 2 | 3;
+  /**
+   * Nombre corto para escribir sobre la maqueta.
+   *
+   * Lo llevan LOS NUEVE lugares. Los que ocupan volúmenes lo apoyan sobre su
+   * edificio y los que son accidentes del suelo, como la rotonda o el
+   * parquesito, sobre su marcador. Que todos se nombren igual es lo que hace
+   * pareja la regla: texto cuando no está elegido, caja cuando sí.
+   *
+   * Es corto porque compite con el dibujo. El nombre completo sigue estando en
+   * `nombre`, que es el que leen el botón y la lista de texto.
+   */
+  rotulo: string;
 };
 
 /**
@@ -277,6 +289,7 @@ export const PUNTOS: Punto[] = [
   {
     id: "acceso",
     nombre: "Acceso principal",
+    rotulo: "Acceso",
     detalle: "Ingreso por la rotonda, con acreditación.",
     categoria: "acceso",
     posicion: sobreEje(-205, 0),
@@ -285,6 +298,7 @@ export const PUNTOS: Punto[] = [
   {
     id: "cocheras",
     nombre: "Estacionamiento",
+    rotulo: "Estacionamiento",
     detalle: "Cocheras sobre Av. de los Estudiantes.",
     categoria: "servicios",
     posicion: sobreEje(35, -76),
@@ -293,6 +307,7 @@ export const PUNTOS: Punto[] = [
   {
     id: "arena",
     nombre: "Polideportivo de Arena",
+    rotulo: "Polideportivo",
     detalle: "Rondas de negocios y vinculación empresarial.",
     categoria: "escenario",
     posicion: sobreEje(20, 68),
@@ -301,6 +316,7 @@ export const PUNTOS: Punto[] = [
   {
     id: "parquesito",
     nombre: "Parquesito",
+    rotulo: "Parquesito",
     detalle: "Zona de descanso sobre Av. de las Carrozas.",
     categoria: "servicios",
     posicion: sobreEje(-10, 120),
@@ -309,6 +325,7 @@ export const PUNTOS: Punto[] = [
   {
     id: "stands-a",
     nombre: "Stands · sector A",
+    rotulo: "Stands A",
     detalle: "Producción y desarrollo, agroindustria y minería.",
     categoria: "expositores",
     posicion: sobreEje(110, 32),
@@ -317,6 +334,7 @@ export const PUNTOS: Punto[] = [
   {
     id: "stands-b",
     nombre: "Stands · sector B",
+    rotulo: "Stands B",
     detalle: "Innovación, tecnología y economía del conocimiento.",
     categoria: "expositores",
     posicion: sobreEje(200, 48),
@@ -325,6 +343,7 @@ export const PUNTOS: Punto[] = [
   {
     id: "gastronomia",
     nombre: "Patio gastronómico",
+    rotulo: "Gastronomía",
     detalle: "Food trucks y mesas al aire libre.",
     categoria: "gastronomia",
     posicion: sobreEje(150, 116),
@@ -333,6 +352,7 @@ export const PUNTOS: Punto[] = [
   {
     id: "nave-1",
     nombre: "Pabellón techado",
+    rotulo: "Pabellón techado",
     detalle: "Nave principal. Apertura y cierre.",
     categoria: "escenario",
     posicion: sobreEje(170, -92),
@@ -341,6 +361,7 @@ export const PUNTOS: Punto[] = [
   {
     id: "nave-2",
     nombre: "Pabellón de robótica",
+    rotulo: "Robótica",
     detalle: "Demostraciones, competencias y talleres.",
     categoria: "expositores",
     posicion: sobreEje(300, -92),
@@ -635,3 +656,40 @@ export const PUNTOS_RETICULA = PUNTOS.map((p) => ({
   y: p.posicion[1] / ESCALA_RETICULA,
   z: Math.max(0, ...BLOQUES.filter((b) => b.punto === p.id).map((b) => b.volumen)),
 }));
+
+/**
+ * ATENCION: PROVISORIO. Cuántos metros mide una unidad del viewBox.
+ *
+ * El plano es esquemático y la organización no entregó medidas, así que esta
+ * escala se DECLARA en vez de medirse. Se eligió anclándola a algo verificable
+ * a ojo: con este valor un pabellón mide 20 por 50 metros y la parcela 126 por
+ * 297, que son medidas plausibles para un predio ferial. Cuando lleguen los
+ * planos reales se corrige acá y las distancias del recorrido se corrigen solas.
+ */
+export const METROS_POR_UNIDAD = 18 / ESCALA_RETICULA;
+
+/** Velocidad de caminata, en metros por segundo. Es la media habitual a pie. */
+const METROS_POR_SEGUNDO = 1.3;
+
+/**
+ * Largo de un recorrido en metros y el tiempo que lleva caminarlo.
+ *
+ * Suma las distancias entre nodos consecutivos del camino que devuelve
+ * `calcularRuta`. Como el camino sale del grafo de circulación, la cuenta mide
+ * lo que alguien realmente camina y no la distancia en línea recta, que es
+ * justamente el dato que sirve cuando uno está parado en el predio.
+ */
+export function medirRuta(camino: [number, number][]): { metros: number; minutos: number } {
+  let largo = 0;
+  for (let i = 1; i < camino.length; i++) {
+    const a = camino[i - 1];
+    const b = camino[i];
+    if (!a || !b) continue;
+    largo += Math.hypot(b[0] - a[0], b[1] - a[1]);
+  }
+  const metros = largo * METROS_POR_UNIDAD;
+  return {
+    metros: Math.round(metros / 10) * 10,
+    minutos: Math.max(1, Math.round(metros / METROS_POR_SEGUNDO / 60)),
+  };
+}

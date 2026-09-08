@@ -10,6 +10,7 @@ import {
   LIMITE_GIRO,
   PARCELA,
   PARCELA_RETICULA,
+  PUNTOS,
   PUNTOS_RETICULA,
   RETICULA,
   ROTONDA,
@@ -68,6 +69,46 @@ const PAREDES = [
   { dx: [0, 0, 0, 0], dy: [1, 0, 0, 1], luz: 76 },
 ] as const;
 
+/**
+ * Los lugares que se rotulan sobre el dibujo, con su ancla ya resuelta.
+ *
+ * Un lugar puede ocupar muchos volúmenes: el sector B de stands son veinticuatro
+ * módulos. El rótulo no va sobre cada uno sino sobre el CENTRO del conjunto, y a
+ * la altura del más alto, así que se apoya arriba del grupo y no lo tapa.
+ *
+ * Se calcula una vez al cargar el módulo, no por cuadro: son datos derivados de
+ * la geometría, que no cambia.
+ */
+const GRUPOS_ROTULADOS = PUNTOS.map((p, i) => {
+  const suyos = BLOQUES.filter((b) => b.punto === p.id);
+  if (suyos.length > 0) {
+    const centro = suyos.reduce(
+      (a, b) => ({ x: a.x + (b.x + b.w / 2), y: a.y + (b.y + b.h / 2) }),
+      { x: 0, y: 0 },
+    );
+    return {
+      id: p.id,
+      rotulo: p.rotulo,
+      x: centro.x / suyos.length,
+      y: centro.y / suyos.length,
+      alto: Math.max(...suyos.map((b) => b.volumen)),
+      /** Un bloque cualquiera del grupo, para leer su levantada al señalarlo. */
+      referencia: suyos[0]?.id ?? "",
+    };
+  }
+  // Los que no ocupan volúmenes se apoyan en su propio marcador: la rotonda, el
+  // polideportivo y el parquesito son accidentes del suelo, no edificios.
+  const lugar = PUNTOS_RETICULA[i];
+  return {
+    id: p.id,
+    rotulo: p.rotulo,
+    x: lugar?.x ?? 0,
+    y: lugar?.y ?? 0,
+    alto: lugar?.z ?? 0,
+    referencia: "",
+  };
+});
+
 /** Grados de giro por píxel arrastrado, distintos por eje. */
 const POR_PIXEL = { z: 0.25, x: 0.15 };
 const UMBRAL_ARRASTRE = 4;
@@ -82,7 +123,27 @@ const PASO_TECLADO: Record<string, [number, number]> = {
 const MS_CONSTRUCCION = 900;
 const MS_VUELTA = 520;
 
+/**
+ * A cuánto baja un rótulo cuando otro se le monta encima.
+ *
+ * NO SE APAGA DEL TODO, Y ESA ES LA DIFERENCIA. Llevarlo a cero deja al lugar
+ * sin nombre, que es información que se pierde por un problema de dibujo.
+ * Atenuado sigue leyéndose, solo que se lee segundo: el de adelante manda y el
+ * de atrás acompaña, que es exactamente lo que pasa en el dibujo con los
+ * volúmenes. Sobre fondo oscuro, 0,4 conserva el texto legible y a la vez deja
+ * clarísimo cuál de los dos está por delante.
+ */
+const OPACIDAD_TAPADO = 0.4;
+
 const acotar = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
+
+/** Diferencia más corta entre dos ángulos, en el rango -180 a 180. */
+const diferenciaDeAngulo = (desde: number, hasta: number) =>
+  ((((hasta - desde) % 360) + 540) % 360) - 180;
+
+/** Si la maqueta está fuera de su posición de reposo, con margen de un grado. */
+const estaGirada = (z: number, x: number) =>
+  Math.abs(diferenciaDeAngulo(z, GIRO.z)) > 1 || Math.abs(x - GIRO.x) > 1;
 const suave = (t: number) => 1 - Math.pow(1 - t, 3);
 
 /** Los tokens que el dibujo necesita. Se resuelven una vez, al montar. */
@@ -99,6 +160,7 @@ const TOKENS = [
   "--color-brand-lavender",
   "--color-accent",
   "--color-border",
+  "--color-text",
 ] as const;
 
 type Paleta = Record<(typeof TOKENS)[number], [number, number, number]>;
@@ -149,6 +211,7 @@ export function useMaquetaCanvas({
 }) {
   const marco = useRef<HTMLDivElement | null>(null);
   const lienzo = useRef<HTMLCanvasElement | null>(null);
+  const rotulos = useRef<HTMLCanvasElement | null>(null);
   const [girada, setGirada] = useState(false);
   const [usada, setUsada] = useState(false);
 
@@ -158,21 +221,34 @@ export function useMaquetaCanvas({
   const giro = useRef<{ z: number; x: number }>({ z: GIRO.z, x: GIRO.x });
   const construccion = useRef(0);
   const eco = useRef(new Map<string, number>());
+  /** Opacidad de cada rótulo, para que apagarse sea gradual y no un parpadeo. */
+  const velo = useRef(new Map<string, number>());
   const pintar = useRef<(() => void) | null>(null);
   const animarEcoRef = useRef<(() => void) | null>(null);
+  /**
+   * Cuenta las vueltas al reposo para poder cancelar la que esté corriendo.
+   * Sin esto, agarrar la maqueta mientras vuelve dejaba dos cosas escribiendo el
+   * mismo ángulo: el arrastre y la animación, peleándose cuadro por medio.
+   */
+  const vuelta = useRef(0);
   const activoRef = useRef(activo);
   const rutaRef = useRef(ruta);
 
   const volver = useCallback(() => {
     const desdeZ = giro.current.z;
     const desdeX = giro.current.x;
-    if (desdeZ === GIRO.z && desdeX === GIRO.x) return;
+    if (!estaGirada(desdeZ, desdeX)) return;
     const t0 = performance.now();
+    const propia = ++vuelta.current;
     const paso = () => {
+      if (propia !== vuelta.current) return;
       const t = Math.min(1, (performance.now() - t0) / MS_VUELTA);
       const k = suave(t);
+      // Por el camino corto: si alguien dio tres cuartos de vuelta, volver
+      // deshaciendo el giro entero sería un mareo. Se interpola la diferencia
+      // más chica entre los dos ángulos, que es como vuelve cualquier brújula.
       giro.current = {
-        z: desdeZ + (GIRO.z - desdeZ) * k,
+        z: desdeZ + diferenciaDeAngulo(desdeZ, GIRO.z) * k,
         x: desdeX + (GIRO.x - desdeX) * k,
       };
       pintar.current?.();
@@ -184,15 +260,25 @@ export function useMaquetaCanvas({
 
   const volverYEnfocar = useCallback(() => {
     volver();
-    marco.current?.focus();
+    // `preventScroll` NO es opcional acá. El botón de volver desaparece apenas
+    // la maqueta llega a su posición, así que el foco tiene que ir a algún lado
+    // o se cae al `body` y quien navega con teclado pierde el lugar. Pero
+    // enfocar arrastra la página hasta el elemento, y eso daba un salto hacia
+    // arriba al tocar el botón: se volvía la vista Y se movía el sitio.
+    marco.current?.focus({ preventScroll: true });
   }, [volver]);
 
   useEffect(() => {
     const cont = marco.current;
     const cv = lienzo.current;
-    if (!cont || !cv) return;
+    const cvRot = rotulos.current;
+    if (!cont || !cv || !cvRot) return;
     const ctx = cv.getContext("2d", { alpha: false });
-    if (!ctx) return;
+    // El de los nombres SÍ lleva alfa: se apoya sobre el dibujo y tiene que
+    // dejarlo ver. El de abajo no, que es más barato de componer.
+    const ctxRot = cvRot.getContext("2d");
+    if (!ctx || !ctxRot) return;
+    const tinta = ctxRot;
     // Se fija la referencia ya estrechada: dentro de una declaracion `function`
     // TypeScript descarta el estrechamiento, porque el hoisting permite llamarla
     // antes de la comprobacion.
@@ -227,11 +313,14 @@ export function useMaquetaCanvas({
       // La proporcion del lienzo y la escala salen de la MISMA medida: cuanto
       // ocupa la reticula proyectada en el peor angulo permitido. Asi el dibujo
       // entra siempre y no sobra lienzo vacio arriba ni abajo.
-      const ext = extensionProyectada(GIRO.z, LIMITE_GIRO.z, LIMITE_GIRO.xMin, LIMITE_GIRO.xMax);
+      const ext = extensionProyectada(LIMITE_GIRO.xMin, LIMITE_GIRO.xMax);
       altoCss = Math.round((anchoCss * ext.altoU) / ext.anchoU);
       cv.width = Math.round(anchoCss * dpr);
       cv.height = Math.round(altoCss * dpr);
       cv.style.height = `${altoCss}px`;
+      cvRot.width = cv.width;
+      cvRot.height = cv.height;
+      cvRot.style.height = `${altoCss}px`;
       camara.u = (anchoCss * 0.96) / ext.anchoU;
       camara.cx = anchoCss / 2;
       camara.cy = altoCss / 2;
@@ -321,6 +410,9 @@ export function useMaquetaCanvas({
 
     const dibujar = () => {
       if (!cv) return;
+      // Se prende si alguna opacidad todavía está en camino: al final del cuadro
+      // se pide otro, y así el fundido termina aunque nadie toque nada.
+      let sigueAnimando = false;
       camara.giroZ = giro.current.z;
       camara.giroX = giro.current.x;
       pincel.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -422,7 +514,137 @@ export function useMaquetaCanvas({
         );
       }
 
-      // 6. El mástil del acceso.
+      // 6. Dónde cae cada marcador, para ubicar los botones más abajo.
+      const cajasMarcador = PUNTOS_RETICULA.map((pt) =>
+        proyectar(camara, pt.x, pt.y, (pt.z ?? 0) + 0.12),
+      );
+
+      // 7. Los rótulos de los edificios.
+      //
+      // Van SOBRE el dibujo y siempre visibles, no en el cartel del marcador:
+      // un plano donde nada tiene nombre hasta que lo tocás obliga a explorar a
+      // ciegas. Se escriben horizontales aunque la maqueta gire, porque un
+      // rótulo acostado con la perspectiva se vuelve ilegible justo en el
+      // ángulo en el que uno está mirando.
+      //
+      // CADA RÓTULO SIEMPRE EN EL MISMO LUGAR DE SU EDIFICIO. NO SE MUEVEN.
+      //
+      // Hubo dos intentos de acomodarlos para que no se pisaran, y los dos
+      // salieron peor que el problema. Primero se descartaba el que chocaba, y
+      // los nombres desaparecían solos al girar. Después se probaban cinco
+      // alturas antes de dibujar, y entonces alguno se iba lejos de su edificio
+      // o se metía abajo, encima de los stands.
+      //
+      // El problema de fondo es que la referencia se mueve: si un rótulo cambia
+      // de lugar según quién tenga al lado, deja de señalar lo que nombra, que
+      // es lo único que un rótulo tiene que hacer. Que dos se rocen de vez en
+      // cuando en algún ángulo se lee sin drama; que uno flote lejos del
+      // edificio, no. Así que la posición es fija y nadie la negocia.
+      //
+      // El halo oscuro no es un efecto: el mismo texto cruza techos claros y
+      // piso oscuro, así que sin contorno pierde contraste en alguno de los dos.
+      // El cuerpo tiene piso además de techo, porque escalando solo con la
+      // maqueta caía a 5px en un teléfono, que es donde más falta hace.
+      const cuerpo = acotar(camara.u * 0.3, 11, 14);
+      // El lienzo de los nombres se limpia entero: es transparente y se apoya
+      // sobre el dibujo, así que lo que no se repinta deja ver lo de abajo.
+      tinta.setTransform(dpr, 0, 0, dpr, 0, 0);
+      tinta.clearRect(0, 0, anchoCss, altoCss);
+      tinta.font = `600 ${cuerpo}px ${estilo.fontFamily}`;
+      tinta.textAlign = "center";
+      tinta.textBaseline = "middle";
+      tinta.lineJoin = "round";
+      // El despeje va en PÍXELES y no en unidades del predio: separa el texto
+      // del punto del marcador, que mide 36px fijos y no se achica con la
+      // maqueta. Medido en unidades, en pantalla chica el punto se lo comía.
+      const despeje = Math.max(24, cuerpo * 2.2);
+
+      // Se resuelven primero las cajas de los nueve, en su posición fija.
+      const cajas = GRUPOS_ROTULADOS.map((grupo) => {
+        const e = eco.current.get(grupo.referencia) ?? 0;
+        const q = proyectar(camara, grupo.x, grupo.y, grupo.alto * crece + e * 0.55);
+        return {
+          grupo,
+          x: q.x,
+          y: q.y - despeje,
+          /** Profundidad ya rotada: a mayor valor, más cerca de la cámara. */
+          z: q.z,
+          ancho: tinta.measureText(grupo.rotulo).width,
+          elegido: grupo.id === activoRef.current,
+        };
+      });
+
+      // CUANDO DOS NOMBRES SE PISAN DE VERDAD, EL DE ATRÁS SE ATENÚA.
+      //
+      // "De verdad" es la parte que costó. La primera versión medía CERCANÍA con
+      // un margen generoso, y apagaba nombres que a la vista no se tocaban:
+      // "Stands A" desaparecía teniendo lugar de sobra. Ahora se calcula el
+      // solape real de las dos cajas de texto y hace falta que se monten unos
+      // píxeles para que una ceda.
+      //
+      // Ninguno se mueve ni se borra: mover el rótulo lo desprende de lo que
+      // nombra, y borrarlo deja al lugar sin nombre. Lo que cede es la
+      // PRESENCIA del que está más lejos de la cámara, que es el que de todos
+      // modos queda detrás en el dibujo. El lugar elegido nunca se atenúa: es el
+      // que el visitante fue a mirar.
+      //
+      // La atenuación es gradual, interpolando la opacidad cuadro a cuadro, así
+      // que al girar los nombres se funden en vez de parpadear.
+      const MONTE_MINIMO = 3;
+      for (const caja of cajas) {
+        const tapado = cajas.some((otra) => {
+          if (otra === caja || caja.elegido) return false;
+          if (!otra.elegido && otra.z <= caja.z) return false;
+          const solapeX = (otra.ancho + caja.ancho) / 2 - Math.abs(otra.x - caja.x);
+          const solapeY = cuerpo * 0.95 - Math.abs(otra.y - caja.y);
+          return solapeX > MONTE_MINIMO && solapeY > MONTE_MINIMO;
+        });
+        const destino = tapado ? OPACIDAD_TAPADO : 1;
+        const actual = velo.current.get(caja.grupo.id) ?? destino;
+        const siguiente = actual + (destino - actual) * 0.2;
+        const listo = Math.abs(destino - siguiente) <= 0.01;
+        velo.current.set(caja.grupo.id, listo ? destino : siguiente);
+        if (!listo) sigueAnimando = true;
+      }
+
+      // De atrás hacia adelante: si un rótulo atenuado se pintara último, su
+      // halo oscuro ensuciaría al que tiene delante. Pintando por opacidad
+      // creciente, el que manda queda entero arriba.
+      const enOrden = [...cajas].sort(
+        (a, b) => (velo.current.get(a.grupo.id) ?? 1) - (velo.current.get(b.grupo.id) ?? 1),
+      );
+      for (const caja of enOrden) {
+        const opacidad = velo.current.get(caja.grupo.id) ?? 1;
+        if (opacidad < 0.02) continue;
+        tinta.globalAlpha = opacidad;
+        if (caja.elegido) {
+          // EL LUGAR ELEGIDO VA EN CAJA, Y ES EL ÚNICO.
+          // Es el destino del recorrido, así que se distingue del resto de los
+          // nombres igual que se distinguía antes: fondo opaco y una raya del
+          // color de acento al costado.
+          const alto = cuerpo * 1.9;
+          const pad = cuerpo * 0.6;
+          const izq = caja.x - caja.ancho / 2 - pad;
+          const arriba = caja.y - alto / 2;
+          tinta.fillStyle = rgb(paleta["--color-surface-overlay"]);
+          tinta.fillRect(izq, arriba, caja.ancho + pad * 2, alto);
+          tinta.fillStyle = rgb(paleta["--color-accent"]);
+          tinta.fillRect(izq, arriba, Math.max(2, cuerpo * 0.22), alto);
+          tinta.fillStyle = rgb(paleta["--color-text"]);
+          tinta.fillText(caja.grupo.rotulo, caja.x + pad / 2, caja.y);
+        } else {
+          // El halo oscuro no es un efecto: el mismo texto cruza techos claros y
+          // piso oscuro, así que sin contorno pierde contraste en alguno.
+          tinta.lineWidth = Math.max(2, cuerpo * 0.3);
+          tinta.strokeStyle = rgb(fondo, 0.9);
+          tinta.strokeText(caja.grupo.rotulo, caja.x, caja.y);
+          tinta.fillStyle = rgb(paleta["--color-text"]);
+          tinta.fillText(caja.grupo.rotulo, caja.x, caja.y);
+        }
+        tinta.globalAlpha = 1;
+      }
+
+      // 8. El mástil del acceso.
       const pieHito = proyectar(camara, HITO.x, HITO.y, 0);
       const puntaHito = proyectar(camara, HITO.x, HITO.y, 1.15 * crece);
       pincel.beginPath();
@@ -432,17 +654,30 @@ export function useMaquetaCanvas({
       pincel.lineWidth = 2;
       pincel.stroke();
 
-      // 7. Los marcadores son botones de HTML: acá solo se los reubica.
+      // 9. Los marcadores son botones de HTML: acá solo se los reubica, con las
+      // posiciones que ya se calcularon para esquivarlos al rotular.
       const botones = cont?.querySelectorAll<HTMLElement>(".plano-punto");
       if (botones) {
-        PUNTOS_RETICULA.forEach((pt, i) => {
+        cajasMarcador.forEach((punto, i) => {
           const boton = botones[i];
           if (!boton) return;
-          const q = proyectar(camara, pt.x, pt.y, (pt.z ?? 0) + 0.12);
-          boton.style.left = `${q.x}px`;
-          boton.style.top = `${q.y}px`;
+          boton.style.left = `${punto.x}px`;
+          boton.style.top = `${punto.y}px`;
+          // UN NOMBRE POR LUGAR, NUNCA DOS.
+          //
+          // El cartel del marcador existe para decir cómo se llama el lugar. Si
+          // el nombre ya quedó escrito sobre el edificio, el cartel lo repite:
+          // pasaba al pasar el mouse por un pabellón rotulado, que mostraba
+          // "Pabellón techado" dos veces, una en el dibujo y otra en el globo.
+          //
+          // El lienzo es el único que sabe qué rótulos entraron en este cuadro,
+          // porque depende del ángulo y del espacio, así que se lo cuenta al
+          // botón con un atributo y el CSS decide. Al revés no se puede: el
+          // dibujo no se entera de que alguien está pasando el mouse.
         });
       }
+
+      if (sigueAnimando) solicitar();
     };
 
     pintar.current = dibujar;
@@ -511,11 +746,29 @@ export function useMaquetaCanvas({
 
     // ── Giro ───────────────────────────────────────────────────────────────
     let origen: { x: number; y: number } | null = null;
+    /**
+     * Ángulo que tenía la maqueta al empezar ESTE arrastre. Ver `alBajar`.
+     * El tipo va anotado porque `GIRO` es `as const` y si no TypeScript lo fija
+     * en los literales -45 y 58.
+     */
+    let desde: { z: number; x: number } = { z: GIRO.z, x: GIRO.x };
     let movio = false;
 
     const alBajar = (e: PointerEvent) => {
       if (e.button !== 0 || reducido) return;
       origen = { x: e.clientX, y: e.clientY };
+      // DESDE DÓNDE GIRA ESTE ARRASTRE.
+      //
+      // Se guarda el ángulo que la maqueta tiene AHORA, al agarrarla. Antes el
+      // arrastre se calculaba siempre desde la posición de reposo, así que al
+      // volver a tomarla después de haberla girado, el primer píxel de
+      // movimiento la teletransportaba al reposo más el desplazamiento. El error
+      // estaba desde el principio y quedaba tapado porque soltar la devolvía
+      // sola; al dejarla quedarse donde la sueltan, salió a la luz.
+      desde = { ...giro.current };
+      // Si venía volviendo por su cuenta, el arrastre manda: se invalida esa
+      // animación para que no siga escribiendo el ángulo por debajo.
+      vuelta.current++;
       movio = false;
       try {
         cont.setPointerCapture(e.pointerId);
@@ -534,24 +787,45 @@ export function useMaquetaCanvas({
         cont.dataset.arrastre = "";
         setUsada(true);
       }
+      // EL GIRO EN Z ES LIBRE, LA VUELTA ENTERA.
+      // Antes estaba acotado a 35 grados con el argumento de que más allá una de
+      // las dos caras visibles queda de canto. Eso era cierto cuando el dibujo
+      // lo hacía CSS con un orden de apilado fijo: pasado cierto ángulo los
+      // bloques se tapaban mal. En el lienzo el orden se calcula con el ángulo
+      // de cada cuadro y las caras traseras se descartan por área con signo, así
+      // que el dibujo es correcto mire desde donde mire. El tope ya no defiende
+      // nada y sí impedía ver el predio desde el otro lado.
       giro.current = {
-        z: acotar(GIRO.z - dx * POR_PIXEL.z, GIRO.z - LIMITE_GIRO.z, GIRO.z + LIMITE_GIRO.z),
-        x: acotar(GIRO.x - dy * POR_PIXEL.x, LIMITE_GIRO.xMin, LIMITE_GIRO.xMax),
+        z: desde.z - dx * POR_PIXEL.z,
+        x: acotar(desde.x - dy * POR_PIXEL.x, LIMITE_GIRO.xMin, LIMITE_GIRO.xMax),
       };
       solicitar();
     };
 
+    /**
+     * Al soltar, LA MAQUETA SE QUEDA DONDE LA DEJARON.
+     *
+     * Antes volvía sola a la posición original apenas se levantaba el dedo, y
+     * eso hacía imposible lo único para lo que sirve girarla: mirar el predio
+     * desde otro ángulo. Había que sostener el gesto para poder ver, o sea que
+     * en un teléfono se miraba con el dedo tapando el dibujo.
+     *
+     * La vuelta sigue estando, pero como decisión de quien mira: el botón
+     * aparece justamente cuando hay algo a lo que volver, y con teclado la
+     * devuelven Inicio y Escape. Es la misma regla que ya regía el giro por
+     * teclado, que nunca volvía solo.
+     */
     const soltar = () => {
       if (!origen) return;
       origen = null;
       delete cont.dataset.arrastre;
-      volver();
+      if (movio) setGirada(estaGirada(giro.current.z, giro.current.x));
     };
 
     const alTeclear = (e: KeyboardEvent) => {
       if (reducido) return;
       if (e.key === "Home" || e.key === "Escape") {
-        if (giro.current.z === GIRO.z && giro.current.x === GIRO.x) return;
+        if (!estaGirada(giro.current.z, giro.current.x)) return;
         e.preventDefault();
         volver();
         return;
@@ -559,8 +833,9 @@ export function useMaquetaCanvas({
       const paso = PASO_TECLADO[e.key];
       if (!paso) return;
       e.preventDefault();
+      vuelta.current++;
       giro.current = {
-        z: acotar(giro.current.z + paso[0], GIRO.z - LIMITE_GIRO.z, GIRO.z + LIMITE_GIRO.z),
+        z: giro.current.z + paso[0],
         x: acotar(giro.current.x + paso[1], LIMITE_GIRO.xMin, LIMITE_GIRO.xMax),
       };
       setGirada(true);
@@ -568,11 +843,10 @@ export function useMaquetaCanvas({
       solicitar();
     };
 
-    const alSalirElFoco = (e: FocusEvent) => {
-      const destino = e.relatedTarget as Node | null;
-      if (destino && cont.contains(destino)) return;
-      volver();
-    };
+    // Salir con el teclado tampoco devuelve la maqueta. Antes sí, y era
+    // coherente con que soltar el arrastre también la devolviera; ahora que se
+    // queda donde la dejaron, resetearla al mover el foco sería quitarle al
+    // visitante algo que eligió. Vuelve con el botón, con Inicio o con Escape.
 
     const alHacerClic = (e: MouseEvent) => {
       if (!movio) return;
@@ -587,7 +861,6 @@ export function useMaquetaCanvas({
     cont.addEventListener("pointercancel", soltar);
     cont.addEventListener("lostpointercapture", soltar);
     cont.addEventListener("keydown", alTeclear);
-    cont.addEventListener("focusout", alSalirElFoco);
     cont.addEventListener("click", alHacerClic, true);
 
     return () => {
@@ -602,7 +875,6 @@ export function useMaquetaCanvas({
       cont.removeEventListener("pointercancel", soltar);
       cont.removeEventListener("lostpointercapture", soltar);
       cont.removeEventListener("keydown", alTeclear);
-      cont.removeEventListener("focusout", alSalirElFoco);
       cont.removeEventListener("click", alHacerClic, true);
     };
   }, [volver]);
@@ -620,5 +892,5 @@ export function useMaquetaCanvas({
     animarEcoRef.current?.();
   }, [activo, ruta]);
 
-  return { marco, lienzo, girada, usada, volver: volverYEnfocar };
+  return { marco, lienzo, rotulos, girada, usada, volver: volverYEnfocar };
 }

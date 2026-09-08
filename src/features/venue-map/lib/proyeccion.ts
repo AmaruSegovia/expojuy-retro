@@ -96,20 +96,22 @@ export function ordenarPorProfundidad<T>(
  * De acá salen las dos cosas: la proporción del lienzo y la escala del dibujo.
  */
 export function extensionProyectada(
-  giroZBase: number,
-  limiteZ: number,
   giroXMin: number,
   giroXMax: number,
 ): { anchoU: number; altoU: number } {
   let anchoU = 0;
   let altoU = 0;
-  for (const z of [giroZBase - limiteZ, giroZBase, giroZBase + limiteZ]) {
+  // Se recorre la vuelta entera y no unos pocos ángulos: el giro en Z no tiene
+  // tope, así que la maqueta puede quedar en cualquier posición y el lienzo se
+  // dimensiona una sola vez para la peor de todas. El paso de un grado alcanza
+  // porque la función es suave; el máximo real cae en la diagonal.
+  for (let z = 0; z < 360; z += 1) {
     const c = Math.abs(Math.cos(z * RAD));
     const s = Math.abs(Math.sin(z * RAD));
     const ancho = RETICULA.columnas * c + RETICULA.filas * s;
+    if (ancho > anchoU) anchoU = ancho;
     for (const x of [giroXMin, giroXMax]) {
       const alto = (RETICULA.columnas * s + RETICULA.filas * c) * Math.cos(x * RAD);
-      if (ancho > anchoU) anchoU = ancho;
       if (alto > altoU) altoU = alto;
     }
   }

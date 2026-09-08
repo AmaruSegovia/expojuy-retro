@@ -6,11 +6,11 @@
    bloques de cinco caras, sombras con `filter: blur()` y el giro repartido por
    dos propiedades registradas. Se veía bien en escritorio y corría a 6,6
    cuadros por segundo en celular. Ahora la maqueta se dibuja en un lienzo y
-   este archivo solo se ocupa de lo que sigue siendo HTML: el marco, los
-   marcadores y sus carteles. La medición está en `use-maqueta-canvas.ts`.
+   este archivo solo se ocupa de lo que sigue siendo HTML: el marco y los
+   marcadores. La medición está en `use-maqueta-canvas.ts`.
 
    LA PALETA NO SE ESCRIBE ACÁ NI ALLÁ. Los tonos de la maqueta se declaran como
-   tokens en `.plano-marco` y el lienzo los lee en tiempo de ejecución, así que
+   tokens en `.plano-vista` y el lienzo los lee en tiempo de ejecución, así que
    siguen siendo la misma fuente de verdad que el resto del sitio y no hay un
    solo color literal en el dibujo.
 
@@ -49,14 +49,15 @@
      así que puede ceder precisión táctil en pantallas chicas sin dejar a nadie
      afuera.
      ───────────────────────────────────────────────────────────────────────── */
-  .plano-scroll {
-    overflow-x: auto;
-    overflow-y: hidden;
-    overscroll-behavior-x: contain;
-  }
-
-  .plano-marco {
-    position: relative;
+  /* SIN JAVASCRIPT NO SE SIRVE UN LIENZO VACÍO.
+     Es la única parte del sitio donde lo que se oculta es el estado por defecto
+     y no la mejora, y tiene un motivo: un `<canvas>` sin script no es el dibujo
+     quieto, es un rectángulo en blanco, y los marcadores, que reciben su
+     posición del script, se apilarían los nueve en la misma esquina. La
+     información no se pierde porque no vivía acá: la lista de lugares con su
+     descripción se sirve desde el servidor, debajo de la maqueta. */
+  .plano-vista {
+    display: none;
 
     /* Los cuatro tonos de la maqueta. Un solo criterio: color de marca sobre la
        superficie más clara del sistema. Los porcentajes suben con la jerarquía
@@ -81,6 +82,20 @@
        opacidad. El indicador principal de volumen son los tres tonos de luz; la
        sombra solo asienta el bloque. */
     --plano-sombra: var(--color-surface-sunken);
+  }
+
+  .js .plano-vista {
+    display: block;
+  }
+
+  .plano-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+  }
+
+  .plano-marco {
+    position: relative;
   }
 
   /* Solo con JavaScript hay algo que arrastrar. */
@@ -116,6 +131,16 @@
     width: 100%;
   }
 
+  /* El lienzo de los nombres se apoya exactamente sobre el otro y no recibe
+     eventos: los clicks siguen llegando a los botones que tiene debajo. */
+  .plano-rotulos {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    width: 100%;
+    pointer-events: none;
+  }
+
   /* ─────────────────────────────────────────────────────────────────────────
      LOS MARCADORES
 
@@ -137,55 +162,40 @@
     border-radius: var(--radius-full);
   }
 
-  /* El cartel de pie. Aparece al señalar el lugar, con el puntero o con el
-     foco, y también cuando es el lugar elegido en el riel. Es CSS puro: no hay
-     un listener detrás. Va `aria-hidden` porque el nombre accesible ya está en
-     el botón. */
-  .plano-cartel {
-    position: absolute;
-    inset-block-end: 100%;
-    inset-inline-start: 50%;
-    translate: -50% -0.5rem;
-    width: max-content;
-    max-width: 11rem;
-    padding: 0.375rem 0.625rem;
-    background: var(--color-surface-overlay);
-    border-inline-start: 3px solid var(--color-accent);
-    color: var(--color-text);
-    font-size: var(--text-xs);
-    line-height: 1.3;
-    text-align: start;
-    text-wrap: balance;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity var(--duration-control) var(--ease-standard);
+  /* EL NOMBRE DE CADA LUGAR SE DIBUJA EN EL LIENZO, NO ACÁ.
+     Antes había un cartel de HTML por marcador. Convivían dos sistemas de
+     rótulo y no podían negociar espacio, porque el HTML siempre pinta por
+     encima del dibujo: por eso un nombre podía aparecer dos veces, o una caja
+     tapar un texto. Ahora los nueve nombres los escribe el lienzo, que es el
+     único que sabe qué hay debajo, y el del lugar elegido va en caja.
+
+     Al pasar el puntero ya no aparece nada: el nombre está siempre visible, así
+     que la única respuesta que falta es la del propio punto. */
+  .plano-punto:is(:hover, :focus-visible) span:last-child {
+    scale: 1.25;
   }
 
-  .plano-cartel::after {
-    content: "";
-    position: absolute;
-    inset-block-start: 100%;
-    inset-inline-start: calc(50% - 1px);
-    width: 2px;
-    height: 0.5rem;
-    background: var(--color-surface-overlay);
+  /* La muestra de color de la leyenda. Sale de los MISMOS tokens que lee el
+     lienzo, así que si un tono cambia, cambian los dos a la vez y la leyenda no
+     puede quedar mintiendo. Es un cuadrado y no un círculo porque representa un
+     techo, que es lo que se ve del volumen desde arriba. */
+  .plano-muestra {
+    width: 0.75rem;
+    height: 0.75rem;
+    flex: none;
+    background: var(--tono-servicio);
   }
 
-  .plano-punto:is(:hover, :focus-visible) .plano-cartel,
-  .plano-punto[data-senalado] .plano-cartel {
-    opacity: 1;
+  .plano-muestra[data-tipo="nave"] {
+    background: var(--tono-nave);
   }
 
-  /* EL CARTEL VA POR ENCIMA DE LOS DEMÁS MARCADORES.
-     Los nueve botones son hermanos y se apilan por orden de documento, así que
-     el cartel de uno quedaba tapado por los puntos que vienen después: en el
-     predio los lugares están cerca y el rótulo cruza por arriba de tres o cuatro
-     vecinos. El marcador que muestra su cartel sube; el resto se queda. Es sobre
-     el BOTÓN y no sobre el cartel porque `z-index` compara dentro del mismo
-     contexto de apilado, y el del cartel es el botón. */
-  .plano-punto:is(:hover, :focus-visible),
-  .plano-punto[data-senalado] {
-    z-index: 2;
+  .plano-muestra[data-tipo="stand"] {
+    background: var(--tono-stand);
+  }
+
+  .plano-muestra[data-tipo="modulo"] {
+    background: var(--tono-modulo);
   }
 
   /* ─────────────────────────────────────────────────────────────────────────
@@ -207,10 +217,6 @@
      no registra un solo listener. Ver `use-maqueta-canvas.ts`. Acá solo queda
      apagar lo que sigue siendo CSS. */
   @media (prefers-reduced-motion: reduce) {
-    .plano-cartel {
-      transition: none;
-    }
-
     .js .plano-marco {
       cursor: auto;
     }
