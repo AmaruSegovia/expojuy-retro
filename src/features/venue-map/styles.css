@@ -1,0 +1,624 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   MAPA DEL PREDIO - la maqueta isométrica
+
+   El plano de `constants/plano.ts` dibujado como una maqueta: los edificios son
+   volúmenes de cinco caras sobre una platea con espesor, vistos desde arriba y
+   de costado. El dibujo de línea de Leo no desaparece: pasa a ser el PISO de la
+   maqueta, un `<svg>` acostado sobre el plano del suelo, con sus calles, sus
+   masas verdes, la rotonda, la pista del polideportivo y el recorrido.
+
+   POR QUÉ ISOMÉTRICO Y NO PERSPECTIVA
+   Un plano sirve para ubicarse. En perspectiva dos naves del mismo tamaño se
+   dibujan distinto según dónde estén y se pierde la lectura de planta. Acá no
+   hay `perspective`: la proyección es ortográfica, que es lo que define una
+   isométrica.
+
+   LA LUZ
+   Una sola fuente, arriba y a la izquierda, que es la convención de toda
+   ilustración isométrica: el techo es la cara más clara, las que miran al oeste
+   y al norte van a media luz, las que miran al sur y al este en sombra, y cada
+   volumen proyecta su sombra hacia abajo y a la derecha en proporción a su
+   altura. Sin eso los bloques están apoyados pero no asentados.
+
+   LA PALETA ES LA DEL SITIO, NO LA DEL ORIGEN
+   La maqueta de origen vive sobre papel claro y tiene seis colores propios de
+   escenografía. Acá el sitio es oscuro y no hay tema claro, así que ninguno de
+   esos valores se copió. La regla de traducción, escrita una sola vez:
+
+     tono de un bloque  = color de marca N% sobre --color-surface-overlay
+     cara a media luz   = tono 76% mezclado hacia --color-surface-sunken
+     cara en sombra     = tono 56% mezclado hacia --color-surface-sunken
+     terreno de platea  = el mismo cian al 8% que ya usan las masas verdes
+
+   Es decir: donde el original mezclaba hacia `#000` para oscurecer, acá se
+   mezcla hacia `--color-surface-sunken` (#040307), que es el negro DEL SISTEMA.
+   No hay un solo color literal en este archivo.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ───────────────────────────────────────────────────────────────────────────
+   PROPIEDADES REGISTRADAS
+
+   Van FUERA de `@layer`: `@property` no es una regla de estilo y no participa
+   de las capas en cascada.
+
+   Registrarlas es lo que las hace INTERPOLABLES. De eso dependen dos cosas que
+   si no habría que escribir con JavaScript:
+
+   1. `--crece` anima techo, cuatro paredes y sombra de un bloque con UNA sola
+      variable. Su `initial-value` es 1, así que donde el navegador no conozca
+      `@property` el plano se pinta construido: el estado final, no una
+      animación fallida.
+   2. `--giro-z` y `--giro-x` hacen que soltar el arrastre sea una TRANSICIÓN.
+      El script solo quita el valor en línea; la variable vuelve al de la hoja
+      de estilos y el navegador interpola. Escena, marcadores y carteles leen la
+      misma variable y vuelven todos juntos, sin coordinar nada.
+   ─────────────────────────────────────────────────────────────────────────── */
+@property --crece {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 1;
+}
+
+/* "Está señalado": el bloque se levanta, su techo se aclara y su sombra se abre
+   y se aclara. Es un número justamente para poder interpolarlo. */
+@property --eco {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+@property --giro-z {
+  syntax: "<angle>";
+  inherits: true;
+  initial-value: -45deg;
+}
+
+@property --giro-x {
+  syntax: "<angle>";
+  inherits: true;
+  initial-value: 58deg;
+}
+
+@layer components {
+  /* ─────────────────────────────────────────────────────────────────────────
+     EL MARCO Y LA UNIDAD
+
+     `.plano-marco` existe SOLO para ser el contenedor de consulta. Un elemento
+     no puede consultarse a sí mismo: las unidades `cq` escritas en la regla de
+     un contenedor se resuelven contra su ANCESTRO contenedor, no contra él. Sin
+     este envoltorio, `cqi` cae en el viewport y la maqueta mide de alto lo que
+     mide la pantalla de ancho.
+
+     EL PISO DE ANCHO NO ES ESTÉTICO, ES UNA COTA DE ACCESIBILIDAD. Los dos
+     marcadores más juntos -la pista y el parquesito- quedan a 1,46 unidades uno
+     de otro en la proyección. Con áreas táctiles de 36px eso obliga a un marco
+     de al menos 462px: por debajo, dos áreas se tocan. Se redondea a 29,5rem y
+     lo que no entra se desplaza en horizontal, que es cómo se mira un mapa.
+     La proporción cede antes que la accesibilidad.
+     ───────────────────────────────────────────────────────────────────────── */
+  .plano-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+  }
+
+  .plano-marco {
+    container-type: inline-size;
+    min-width: 29.5rem;
+  }
+
+  .plano-maqueta {
+    /* `--u` y `--alto-marco` llegan en línea desde `constants/plano.ts`: son
+       geometría derivada del viewBox, no decisiones de estilo. */
+    position: relative;
+    width: 100%;
+    height: calc(var(--alto-marco) * var(--u));
+    /* Espesor del canto de la platea, en unidades. */
+    --espesor: calc(0.3 * var(--u));
+
+    /* Los cuatro tonos de la maqueta. Un solo criterio: color de marca sobre la
+       superficie más clara del sistema. Los porcentajes suben con la jerarquía
+       del edificio, así que naves, stands y servicios se distinguen por tono y
+       no solo por altura. */
+    --plano-terreno: color-mix(in oklab, var(--color-brand-cyan) 8%, var(--color-surface));
+    --tono-nave: color-mix(in oklab, var(--color-brand-violet) 46%, var(--color-surface-overlay));
+    --tono-stand: color-mix(
+      in oklab,
+      var(--color-brand-lavender) 30%,
+      var(--color-surface-overlay)
+    );
+    --tono-servicio: color-mix(
+      in oklab,
+      var(--color-border-strong) 40%,
+      var(--color-surface-overlay)
+    );
+    --tono-modulo: color-mix(in oklab, var(--color-brand-cyan) 26%, var(--color-surface-overlay));
+
+    /* Sobre fondo oscuro una sombra no puede ser "negro translúcido": ya está
+       casi todo oscuro. Es el negro del sistema al 72%, que sobre el pavimento
+       de la parcela da un pozo apenas más oscuro. El indicador principal de
+       volumen son los tres tonos de luz; la sombra solo asienta el bloque. */
+    --plano-sombra: color-mix(in oklab, var(--color-surface-sunken) 72%, transparent);
+
+    /* Al soltar el arrastre las dos variables vuelven a su valor de hoja de
+       estilo y el navegador interpola. No hay animación escrita en JavaScript. */
+    transition:
+      --giro-z var(--duration-scene) var(--ease-out-expo),
+      --giro-x var(--duration-scene) var(--ease-out-expo);
+  }
+
+  /* Solo con JavaScript hay algo que arrastrar. */
+  .js .plano-maqueta {
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* `pan-y` deja pasar el scroll vertical de la página y reserva el horizontal
+     para el giro. Se declara SOLO donde la maqueta entra sin desplazamiento
+     horizontal: por debajo de 34rem el marco tiene su piso de 29,5rem y el
+     gesto horizontal le pertenece al scroll del mapa, no al giro. */
+  @media (min-width: 34rem) {
+    .js .plano-maqueta {
+      touch-action: pan-y;
+    }
+  }
+
+  .plano-maqueta[data-arrastre] {
+    cursor: grabbing;
+    transition: none;
+  }
+
+  /* El grupo es enfocable para girarlo con teclado. El motivo de foco no es un
+     recuadro alrededor de toda la caja -que encierra aire- sino el borde de la
+     propia platea. */
+  .plano-maqueta:focus-visible {
+    outline: none;
+  }
+
+  .plano-maqueta:focus-visible .plano-platea {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 3px;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     LA ESCENA
+
+     Las dos rotaciones, en este orden: primero la planta gira 45 grados sobre
+     su propio plano y después se vuelca 58 hacia el espectador. SIN
+     `perspective`: las paralelas no convergen.
+     ───────────────────────────────────────────────────────────────────────── */
+  .plano-escena {
+    position: absolute;
+    inset-inline-start: 50%;
+    inset-block-start: 50%;
+    width: calc(var(--cols) * var(--u));
+    height: calc(var(--filas) * var(--u));
+    translate: -50% -50%;
+    transform: rotateX(var(--giro-x)) rotateZ(var(--giro-z));
+    transform-style: preserve-3d;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     LA PLATEA
+
+     Una losa con espesor: el terreno alrededor de la parcela y cuatro cantos
+     que cuelgan hacia abajo. Es lo que convierte el dibujo en una maqueta
+     apoyada sobre una mesa y no en un rombo flotando. Ocupa exactamente el
+     viewBox del plano, así que el margen de terreno que se ve alrededor de la
+     parcela es el que el propio encuadre ya tenía.
+     ───────────────────────────────────────────────────────────────────────── */
+  .plano-platea {
+    position: absolute;
+    inset: 0;
+    background: var(--plano-terreno);
+    transform-style: preserve-3d;
+  }
+
+  .plano-canto {
+    position: absolute;
+    /* Los cantos son caras verticales: reciben la misma regla de luz que las
+       paredes de los bloques. */
+    background: color-mix(in oklab, var(--plano-terreno) 76%, var(--color-surface-sunken));
+  }
+
+  .plano-canto--sur,
+  .plano-canto--norte {
+    inset-inline: 0;
+    height: var(--espesor);
+  }
+
+  .plano-canto--sur {
+    inset-block-start: 100%;
+    transform-origin: 0 0;
+    transform: rotateX(-90deg);
+    background: color-mix(in oklab, var(--plano-terreno) 56%, var(--color-surface-sunken));
+  }
+
+  .plano-canto--norte {
+    inset-block-end: 100%;
+    transform-origin: 0 100%;
+    transform: rotateX(90deg);
+  }
+
+  .plano-canto--este,
+  .plano-canto--oeste {
+    inset-block: 0;
+    width: var(--espesor);
+  }
+
+  .plano-canto--este {
+    inset-inline-start: 100%;
+    transform-origin: 0 0;
+    transform: rotateY(90deg);
+    background: color-mix(in oklab, var(--plano-terreno) 56%, var(--color-surface-sunken));
+  }
+
+  .plano-canto--oeste {
+    inset-inline-end: 100%;
+    transform-origin: 100% 0;
+    transform: rotateY(-90deg);
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     LAS CAPAS DEL PISO
+
+     Todo lo que va en el suelo se separa por fracciones de píxel en Z para que
+     no se peleen por el mismo plano: platea 0, pavimento 0,4px, dibujo 0,6px,
+     sombras 0,9px. Son fracciones a propósito: alcanzan para desempatar y no
+     alcanzan para verse.
+     ───────────────────────────────────────────────────────────────────────── */
+  .plano-pavimento {
+    position: absolute;
+    inset-inline-start: calc(var(--px) * var(--u));
+    inset-block-start: calc(var(--py) * var(--u));
+    width: calc(var(--pw) * var(--u));
+    height: calc(var(--ph) * var(--u));
+    background-color: var(--color-surface);
+    /* Retícula de replanteo, como la de un plano de obra. Va corrida por el
+       desplazamiento de la parcela para que las líneas caigan en unidades
+       enteras de la escena y coincidan con los cantos de los bloques. */
+    background-image:
+      linear-gradient(var(--plano-replanteo) 1px, transparent 1px),
+      linear-gradient(90deg, var(--plano-replanteo) 1px, transparent 1px);
+    background-size: var(--u) var(--u);
+    background-position: calc(-1 * var(--px) * var(--u)) calc(-1 * var(--py) * var(--u));
+    --plano-replanteo: color-mix(in oklab, var(--color-border) 60%, var(--color-surface));
+    transform: translateZ(0.4px);
+  }
+
+  /* El dibujo de línea, acostado sobre el piso. Es el mismo SVG de siempre:
+     mantiene sus calles, sus masas verdes, la rotonda, la pista y el recorrido
+     con su degradado y su animación de dibujado. Va `aria-hidden` desde el
+     marcado: lo operable son los botones. */
+  .plano-piso {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transform: translateZ(0.6px);
+    pointer-events: none;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     UN VOLUMEN
+
+     `--tono` es el color del cuerpo y las cinco caras lo derivan. `--x`, `--y`,
+     `--w`, `--h`, `--volumen` e `--i` llegan en línea desde la retícula.
+     ───────────────────────────────────────────────────────────────────────── */
+  .plano-bloque {
+    position: absolute;
+    inset-inline-start: calc(var(--x) * var(--u));
+    inset-block-start: calc(var(--y) * var(--u));
+    width: calc(var(--w) * var(--u));
+    height: calc(var(--h) * var(--u));
+    transform-style: preserve-3d;
+    /* `--eco` es un número, así que sirve para interpolar sin escribir dos
+       estados: el bloque señalado se separa del piso 0,55 unidades. */
+    translate: 0 0 calc(var(--eco) * 0.55 * var(--u));
+    transition: translate var(--duration-control) var(--ease-standard);
+  }
+
+  .plano-bloque[data-tipo="nave"] {
+    --tono: var(--tono-nave);
+  }
+  .plano-bloque[data-tipo="stand"] {
+    --tono: var(--tono-stand);
+  }
+  .plano-bloque[data-tipo="servicio"] {
+    --tono: var(--tono-servicio);
+  }
+  .plano-bloque[data-tipo="modulo"] {
+    --tono: var(--tono-modulo);
+  }
+
+  /* El lugar elegido en el riel enciende sus bloques. En el original esto lo
+     resolvía un generador de reglas `:has()` porque el plano y la agenda eran
+     dos componentes sin estado común; acá el estado ya existe y es uno solo,
+     así que alcanza un atributo y una regla. Los dos interruptores siguen
+     siendo números interpolables, que es lo que hacía valiosa la técnica. */
+  .plano-bloque[data-senalado] {
+    --eco: 1;
+  }
+
+  .plano-cara {
+    position: absolute;
+    background: var(--tono);
+    transition: background-color var(--duration-control) var(--ease-standard);
+  }
+
+  /* La sombra vive DENTRO del bloque para heredar su planta, pero se queda en
+     el piso cuando el bloque se levanta: el `translateZ` contrarresta exacto el
+     levantamiento de `--eco` y le suma 0,9px para quedar apenas por encima del
+     dibujo. Y se aclara, que es lo que hace una sombra cuando el objeto se
+     separa del suelo. Mide en proporción al alto: 0,06u en X y 0,3u en Y. */
+  .plano-cara--sombra {
+    inset: 0;
+    background: var(--plano-sombra);
+    filter: blur(calc(0.07 * var(--u)));
+    transform: translate(
+        calc(0.06 * var(--u) * var(--volumen)),
+        calc(0.3 * var(--u) * var(--volumen))
+      )
+      translateZ(calc(0.9px - var(--eco) * 0.55 * var(--u)));
+    opacity: calc(var(--crece) * (1 - 0.55 * var(--eco)));
+    transition:
+      transform var(--duration-control) var(--ease-standard),
+      opacity var(--duration-control) var(--ease-standard);
+  }
+
+  /* El techo es la planta levantada a la altura del bloque. Al señalarlo se
+     aclara hacia el color de texto del sistema: es la luz que le cae encima,
+     no un contorno. */
+  .plano-cara--techo {
+    inset: 0;
+    background-color: color-mix(in oklab, var(--tono), var(--color-text) calc(var(--eco) * 16%));
+    transform: translateZ(calc(var(--volumen) * var(--u) * var(--crece)));
+  }
+
+  /* Techo de nave industrial: tres crujías a lo largo. Es lo que distingue un
+     pabellón de feria de un cubo. Con las naves largas del predio las bandas
+     corren en el sentido del galpón, que es como va una cubierta de chapa. */
+  .plano-bloque[data-tipo="nave"] .plano-cara--techo {
+    background-image: repeating-linear-gradient(
+      90deg,
+      transparent 0 31%,
+      color-mix(in oklab, var(--color-surface-sunken) 45%, transparent) 31% 33.33%
+    );
+  }
+
+  /* Las cuatro paredes salen del suelo hacia arriba, cada una girada sobre el
+     canto que la une a la planta, y escalada sobre ese mismo canto por
+     `--crece`: al entrar crecen desde el piso junto con el techo. Se dibujan
+     las cuatro porque al girar la maqueta cambian de lado; las que quedan de
+     espaldas las tapan el techo y las de adelante. */
+  .plano-cara--sur,
+  .plano-cara--norte {
+    inset-inline: 0;
+    height: calc(var(--volumen) * var(--u));
+  }
+
+  .plano-cara--sur {
+    inset-block-start: 100%;
+    transform-origin: 0 0;
+    transform: rotateX(90deg) scaleY(var(--crece));
+    background-color: color-mix(in oklab, var(--tono) 56%, var(--color-surface-sunken));
+  }
+
+  .plano-cara--norte {
+    inset-block-end: 100%;
+    transform-origin: 0 100%;
+    transform: rotateX(-90deg) scaleY(var(--crece));
+    background-color: color-mix(in oklab, var(--tono) 76%, var(--color-surface-sunken));
+  }
+
+  .plano-cara--este,
+  .plano-cara--oeste {
+    inset-block: 0;
+    width: calc(var(--volumen) * var(--u));
+  }
+
+  .plano-cara--este {
+    inset-inline-start: 100%;
+    transform-origin: 0 0;
+    transform: rotateY(-90deg) scaleX(var(--crece));
+    background-color: color-mix(in oklab, var(--tono) 56%, var(--color-surface-sunken));
+  }
+
+  .plano-cara--oeste {
+    inset-inline-end: 100%;
+    transform-origin: 100% 0;
+    transform: rotateY(90deg) scaleX(var(--crece));
+    background-color: color-mix(in oklab, var(--tono) 76%, var(--color-surface-sunken));
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     EL HITO DE ENTRADA
+
+     Un mástil con bandera sobre la rotonda, en cian: la marca de "por acá se
+     entra" de cualquier plano de feria, y el único elemento de la maqueta con
+     color de dato. Está en el plano del piso y se lo pone de pie con dos giros:
+     el primero deshace el giro de la escena para que quede de frente, el
+     segundo lo levanta.
+     ───────────────────────────────────────────────────────────────────────── */
+  .plano-hito {
+    position: absolute;
+    inset-inline-start: calc(var(--hx) * var(--u));
+    inset-block-start: calc(var(--hy) * var(--u));
+    width: 2px;
+    height: calc(1.15 * var(--u));
+    background: var(--color-accent);
+    transform-origin: 50% 100%;
+    transform: translate(-50%, -100%) rotateZ(calc(-1 * var(--giro-z))) rotateX(-90deg);
+    transform-style: preserve-3d;
+    opacity: var(--crece);
+  }
+
+  .plano-hito::before {
+    content: "";
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 2px;
+    width: calc(0.55 * var(--u));
+    height: calc(0.34 * var(--u));
+    background: var(--color-accent);
+  }
+
+  /* La base del mástil, de vuelta en el piso. */
+  .plano-hito::after {
+    content: "";
+    position: absolute;
+    inset-block-end: 0;
+    inset-inline-start: 50%;
+    width: calc(0.22 * var(--u));
+    height: calc(0.22 * var(--u));
+    translate: -50% 50%;
+    background: var(--color-accent);
+    transform: rotateX(90deg);
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     LOS MARCADORES
+
+     Siguen siendo `<button>` de HTML, como en el plano plano: se gana foco,
+     rol, nombre accesible y recorrido de teclado sin reconstruir nada.
+
+     LO ÚNICO NUEVO ES QUE VIVEN DENTRO DE LA ESCENA. Ubicados en la retícula,
+     se mueven con la maqueta cuando gira, y deshacen los DOS giros de la escena
+     -primero el de Z, después el de X- así que quedan siempre de frente a la
+     cámara, redondos y del mismo tamaño en cualquier ángulo. Como la proyección
+     es ortográfica, el `translateZ` final los acerca al espectador sin
+     agrandarlos: es lo que garantiza que se pinten por encima de los volúmenes
+     sin usar `z-index`, que dentro de un contexto 3D no ordena nada.
+     ───────────────────────────────────────────────────────────────────────── */
+  .plano-punto {
+    position: absolute;
+    inset-inline-start: calc(var(--x) * var(--u));
+    inset-block-start: calc(var(--y) * var(--u));
+    /* 36px de área táctil, por encima de los 24 de WCAG 2.5.8, con un punto
+       visible de 12: el dibujo no engorda. El margen negativo centra la caja en
+       la coordenada sin gastar el `translate`, que ya usa el transform. */
+    width: 2.25rem;
+    height: 2.25rem;
+    margin: -1.125rem;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-full);
+    transform-style: preserve-3d;
+    transform: translateZ(calc(var(--z) * var(--u))) rotateZ(calc(-1 * var(--giro-z)))
+      rotateX(calc(-1 * var(--giro-x))) translateZ(1.5rem);
+  }
+
+  /* El cartel de pie. Aparece al señalar el lugar -con el puntero, con el foco
+     o porque es el lugar elegido en el riel- y es puro CSS: no hay ningún
+     listener detrás. Va `aria-hidden` porque el nombre accesible ya está en el
+     botón. */
+  .plano-cartel {
+    position: absolute;
+    inset-block-end: 100%;
+    inset-inline-start: 50%;
+    translate: -50% -0.5rem;
+    width: max-content;
+    max-width: 11rem;
+    padding: 0.375rem 0.625rem;
+    background: var(--color-surface-overlay);
+    border-inline-start: 3px solid var(--tono, var(--color-accent));
+    color: var(--color-text);
+    font-size: var(--text-xs);
+    line-height: 1.3;
+    text-align: start;
+    text-wrap: balance;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--duration-control) var(--ease-standard);
+  }
+
+  /* El poste, que ata el cartel al marcador. */
+  .plano-cartel::after {
+    content: "";
+    position: absolute;
+    inset-block-start: 100%;
+    inset-inline-start: calc(50% - 1px);
+    width: 2px;
+    height: 0.5rem;
+    background: var(--color-surface-overlay);
+  }
+
+  .plano-punto:is(:hover, :focus-visible) .plano-cartel,
+  .plano-punto[data-senalado] .plano-cartel {
+    opacity: 1;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     MANDOS
+
+     La pista solo existe con JavaScript, que es cuando hay algo que arrastrar,
+     y se va con el primer gesto. El botón de vuelta aparece solo cuando la
+     maqueta está girada: un mando que no hace nada no se muestra.
+     ───────────────────────────────────────────────────────────────────────── */
+  .plano-pista {
+    display: none;
+  }
+
+  .js .plano-pista:not([hidden]) {
+    display: inline-flex;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     LA CONSTRUCCIÓN
+
+     Cuando la sección entra en pantalla los bloques se levantan del piso uno
+     por uno, del fondo hacia adelante, en el mismo orden en que se dibujan.
+     Todo cuelga de `--crece`: el techo sube, las cuatro paredes crecen desde su
+     canto y la sombra aparece, con UNA sola variable animada por volumen.
+
+     El disparador es el mismo `[data-reveal]` que usa el resto del sitio, así
+     que no hay un segundo observador. Y como el estado oculto vive detrás de la
+     clase `.js`, sin JavaScript `--crece` vale 1 desde el primer cuadro: el
+     plano se pinta construido. Nunca vacío.
+
+     Con movimiento reducido no existe ninguna de las dos reglas, ni la que
+     apaga ni la que anima: el plano aparece construido y quieto.
+     ───────────────────────────────────────────────────────────────────────── */
+  @media (prefers-reduced-motion: no-preference) {
+    .js [data-reveal="hidden"] :is(.plano-bloque, .plano-hito) {
+      --crece: 0;
+    }
+
+    .js [data-reveal="shown"] .plano-bloque {
+      animation: plano-levantar 720ms cubic-bezier(0.2, 0.9, 0.3, 1) both;
+      /* 140ms de espera y 55 por bloque: el retardo sale del orden de dibujo,
+         así que la maqueta se construye del fondo hacia adelante. */
+      animation-delay: calc(140ms + var(--i) * 55ms);
+    }
+
+    .js [data-reveal="shown"] .plano-hito {
+      animation: plano-levantar var(--duration-enter) var(--ease-out-expo) both;
+      animation-delay: 1100ms;
+    }
+
+    @keyframes plano-levantar {
+      from {
+        --crece: 0;
+      }
+      to {
+        --crece: 1;
+      }
+    }
+  }
+
+  /* El giro y la construcción se apagan; el dibujo queda entero. Quitar el
+     movimiento nunca debe quitar contenido. */
+  @media (prefers-reduced-motion: reduce) {
+    .plano-maqueta,
+    .plano-bloque,
+    .plano-cara,
+    .plano-cartel {
+      transition: none;
+    }
+
+    .js .plano-maqueta {
+      cursor: auto;
+    }
+  }
+}
