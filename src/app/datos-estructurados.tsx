@@ -21,6 +21,7 @@ import { SITE, CONTACTO, SOCIAL_LINKS } from "@/shared/constants/site";
  * No hay riesgo de inyección: todo sale de constantes propias, nada de entrada
  * de usuario.
  */
+
 export function DatosEstructurados() {
   const jsonLd = {
     "@context": "https://schema.org",
