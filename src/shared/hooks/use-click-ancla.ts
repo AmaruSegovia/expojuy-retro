@@ -29,6 +29,15 @@ import { usePrefersReducedMotion } from "@/shared/hooks/use-prefers-reduced-moti
  *   pestaña, con el id de destino. Sirve para marcar el ítem activo antes de
  *   que termine el scroll y para cerrar el menú.
  */
+/**
+ * Duración del salto por menú, en segundos.
+ *
+ * 0,8s es el punto donde el movimiento todavía se lee como un desplazamiento
+ * -o sea, el visitante entiende que bajó y no que cambió de página- pero no se
+ * hace esperar. Por encima de 1s el menú empieza a sentirse trabado.
+ */
+const DURACION_SALTO_S = 0.8;
+
 export function useClickAncla(alNavegar?: (id: string) => void) {
   const lenis = useLenis();
   const reducido = usePrefersReducedMotion();
@@ -65,7 +74,25 @@ export function useClickAncla(alNavegar?: (id: string) => void) {
       if (lenis) {
         // `immediate` respeta la preferencia del sistema: con movimiento
         // reducido el salto es instantáneo, pero CONSERVA el offset.
-        lenis.scrollTo(destino, { offset: -margen, immediate: reducido });
+        //
+        // BUG CORREGIDO: EL VIAJE INTERMINABLE
+        //
+        // Sin `duration`, Lenis interpola con el `lerp` global (0.1), que es
+        // asintótico: se acerca un 10% por frame. En una página corta no se
+        // nota, pero este documento mide más de 16.000px y un salto de Inicio a
+        // Noticias recorre 11.362. Medido en navegador: el viaje tardaba más de
+        // cinco segundos, y como cada sección está oculta hasta que su
+        // observador la revela, durante todo el trayecto la pantalla quedaba
+        // NEGRA. Alguien que abre el sitio y toca un ítem del menú veía eso.
+        //
+        // Con duración fija el tiempo de llegada no depende de la distancia:
+        // saltar a la sección de al lado y a la última cuestan lo mismo, que es
+        // además lo que el visitante espera de un menú.
+        lenis.scrollTo(destino, {
+          offset: -margen,
+          duration: DURACION_SALTO_S,
+          immediate: reducido,
+        });
       } else {
         // Sin Lenis (todavía montando), scrollIntoView respeta por sí solo el
         // scroll-margin-top de la sección.

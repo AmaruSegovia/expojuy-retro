@@ -34,9 +34,10 @@
  */
 export const HERO_PARES = [
   { izquierda: "Ciudad Cultural", derecha: "San Salvador de Jujuy" },
-  { izquierda: "Innovación", derecha: "robots con IA y charlas dev" },
+  { izquierda: "Innovación", derecha: "economía del conocimiento" },
   { izquierda: "Tecnología", derecha: "demos en vivo y prototipos" },
-  { izquierda: "Producción", derecha: "stands de minería y agro" },
+  { izquierda: "Producción", derecha: "minería, agro y litio" },
+  { izquierda: "Vinculación empresarial", derecha: "rueda internacional de negocios" },
   { izquierda: "Desarrollo", derecha: "rondas de negocios" },
 ] as const;
 
