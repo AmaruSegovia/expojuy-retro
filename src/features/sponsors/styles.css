@@ -1,0 +1,301 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   SPONSORS - ver src/features/sponsors/components/
+
+   Muro agrupado por nivel del prototipo de Astro, marcador viajero del
+   prototipo de Next. Toda la paleta de origen quedó traducida a los tokens de
+   globals.css: no hay un solo color literal acá. El mapeo:
+
+     --surface-papel   -> --color-surface-raised   (ficha)
+     --surface-papel-2 -> --color-surface-overlay  (ficha activa)
+     --borde           -> --color-border
+     --text-titulo     -> --color-text
+     --text-dato       -> --color-text-subtle      (título de nivel)
+     --text-suave      -> --color-text-subtle      (aviso de pendiente)
+     --brand-azul      -> --color-primary          (las cuatro "L")
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@layer components {
+  .muro-sponsors {
+    display: grid;
+    gap: 3rem;
+    margin-top: 3rem;
+  }
+
+  .muro-sponsors__nivel {
+    font-size: var(--text-xs);
+    line-height: var(--text-xs--line-height);
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-text-subtle);
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: 1.5rem;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     LA RETICULA
+
+     Los valores de la regla base son los del nivel más alto en móvil; cada
+     `data-escala` corrige lo suyo. Cuatro variables por grilla y las cuatro
+     las lee también el marcador, que por eso nunca tiene que medir nada.
+
+     POR QUE LAS COLUMNAS SON UN NUMERO Y NO `auto-fill`
+
+     El diseño de origen usaba `repeat(auto-fill, minmax(15rem, 1fr))`, o sea
+     la cantidad de columnas la decide el ancho disponible y NO existe como
+     número en ningún lado. El marcador la necesita para sacar fila y columna
+     con `mod()` y `round()`, así que con `auto-fill` habría que medir en
+     JavaScript, que es exactamente lo que este mecanismo evita. Las columnas
+     se declaran acá, por nivel y por breakpoint.
+
+     EL ALTO DE FILA TAMBIEN ES UN NUMERO, por el mismo motivo: el marcador
+     resuelve su paso vertical con `100%` de su propia altura, así que las
+     filas tienen que medir todas lo mismo y ese valor tiene que existir. En el
+     origen las fichas tenían `min-height` y crecían con su contenido.
+
+     EL TAMAÑO ES LA JERARQUIA. El lienzo del archivo ya trae resuelta la
+     proporción entre un logotipo y otro -todos vienen centrados y escalados
+     por cantidad de tinta-, así que acá solo se elige cuánto mide ese lienzo
+     según el nivel. Es como se ordena un muro de patrocinadores: el tamaño
+     distingue las categorías y dentro de cada una todos miden igual.
+     ───────────────────────────────────────────────────────────────────────── */
+  .muro-sponsors__grilla {
+    --sponsors-i: 0;
+    --sponsors-cols: 2;
+    --sponsors-hueco: 0.75rem;
+    --sponsors-alto: 6.5rem;
+    --sponsors-logo: 9rem;
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(var(--sponsors-cols), minmax(0, 1fr));
+    grid-auto-rows: var(--sponsors-alto);
+    gap: var(--sponsors-hueco);
+  }
+
+  /* Un solo patrocinador principal: una columna en móvil y media grilla en
+     escritorio. Es la ficha más grande del muro y tiene que leerse así. */
+  .muro-sponsors__grilla[data-escala="principal"] {
+    --sponsors-cols: 1;
+    --sponsors-alto: 8rem;
+    --sponsors-logo: 11rem;
+  }
+
+  .muro-sponsors__grilla[data-escala="medio"] {
+    --sponsors-alto: 5.5rem;
+    --sponsors-logo: 7.5rem;
+  }
+
+  .muro-sponsors__grilla[data-escala="chico"] {
+    --sponsors-alto: 4.5rem;
+    --sponsors-logo: 6rem;
+  }
+
+  @media (width >= 48rem) {
+    .muro-sponsors__grilla {
+      --sponsors-cols: 4;
+      --sponsors-hueco: 1rem;
+      --sponsors-alto: 8rem;
+      --sponsors-logo: 11rem;
+    }
+
+    .muro-sponsors__grilla[data-escala="principal"] {
+      --sponsors-cols: 2;
+      --sponsors-alto: 10rem;
+      --sponsors-logo: 13rem;
+    }
+
+    .muro-sponsors__grilla[data-escala="medio"] {
+      --sponsors-alto: 6.5rem;
+      --sponsors-logo: 9rem;
+    }
+
+    .muro-sponsors__grilla[data-escala="chico"] {
+      --sponsors-alto: 5.5rem;
+      --sponsors-logo: 7.5rem;
+    }
+  }
+
+  .muro-sponsors__marca {
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface-raised);
+    transition: background-color var(--duration-control) var(--ease-standard);
+  }
+
+  /* Detrás de `.js` porque el estado activo lo decide JavaScript: sin él, la
+     ficha cero quedaría resaltada para siempre sin que nada la haya elegido. */
+  .js .muro-sponsors__marca[data-activa] {
+    background-color: var(--color-surface-overlay);
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     EL CONTRASTE DE LOS LOGOTIPOS
+
+     EL PROBLEMA: los nueve archivos vienen normalizados a una sola tinta
+     #232326 sobre transparente. Ese gris casi negro fue elegido para papel
+     blanco; sobre --color-surface-raised (#16131d) da 1.14:1 y es literalmente
+     invisible. No alcanza con "aclararlos un poco".
+
+     LA SOLUCION, Y POR QUE ESTA: `brightness(0)` lleva la tinta a negro puro
+     conservando el canal alfa, e `invert(1)` la lleva a BLANCO PURO, también
+     conservando el alfa, así que los bordes suavizados siguen suavizados. A
+     partir de ahí el nivel de tinta lo pone `opacity`, y no un color, que es
+     lo que permite que el resultado caiga sobre tokens del sistema en vez de
+     inventar un gris nuevo:
+
+       0.60 de blanco sobre --color-surface-raised da #a2a1a5. El token
+            --color-text-muted es #a19ea7: la diferencia es de 3 puntos por
+            canal, imperceptible. Contraste medido: 7.07:1 sobre la superficie
+            de la ficha y 6.28:1 sobre la de la ficha activa.
+       0.90 de blanco sobre --color-surface-overlay da #e9e9ea, contra el
+            #e8e6eb de --color-text. Contraste 13.3:1.
+
+     El mínimo que pide WCAG 1.4.11 para gráficos no textuales es 3:1: el peor
+     caso de acá lo duplica.
+
+     Se descartó la máscara -usar el alfa del PNG como `mask-image` y pintar la
+     silueta con un token- aunque cromáticamente sería más exacta: `next/image`
+     sirve una URL optimizada con hash que el CSS no puede nombrar, así que
+     habría que descargar el archivo DOS veces, una para la imagen y otra para
+     la máscara. Un archivo de más por logotipo, nueve en total, para ganar tres
+     puntos de gris.
+
+     El paso de reposo a activo no es solo el brillo del logotipo: la ficha
+     cambia de superficie y el marcador la encierra con cuatro esquinas. El
+     color nunca es el único indicador (WCAG 1.4.1).
+     ───────────────────────────────────────────────────────────────────────── */
+  .muro-sponsors__logo {
+    /* Ancho y alto en `auto` con los dos topes puestos: el navegador aplica el
+       más restrictivo conservando la proporción, así que un logotipo nunca se
+       desborda de una ficha baja ni de una angosta. */
+    width: auto;
+    height: auto;
+    max-width: min(100%, var(--sponsors-logo));
+    max-height: 100%;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+    opacity: 0.6;
+    transition: opacity var(--duration-control) var(--ease-standard);
+  }
+
+  .js .muro-sponsors__marca[data-activa] .muro-sponsors__logo {
+    opacity: 0.9;
+  }
+
+  /* Sin archivo, el nombre compuesto tipográficamente y el aviso de que falta.
+     Lo que no llegó se declara en vez de disimularse. */
+  .muro-sponsors__nombre {
+    display: grid;
+    gap: 0.5rem;
+    justify-items: center;
+    text-align: center;
+    text-wrap: balance;
+    font-size: var(--text-sm);
+    line-height: 1.25;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--color-text);
+  }
+
+  .muro-sponsors__pendiente {
+    font-size: var(--text-xs);
+    line-height: var(--text-xs--line-height);
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-text-subtle);
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     EL MARCADOR
+
+     Un solo elemento del tamaño exacto de una celda que se traslada. Su
+     posición sale de dos números: `--sponsors-i` y `--sponsors-cols`. La
+     columna es el resto y la fila el cociente entero, y los dos los resuelve
+     el CSS.
+
+     POR QUE LOS PORCENTAJES FUNCIONAN: en `translate`, un porcentaje se
+     resuelve contra la caja del PROPIO elemento, el primero contra su ancho y
+     el segundo contra su alto. Y el marcador mide exactamente una celda.
+     Entonces `100% + hueco` es el paso de la grilla en los dos ejes a la vez,
+     sin que ninguno de los dos valores tenga que escribirse en ningún lado.
+
+     Arranca invisible: el marcador señala un estado que solo existe con
+     JavaScript, así que sin `.js` no aparece ninguna ficha marcada. La
+     transición de opacidad es la que cubre el salto de un nivel a otro, donde
+     el marcador no viaja: se apaga en una grilla y se enciende en la otra, ya
+     estacionado en la celda correcta.
+     ───────────────────────────────────────────────────────────────────────── */
+  .muro-sponsors__marcador {
+    position: absolute;
+    top: 0;
+    left: 0;
+    /* El mismo ancho que una pista de la grilla, escrito con la misma cuenta
+       que `repeat()` resuelve internamente. */
+    width: calc((100% - (var(--sponsors-cols) - 1) * var(--sponsors-hueco)) / var(--sponsors-cols));
+    height: var(--sponsors-alto);
+    translate: calc(mod(var(--sponsors-i), var(--sponsors-cols)) * (100% + var(--sponsors-hueco)))
+      calc(
+        round(down, var(--sponsors-i) / var(--sponsors-cols), 1) * (100% + var(--sponsors-hueco))
+      );
+    opacity: 0;
+    transition:
+      translate var(--duration-control) var(--ease-standard),
+      opacity var(--duration-control) var(--ease-standard);
+    /* No intercepta el puntero: el hover lo tienen que recibir las fichas que
+       quedan debajo. Sin esto el marcador se taparía a sí mismo el destino. */
+    pointer-events: none;
+  }
+
+  .js .muro-sponsors__grilla[data-activo] .muro-sponsors__marcador {
+    opacity: 1;
+  }
+
+  /* Las cuatro "L". Van con esquinas VIVAS -radio 0- como todo el sistema, y
+     desbordan tres píxeles hacia afuera para que se lean como un corchete que
+     encierra la ficha y no como un borde pegado a ella. */
+  .muro-sponsors__marcador > span {
+    position: absolute;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid var(--color-primary);
+  }
+
+  .muro-sponsors__marcador > span:nth-child(1) {
+    top: -3px;
+    left: -3px;
+    border-right-width: 0;
+    border-bottom-width: 0;
+  }
+  .muro-sponsors__marcador > span:nth-child(2) {
+    top: -3px;
+    right: -3px;
+    border-bottom-width: 0;
+    border-left-width: 0;
+  }
+  .muro-sponsors__marcador > span:nth-child(3) {
+    bottom: -3px;
+    left: -3px;
+    border-top-width: 0;
+    border-right-width: 0;
+  }
+  .muro-sponsors__marcador > span:nth-child(4) {
+    bottom: -3px;
+    right: -3px;
+    border-top-width: 0;
+    border-left-width: 0;
+  }
+
+  /* Con movimiento reducido el marcador SALTA en vez de viajar. Sigue
+     marcando: quitar la animación nunca debe quitar la función. */
+  @media (prefers-reduced-motion: reduce) {
+    .muro-sponsors__marcador,
+    .muro-sponsors__marca,
+    .muro-sponsors__logo {
+      transition: none;
+    }
+  }
+}

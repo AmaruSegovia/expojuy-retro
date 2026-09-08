@@ -72,56 +72,62 @@ export function NoticiasCarrusel() {
           necesita ancho para leerse como que el listado sigue, y no como dos
           tarjetas cortadas contra el borde de una caja. */}
       <div className="relative mt-12">
+        {/* DOS CAJAS Y NO UNA, POR EL ANILLO DE FOCO. La ventana lleva una
+            máscara de degradado, y una máscara recorta TODO lo que pinta el
+            elemento, el `outline` incluido: con el foco puesto en la ventana,
+            el anillo se desvanecía contra los mismos bordes que apagan el
+            asomo. La zona -que no tiene máscara- es la que recibe el foco y
+            el teclado; la ventana solo recorta y recibe el arrastre. */}
         <div
-          // El riel es operable por teclado con las flechas, así que es un
-          // grupo enfocable y lo declara. Las tarjetas no tienen nada
-          // enfocable adentro: si esto no fuera alcanzable, el carrusel sería
-          // exclusivamente de puntero.
           role="group"
           tabIndex={0}
           aria-roledescription="carrusel"
           aria-label="Noticias. Usá las flechas del teclado o arrastrá para cambiar de tarjeta."
           onKeyDown={alPresionarTecla}
-          {...manejadores}
-          data-arrastrando={arrastrando ? "" : undefined}
-          className="noticias-carrusel__ventana mx-auto max-w-5xl min-w-0 px-5 sm:px-10"
+          className="mx-auto max-w-5xl min-w-0 px-5 sm:px-10"
         >
-          <ul
-            role="list"
-            className={cn(
-              "flex min-w-0 gap-4",
-              reacomodando || arrastrando
-                ? "transition-none"
-                : "transition-[translate] duration-scene ease-in-out-quint",
-            )}
-            style={{ translate: conArrastre(desplazamiento) }}
-            onTransitionEnd={alTerminarTransicion}
+          <div
+            {...manejadores}
+            data-arrastrando={arrastrando ? "" : undefined}
+            className="noticias-carrusel__ventana min-w-0"
           >
-            {repetidos.map((n, i) => {
-              const activa = i === enRiel;
-              return (
-                <li
-                  key={`${n.id}-${i}`}
-                  // Solo la tarjeta al frente participa del árbol de
-                  // accesibilidad: sin esto, un lector de pantalla leería las
-                  // dieciocho copias y el mismo título tres veces.
-                  inert={!activa}
-                  aria-hidden={activa ? undefined : true}
-                  className={cn(
-                    "flex w-4/5 shrink-0",
-                    reacomodando
-                      ? "transition-none"
-                      : "transition-opacity duration-scene ease-in-out-quint",
-                    // Las que asoman quedan atenuadas: el foco visual va a la
-                    // del frente y el asomo se lee como contexto.
-                    activa ? "opacity-100" : "opacity-30",
-                  )}
-                >
-                  <NoticiaTarjeta noticia={n} className="w-full" />
-                </li>
-              );
-            })}
-          </ul>
+            <ul
+              role="list"
+              className={cn(
+                "flex min-w-0 gap-4",
+                reacomodando || arrastrando
+                  ? "transition-none"
+                  : "transition-[translate] duration-scene ease-in-out-quint",
+              )}
+              style={{ translate: conArrastre(desplazamiento) }}
+              onTransitionEnd={alTerminarTransicion}
+            >
+              {repetidos.map((n, i) => {
+                const activa = i === enRiel;
+                return (
+                  <li
+                    key={`${n.id}-${i}`}
+                    // Solo la tarjeta al frente participa del árbol de
+                    // accesibilidad: sin esto, un lector de pantalla leería
+                    // las dieciocho copias y el mismo título tres veces.
+                    inert={!activa}
+                    aria-hidden={activa ? undefined : true}
+                    className={cn(
+                      "flex w-4/5 shrink-0",
+                      reacomodando
+                        ? "transition-none"
+                        : "transition-opacity duration-scene ease-in-out-quint",
+                      // Las que asoman quedan atenuadas: el foco visual va a
+                      // la del frente y el asomo se lee como contexto.
+                      activa ? "opacity-100" : "opacity-30",
+                    )}
+                  >
+                    <NoticiaTarjeta noticia={n} className="w-full" />
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         </div>
       </div>
 
