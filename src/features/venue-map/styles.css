@@ -94,6 +94,21 @@
     overscroll-behavior-x: contain;
   }
 
+  /* EN PANTALLA ANGOSTA EL DIBUJO SALE A LOS BORDES.
+     La maqueta vive dentro de `.container-content`, que reserva de 20 a 40 px
+     de margen a cada lado para que el texto se lea. Un dibujo no necesita esos
+     márgenes de lectura, y en un teléfono son el 11 por ciento del ancho: en
+     412 px el marco quedaba en 371 y la escala en 17,9 px por unidad. Sacando
+     el mapa a los bordes la escala sube a 19,9, que es lo único gratis que hay
+     acá, porque el tamaño de la maqueta lo fija el ancho disponible y nada más.
+     El valor negativo repite el `padding-inline` del contenedor: si aquel
+     cambia, este lo sigue. */
+  @media (width < 40rem) {
+    .plano-scroll {
+      margin-inline: calc(clamp(1.25rem, 5vw, 2.5rem) * -1);
+    }
+  }
+
   .plano-marco {
     position: relative;
   }
