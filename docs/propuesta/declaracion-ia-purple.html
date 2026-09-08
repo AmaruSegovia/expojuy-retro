@@ -237,21 +237,24 @@ figure.captura figcaption { font-family: var(--mono); font-size: 8.5pt; color: v
   <p class="kicker">Primera Edición · Programa Provincial de Desafíos Tecnológicos</p>
   <svg class="logo" viewBox="0 0 164.6901 229.8555" role="img" aria-label="Isologotipo de ExpoJuy 2026"><g transform="translate(-338.5848, 412.3633) scale(1, -1)"><path fill="#774ff0" d="M454.9700 292.1250 L454.9700 412.3630 L503.2749 412.3630 L503.2749 292.1250 Z"/><path fill="#bb8cff" fill-rule="evenodd" d="M419.6341 182.5078 C393.9134 182.5078 373.9757 189.5865 359.8183 203.7438 C345.6609 217.8998 338.5848 236.7581 338.5848 260.3146 C338.5848 263.3063 338.7152 266.3929 338.9723 269.5728 L387.4680 269.5728 C387.2965 267.3227 387.2120 265.1023 387.2120 262.9086 C387.2120 251.2378 389.9687 242.1060 395.4804 235.5134 C400.9921 228.9234 409.1516 225.6259 419.9564 225.6259 C442.2197 225.6259 453.8673 240.2756 454.8957 269.5728 L503.2749 269.5728 L503.2749 262.9086 C503.2749 237.4053 495.9264 217.6299 481.2293 203.5800 C466.5334 189.5326 446.0020 182.5078 419.6341 182.5078 Z"/><path fill="#820cd0" d="M338.9726 292.1253 L419.9564 292.1253 L419.9564 340.4302 L338.9726 340.4302 Z"/><path fill="#25c0d4" d="M338.9726 364.0584 L419.9564 364.0584 L419.9564 412.3633 L338.9726 412.3633 Z"/></g></svg>
   <h1>Declaración de uso de inteligencia artificial</h1>
-  <p class="subtitulo">Herramientas, método de trabajo y límites del uso de IA en el prototipo de ExpoJuy 2026.</p>
+  <p class="subtitulo">Herramientas, método de trabajo, evidencia auditable y límites del uso de IA en la propuesta de ExpoJuy 2026.</p>
   <dl class="ficha">
-    <dt>Equipo</dt><dd>Equipo Retro · Prototipo de Leandro Rufino</dd>
+    <dt>Equipo</dt><dd>Equipo Retro · tres integrantes: Maru, Nacho y Leandro</dd>
     <dt>Fecha</dt><dd>8 de septiembre de 2026</dd>
-    <dt>Adjunto a</dt><dd>Memoria descriptiva · <a href="https://expojuy-prototipo.vercel.app">expojuy-prototipo.vercel.app</a></dd>
+    <dt>Adjunto a</dt><dd>Memoria descriptiva de la propuesta, sección 08</dd>
   </dl>
 </header>
 
 <section>
   <h2><span class="n">01</span> Marco de uso</h2>
-  <p>La IA se usó como <strong>herramienta de apoyo bajo dirección humana</strong>, no como sustituto
-  del trabajo del equipo. Nada llegó al repositorio sin pasar el mismo ciclo en cada fase:</p>
-  <p class="panel panel--nota"><strong>especificar → implementar → validar en el navegador midiendo el DOM → aprobar → commit.</strong><br>
+  <p>Las bases piden declarar el uso de inteligencia artificial. Esta declaración lo hace con
+  detalle y sin adornos, porque lo que se declara es verificable: está en el repositorio.</p>
+  <p>La IA se usó como <strong>herramienta de apoyo bajo dirección humana</strong>, no como
+  sustituto del trabajo del equipo. Nada llegó al repositorio sin pasar el mismo ciclo:</p>
+  <p class="panel panel--nota"><strong>especificar → implementar → validar en el navegador midiendo el DOM → aprobar → registrar el cambio.</strong><br>
   La validación no es mirar una captura: es medir cajas, contrastes y animaciones sobre la página
-  real, en escritorio y con emulación táctil. La aprobación de cada cambio es siempre de una persona.</p>
+  real, en escritorio y con emulación táctil. La aprobación de cada cambio es siempre de una
+  persona, y las decisiones de concepto, diseño, contenido y descarte son del equipo.</p>
 </section>
 
 <section>
@@ -260,57 +263,118 @@ figure.captura figcaption { font-family: var(--mono); font-size: 8.5pt; color: v
     <caption>Inventario declarado</caption>
     <thead><tr><th>Herramienta</th><th>Rol en el proyecto</th></tr></thead>
     <tbody>
-      <tr><td>Claude Code (Anthropic)</td><td>Asistente de desarrollo en sesiones interactivas, con modelos de la familia Claude. Implementación, diagnóstico y redacción técnica.</td></tr>
+      <tr><td>Claude Code (Anthropic)</td><td>Asistente de desarrollo en sesiones interactivas, con modelos de la familia Claude. Análisis de repositorios, implementación, diagnóstico y redacción técnica.</td></tr>
       <tr><td>MCP chrome-devtools</td><td>Protocolo que le permite a la IA operar un Chrome real: medir geometría del DOM, muestrear animaciones, emular dispositivos táctiles y auditar con Lighthouse.</td></tr>
       <tr><td>Plugin claude-in-chrome</td><td>Validación visual en el navegador del equipo durante las revisiones conjuntas.</td></tr>
-      <tr><td>Lighthouse (CLI)</td><td>Auditoría de rendimiento, accesibilidad, buenas prácticas y SEO contra producción, en perfiles móvil y escritorio.</td></tr>
+      <tr><td>Lighthouse (CLI)</td><td>Auditoría de rendimiento, accesibilidad, buenas prácticas y SEO contra la build de producción, en perfiles móvil y escritorio.</td></tr>
       <tr><td>Plugin de Vercel</td><td>Apoyo sobre despliegue continuo y plataforma.</td></tr>
-      <tr><td>Memoria persistente</td><td>Preferencias y acuerdos de trabajo del equipo que la IA conserva entre sesiones (p.&nbsp;ej., autoría de los commits).</td></tr>
+      <tr><td>Memoria persistente</td><td>Preferencias y acuerdos de trabajo del equipo que la herramienta conserva entre sesiones, por ejemplo la autoría de los commits.</td></tr>
     </tbody>
   </table>
+  <p>Todas las herramientas se usaron con cuentas del equipo y sobre código propio. No se envió a
+  ningún servicio material de terceros ni datos personales de nadie.</p>
 </section>
 
 <section>
-  <h2><span class="n">03</span> Documentación IA-first: el uso es auditable</h2>
-  <p>El conocimiento del proyecto no vive en la conversación: vive <strong>versionado en el
-  repositorio</strong>, donde cualquiera puede auditarlo.</p>
+  <h2><span class="n">03</span> Los cuatro usos concretos</h2>
+  <p>El proyecto tuvo una etapa que en la mayoría de las propuestas no existe: comparar tres
+  implementaciones completas del mismo sitio antes de decidir cuál se presentaba. Esa etapa es
+  donde la IA aportó más, y conviene declararlo con precisión.</p>
   <ul class="lista">
-    <li><strong>AGENTS.md</strong>: la memoria técnica del proyecto. Reglas del sistema de diseño, arquitectura y una sección de «trampas ya pisadas» con 39 lecciones medidas, escrita para que ninguna sesión, humana o de IA, repita un error ya pagado.</li>
-    <li><strong>docs/</strong>: plan, estado y pendientes, el contexto que cada sesión retoma.</li>
-    <li><strong>Historial de commits</strong>: 32 commits en español que documentan qué se hizo, por qué, y con qué mediciones se verificó. La autoría es del equipo.</li>
+    <li><strong>Análisis de los tres repositorios.</strong> Lectura completa de los tres
+    prototipos y producción de un informe por cada uno, sección por sección, con el mecanismo
+    exacto de cada pieza, las trampas ya medidas y el costo estimado de trasladarla. Los tres
+    informes están versionados en el repositorio y son la evidencia de la decisión de
+    integración: cualquiera puede leer por qué se eligió lo que se eligió.</li>
+    <li><strong>Portado de código entre stacks.</strong> Traslado de piezas escritas en Astro y en
+    Vite al stack de la propuesta, traduciendo su CSS a los tokens del sistema y reemplazando sus
+    dependencias de animación por CSS nativo. El equipo definió qué se portaba; la herramienta hizo
+    el traslado y midió que el resultado se comportara igual.</li>
+    <li><strong>Implementación y medición.</strong> Escritura de código bajo especificación, y
+    medición en un navegador real: geometría del DOM en varios anchos, contrastes de color,
+    duración y estado de las animaciones.</li>
+    <li><strong>Redacción y documentación.</strong> Documentación técnica del repositorio,
+    mensajes de commit, esta declaración y la memoria descriptiva. El contenido lo fija el equipo;
+    la herramienta redacta y el equipo corrige.</li>
   </ul>
 </section>
 
 <section>
-  <h2><span class="n">04</span> Qué hizo la IA y qué hizo el equipo</h2>
-  <table>
-    <caption>IA: ejecución instrumentada</caption>
-    <tbody>
-      <tr><td>Implementación de código bajo especificación</td></tr>
-      <tr><td>Medición en navegador: cajas, contrastes, animaciones, bucles</td></tr>
-      <tr><td>Detección y diagnóstico de errores</td></tr>
-      <tr><td>Redacción técnica: documentación y mensajes de commit</td></tr>
-    </tbody>
-  </table>
-  <table>
-    <caption>Equipo: dirección y decisión</caption>
-    <tbody>
-      <tr><td>Especificación de cada sección y cambio de alcance</td></tr>
-      <tr><td>Dirección de diseño y validación visual final</td></tr>
-      <tr><td>Aprobación explícita previa a cada commit</td></tr>
-      <tr><td>Decisiones de contenido, orden y descartes</td></tr>
-    </tbody>
-  </table>
+  <h2><span class="n">04</span> Documentación auditable: el uso se puede verificar</h2>
+  <p>El conocimiento del proyecto no vive en una conversación que nadie puede revisar: vive
+  <strong>versionado en el repositorio</strong>.</p>
+  <ul class="lista">
+    <li><strong>Guía operativa del repositorio.</strong> Reglas del sistema de diseño,
+    arquitectura, convenciones y procedencia de cada sección, escritas para que ninguna sesión,
+    humana o asistida, repita un error ya pagado. Incluye un apartado de trampas ya pisadas con la
+    medición que las descubrió.</li>
+    <li><strong>Informes de integración.</strong> Un informe por prototipo, con las mediciones que
+    sostienen cada decisión de la fusión.</li>
+    <li><strong>Historial de commits.</strong> Mensajes en español que documentan qué se hizo, por
+    qué y con qué medición se verificó. La autoría de los commits es del equipo y la colaboración
+    de la herramienta queda asentada como coautoría en el propio mensaje, que es la forma estándar
+    de declararla en control de versiones.</li>
+  </ul>
 </section>
 
 <section>
-  <h2><span class="n">05</span> Límites y uso responsable</h2>
+  <h2><span class="n">05</span> Qué hizo la IA y qué hizo el equipo</h2>
+  <div class="dos-columnas">
+    <table>
+      <caption>IA: ejecución instrumentada</caption>
+      <tbody>
+        <tr><td style="white-space:normal">Análisis comparado de los tres repositorios</td></tr>
+        <tr><td style="white-space:normal">Portado de piezas entre stacks distintos</td></tr>
+        <tr><td style="white-space:normal">Implementación de código bajo especificación</td></tr>
+        <tr><td style="white-space:normal">Medición en navegador: cajas, contrastes y animaciones</td></tr>
+        <tr><td style="white-space:normal">Detección y diagnóstico de errores</td></tr>
+        <tr><td style="white-space:normal">Redacción técnica y documentación</td></tr>
+      </tbody>
+    </table>
+    <table>
+      <caption>Equipo: dirección y decisión</caption>
+      <tbody>
+        <tr><td style="white-space:normal">Concepto, identidad y dirección de diseño</td></tr>
+        <tr><td style="white-space:normal">Desarrollo original de los tres prototipos</td></tr>
+        <tr><td style="white-space:normal">Especificación de cada sección y del alcance</td></tr>
+        <tr><td style="white-space:normal">Decisión final de qué implementación se adopta</td></tr>
+        <tr><td style="white-space:normal">Validación visual y aprobación previa a cada commit</td></tr>
+        <tr><td style="white-space:normal">Decisiones de contenido, orden y descarte</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2><span class="n">06</span> Límites y uso responsable</h2>
   <ul class="lista">
-    <li><strong>Sin datos institucionales inventados sin marcar.</strong> Fechas, precios, expositores, noticias y auspiciantes son provisorios, están señalizados en el código y, cuando el dato podría tomarse por real, también en la interfaz («precio de referencia»). Ningún auspiciante corresponde a una empresa real.</li>
-    <li><strong>Sin imágenes generadas por IA.</strong> Los espacios visuales usan un patrón derivado del módulo geométrico del propio isologotipo hasta contar con fotografías institucionales.</li>
-    <li><strong>Marca sin modificaciones.</strong> La geometría de la «J» se extrajo del PDF oficial sin modificar un solo punto.</li>
-    <li><strong>Material de terceros con licencia.</strong> El video del inicio es de licencia libre.</li>
-    <li><strong>Honestidad funcional.</strong> Lo que exige backend no se simula: el formulario de pago se declara ilustrativo en pantalla y el envío de contacto compone un correo real.</li>
+    <li><strong>Sin imágenes generadas por IA.</strong> No hay una sola imagen generada por
+    inteligencia artificial en la propuesta. Los espacios que esperan fotografía institucional se
+    resuelven con un patrón derivado del módulo geométrico del propio isologotipo, que declara qué
+    va en cada lugar sin fingir que ya está.</li>
+    <li><strong>Sin fotografías de banco de imágenes.</strong> Tampoco se recurrió a fotografía de
+    archivo para rellenar.</li>
+    <li><strong>Marca sin modificaciones.</strong> La geometría de la «J» se extrajo del flujo
+    comprimido del PDF oficial y está sin modificar, para que sea verificable con una comparación
+    automática. De esa única fuente salen el logotipo, la máscara de la pantalla de carga y el
+    favicon.</li>
+    <li><strong>Sin datos institucionales inventados sin marcar.</strong> Fechas, sede, precios,
+    expositores, noticias, auspiciantes y canales de contacto son provisorios, están señalizados en
+    el código y, cuando el dato podría tomarse por real, también en la interfaz: los precios se
+    muestran como precio de referencia sujeto a confirmación. Ningún auspiciante corresponde a una
+    empresa real.</li>
+    <li><strong>Material de terceros con licencia verificada.</strong> Los iconos que provienen de
+    bibliotecas externas se usan bajo licencias permisivas, con su aviso transcrito en el registro
+    de licencias del repositorio. El video del inicio es de licencia libre. Un primer clip
+    candidato se descartó por tener marca de agua: quitarla habría sido sortear el mecanismo que
+    protege una licencia que ese material no tenía.</li>
+    <li><strong>Honestidad funcional.</strong> Lo que exige un servidor no se simula. El formulario
+    de contacto compone un correo real en el cliente del visitante en vez de mostrar un mensaje de
+    envío exitoso que no ocurrió.</li>
+    <li><strong>Nada se dio por bueno sin verificar.</strong> Todo lo que la herramienta produjo
+    pasó por tipos, lint, formato y build automáticos, y por validación humana en el navegador
+    antes de quedar registrado. Los números que se informan salen de mediciones sobre la página
+    real, y los que no se midieron sobre el sitio integrado se declaran como lo que son.</li>
   </ul>
 </section>
 

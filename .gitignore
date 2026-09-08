@@ -40,3 +40,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 reports/
+
+# Capturas y perfiles temporales de Chrome
+.cache/
