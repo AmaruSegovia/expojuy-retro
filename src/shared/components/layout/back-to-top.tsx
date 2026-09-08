@@ -38,10 +38,13 @@ export function BackToTop() {
       inert={!visible}
       aria-hidden={!visible}
       className={cn(
-        // Por debajo de 64rem la barra móvil ocupa los últimos 3.5rem del
-        // viewport: el botón se apoya arriba de ella (3.5rem + 1rem de aire)
-        // en vez de quedar pisado. De `lg` para arriba la barra no existe.
-        "fixed right-5 bottom-[calc(4.5rem_+_env(safe-area-inset-bottom))] z-[85] sm:right-8 lg:bottom-8",
+        // El botón se apoya arriba de la isla flotante en vez de quedar
+        // pisado. El alto de la isla NO está escrito acá: sale de
+        // `--espacio-barra-movil` (ver layout.css), que ya incluye su margen y
+        // el área segura del teléfono, y que vale cero de `lg` para arriba
+        // porque ahí la isla no existe. Por eso `lg:bottom-8` puede fijar su
+        // propia separación sin pelearse con ninguna cuenta.
+        "fixed right-5 bottom-[calc(var(--espacio-barra-movil)_+_0.75rem)] z-[85] sm:right-8 lg:bottom-8",
         "grid size-12 place-items-center rounded-full",
         "border border-border-strong bg-surface-overlay/90 text-text backdrop-blur-md",
         "hover:border-primary hover:bg-primary hover:text-on-primary",

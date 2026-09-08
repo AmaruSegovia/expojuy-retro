@@ -19,6 +19,30 @@
    --color-surface, su borde inverso es --color-border.
    ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   ESPACIO QUE RESERVA LA ISLA FLOTANTE
+
+   Lo que la barra móvil le come al viewport por abajo: su alto, el margen de
+   los dos costados y el área segura del teléfono. Lo leen el colchón del pie y
+   el botón de volver arriba, que tienen que quedar por encima de ella y no
+   pueden tener cada uno su propia cuenta.
+
+   A partir de 64rem la isla no existe y el espacio se hace CERO, así que
+   ninguno de los dos consumidores necesita su propia media query: el valor ya
+   trae adentro la decisión.
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root {
+  --espacio-barra-movil: calc(
+    var(--alto-barra-movil) + var(--margen-barra-movil) * 2 + env(safe-area-inset-bottom)
+  );
+}
+
+@media (min-width: 64rem) {
+  :root {
+    --espacio-barra-movil: 0px;
+  }
+}
+
 @layer components {
   /* ─────────────────────────────────────────────────────────────────────────
      1. ENCABEZADO
@@ -65,17 +89,27 @@
     pointer-events: none;
   }
 
-  /* Estado 2: velo. `color-mix` con 92% es casi opaco a propósito: el peor
-     caso es un titular grande pasando por detrás del texto del header, y con
-     menos velo pierde contraste. El pseudo-elemento va en z-index -1 para
-     quedar detrás del contenido del header pero dentro de su propio contexto
-     de apilado (nunca detrás del <body>: ese es el bug del footer). */
+  /* Estado 2: velo de vidrio esmerilado.
+
+     EL 70% ESTÁ MEDIDO CONTRA EL CONTRASTE, no elegido a ojo. Antes era 92%,
+     casi opaco, y a esa opacidad el `backdrop-filter` no se veía: desenfocaba
+     el 8% de señal que pasaba. Bajarlo deja ver el desenfoque de verdad, y el
+     piso lo pone el texto del encabezado. Con el velo mezclado contra blanco
+     puro -el peor caso es un titular claro pasando por detrás-,
+     `--color-text` da 6,62:1, holgado sobre los 4,5:1 que pide WCAG 1.4.3.
+
+     La isla flotante usa EXACTAMENTE esta misma receta -misma base, mismo 70%,
+     mismo radio- porque las dos son lo mismo: cromo sobre el contenido. Ver §4.
+
+     El pseudo-elemento va en z-index -1 para quedar detrás del contenido del
+     header pero dentro de su propio contexto de apilado (nunca detrás del
+     <body>: ese es el bug del footer). */
   .encabezado::before {
     content: "";
     position: absolute;
     inset: 0;
     z-index: -1;
-    background: color-mix(in srgb, var(--fondo-seccion) 92%, transparent);
+    background: color-mix(in srgb, var(--fondo-seccion) 70%, transparent);
     -webkit-backdrop-filter: blur(14px);
     backdrop-filter: blur(14px);
     border-bottom: 1px solid var(--color-border);
@@ -287,53 +321,269 @@
   }
 
   /* ─────────────────────────────────────────────────────────────────────────
-     4. BARRA MÓVIL
+     4. BARRA MÓVIL: ISLA FLOTANTE
 
-     Tres accesos y ninguno más, en la zona del pulgar: es la respuesta a
-     "alguien parado en el predio con una mano libre". Se apaga a 64rem, donde
-     la navegación completa ya está en el encabezado.
+     Tres accesos en la zona del pulgar, con Entradas al centro y elevado: es
+     la respuesta a "alguien parado en el predio con una mano libre". Se apaga
+     a 64rem, donde la navegación completa ya está en el encabezado.
+
+     POR QUÉ ISLA Y NO BARRA PEGADA AL BORDE
+
+     La versión anterior era una barra a sangre completa apoyada contra el
+     borde inferior, y en los teléfonos con navegación por gestos quedaba
+     pegada a la barra del sistema: dos filas de controles con distinto dueño y
+     sin nada que las separe. Despegarla del borde y redondearla resuelve eso,
+     y el área segura se sigue respetando aparte.
+
+     LAS MEDIDAS NO ESTÁN ACÁ. `--alto-barra-movil` y `--margen-barra-movil`
+     viven en globals.css porque las necesitan también el colchón del pie y el
+     botón de volver arriba. Ver el bloque `--espacio-barra-movil` de arriba.
      ───────────────────────────────────────────────────────────────────────── */
   .barra-movil {
+    /* El disco mide 2,75rem y los íconos de las casillas comunes 1,25rem, que
+       son los 20px del `size={20}` de lucide. La diferencia entre esos dos
+       números es lo único que necesita el disco para elevarse sin desalinear
+       los rótulos, así que se declaran una vez y acá.
+
+       `--casillas` lo lee el indicador para saber cuánto mide una casilla. Si
+       algún día la barra pasa a cuatro accesos, se cambia acá y en el array
+       del componente, y el indicador sigue cayendo justo. */
+    --disco: 2.75rem;
+    --icono-casilla: 1.25rem;
+    --casillas: 3;
+    --aire-isla: 0.25rem;
+
     position: fixed;
     inset-inline: 0;
-    inset-block-end: 0;
+    inset-block-end: calc(var(--margen-barra-movil) + env(safe-area-inset-bottom));
     /* Debajo del encabezado (80) y del botón de volver arriba (85), encima
-       del contenido (1). El diálogo no compite: vive en el top layer. */
+       del contenido (1). El diálogo del menú no compite: vive en el top layer. */
     z-index: 70;
-    background: var(--color-surface-overlay);
-    border-top: 1px solid var(--color-border);
-    /* El notch de los teléfonos con gestos. */
-    padding-block-end: env(safe-area-inset-bottom);
+    padding-inline: var(--margen-barra-movil);
+
+    /* El <nav> ocupa todo el ancho para poder CENTRAR la isla, pero la isla no
+       lo ocupa. Sin esto, la franja transparente que queda a los costados y la
+       que deja el disco al sobresalir se comerían toques destinados al
+       contenido de abajo. Los toques vuelven a existir solo sobre la píldora. */
+    pointer-events: none;
   }
 
-  .barra-movil ul {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+  .barra-movil__isla {
+    pointer-events: auto;
+    /* Es el bloque contenedor del indicador, que va absoluto. */
+    position: relative;
+    display: flex;
+    margin-inline: auto;
+    /* Arriba de esto la isla deja de leerse como un control para el pulgar. El
+       corte de la barra es 64rem, así que en una tablet en vertical la píldora
+       se queda en 26rem centrada en vez de estirarse a lo ancho. */
+    max-width: 26rem;
+    min-height: var(--alto-barra-movil);
+    padding-inline: var(--aire-isla);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-full);
+
+    /* VIDRIO ESMERILADO, CON LA MISMA RECETA QUE EL VELO DEL ENCABEZADO: misma
+       base, misma opacidad, mismo radio de desenfoque. Que sean idénticos no
+       es pereza, es la decisión: el encabezado y la isla son la MISMA COSA,
+       cromo flotando sobre el contenido, y el sitio tiene un solo vidrio en
+       lugar de dos parecidos que hay que mantener sincronizados a mano.
+
+       La primera versión usaba `--color-surface-overlay`, que es el escalón
+       que el sistema reserva para lo que se apoya encima (popover, dropdown,
+       el pie superpuesto). Sobre este fondo casi negro esa superficie leía
+       gris y polvorienta, y sobre todo leía DISTINTA del encabezado, que está
+       a diez centímetros de distancia en la misma pantalla. La elevación ya la
+       comunican el borde, la sombra y el disco que sobresale: no hace falta
+       además aclarar el relleno.
+
+       EL 70% ESTÁ MEDIDO. Con el fondo mezclado contra blanco puro -el peor
+       caso real es el texto del botón "Comprar" pasando por debajo-,
+       `--color-text` sobre esta base da:
+
+         60% → 4,49:1   FALLA por poco (el rótulo mide 12px, pide 4,5:1)
+         65% → 5,44:1   pasa
+         70% → 6,62:1   pasa con margen
+
+       Y por eso los rótulos van en `--color-text` y no en
+       `--color-text-muted`: el escalón apagado no llega a esta transparencia.
+
+       Sin `saturate()`: es un pase de filtro más sobre un elemento fijo
+       siempre visible, y sobre una superficie casi neutra no aporta nada. */
+    background: color-mix(in srgb, var(--color-surface-sunken) 70%, transparent);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+
+    /* Lo que despega la isla del contenido que le pasa por debajo. Los tres
+       valores salen de TOKENS y no de un negro literal: `surface-sunken` es el
+       fondo de página del sistema y `text` el claro más alto. La línea interna
+       de arriba es el brillo del canto, que es lo que le da espesor. */
+    box-shadow:
+      inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 8%, transparent),
+      0 12px 32px -12px color-mix(in srgb, var(--color-surface-sunken) 92%, transparent),
+      0 4px 12px -6px color-mix(in srgb, var(--color-surface-sunken) 80%, transparent);
   }
 
-  .barra-movil li + li {
-    border-inline-start: 1px solid var(--color-border);
+  /* La lista va por ENCIMA del indicador. El indicador es absoluto, o sea
+     posicionado, y sin esto se pintaría arriba de los íconos y los rótulos. */
+  .barra-movil__isla ul {
+    position: relative;
+    display: flex;
+    flex: 1;
+  }
+
+  .barra-movil li {
+    display: flex;
+    /* Las tres casillas miden EXACTAMENTE lo mismo, así que el disco queda en
+       el centro geométrico de la isla y el indicador puede posicionarse por
+       índice en vez de por píxeles medidos. `min-width: 0` impide que el
+       rótulo más largo se lleve más ancho que los otros. */
+    flex: 1 1 0;
+    min-width: 0;
   }
 
   .barra-movil a {
     display: flex;
+    flex: 1;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.25rem;
-    /* 3.5rem supera holgado los 44px de objetivo táctil de WCAG 2.5.5. */
-    min-height: 3.5rem;
-    padding-block: 0.5rem;
-    color: var(--color-text-muted);
-    transition: color var(--duration-micro) var(--ease-standard);
+    gap: 0.2rem;
+    /* La casilla entera es el objetivo táctil: 54px de alto por un tercio del
+       ancho de la isla. Supera los 44px de WCAG 2.5.5 sin engordar el dibujo. */
+    min-height: calc(var(--alto-barra-movil) - 2px);
+    border-radius: var(--radius-full);
+    color: var(--color-text);
+    transition: background-color var(--duration-micro) var(--ease-standard);
   }
 
   .barra-movil a:hover {
-    color: var(--color-text);
+    background: color-mix(in srgb, var(--color-text) 10%, transparent);
   }
 
-  .barra-movil :focus-visible {
-    outline-offset: -4px;
+  .barra-movil a:focus-visible {
+    outline-offset: -3px;
+  }
+
+  .barra-movil__rotulo {
+    /* 12px fijos. Con tres casillas el rótulo más largo -"Entradas"- mide 46px
+       contra los 98px que deja la casilla en un teléfono de 320px, así que no
+       hace falta el cuerpo fluido que sí necesitaba la versión de cinco. */
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.1;
+    /* Nunca se parte en dos líneas: la isla crecería de alto y el rótulo más
+       largo mandaría sobre los otros dos. */
+    white-space: nowrap;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     INDICADOR DE SECCIÓN ACTIVA
+
+     Una píldora que SE DESLIZA de casilla en casilla mientras se recorre la
+     página. Es la única marca de "estás acá" que tiene la barra.
+
+     POR QUÉ UNA FORMA QUE SE MUEVE Y NO UN CAMBIO DE COLOR
+
+     Dos razones, y las dos son duras. La primera es de contraste: sobre la
+     isla translúcida el cian de acento cae a 3,23:1 y un rótulo de 12px pide
+     4,5:1, así que pintar el activo de otro color no era una opción. La
+     segunda es WCAG 1.4.1: el color no puede ser el único indicador de estado.
+     La posición sí lo puede ser, y encima se ve mejor.
+
+     POR QUÉ SE POSICIONA POR ÍNDICE Y NO MIDIENDO EL DOM
+
+     Una casilla mide siempre un tercio del ancho útil, a cualquier viewport.
+     Con `translate` en porcentaje del propio ancho, el número que necesita el
+     CSS es apenas el índice, y no hay que medir nada al montar ni volver a
+     medir al rotar el teléfono. `translate` además se compone en GPU: la
+     animación no toca layout.
+     ───────────────────────────────────────────────────────────────────────── */
+  .barra-movil__indicador {
+    position: absolute;
+    /* El bloque contenedor de un absoluto es la CAJA DE RELLENO del ancestro
+       posicionado, así que `100%` incluye el aire de los dos costados y hay
+       que descontarlo para que la casilla dé exacta. */
+    inset-block: 0.3125rem;
+    inset-inline-start: var(--aire-isla);
+    width: calc((100% - var(--aire-isla) * 2) / var(--casillas));
+    translate: calc(var(--indice, 0) * 100%);
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, var(--color-text) 12%, transparent);
+    /* Arranca invisible: mientras se está en una sección que la barra no
+       lista, no hay nada que marcar y la píldora se va con un desvanecido en
+       vez de quedarse mintiendo sobre la última. */
+    opacity: 0;
+    transition:
+      translate var(--duration-control) var(--ease-standard),
+      opacity var(--duration-control) var(--ease-standard);
+  }
+
+  .barra-movil__isla[data-activo] .barra-movil__indicador {
+    opacity: 1;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     ACCESO DESTACADO
+
+     El disco sobresale por arriba del borde de la isla. La parte difícil no es
+     elevarlo, sino elevarlo SIN DESALINEAR LOS RÓTULOS: los tres tienen que
+     quedar sobre la misma línea o el conjunto se lee torcido.
+     ───────────────────────────────────────────────────────────────────────── */
+  .barra-movil__disco {
+    display: grid;
+    place-items: center;
+    inline-size: var(--disco);
+    block-size: var(--disco);
+    border-radius: var(--radius-full);
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+
+    /* DOS PROPIEDADES, DOS TRABAJOS DISTINTOS, y conviene no confundirlos.
+
+       El MARGEN NEGATIVO es el que alinea. Le devuelve a la fila exactamente
+       la diferencia de alto entre el disco y un ícono común, así que la
+       casilla del centro aporta el mismo alto que las otras dos y los tres
+       rótulos quedan sobre la misma línea sin compensar nada aparte. Toca el
+       layout, y por eso puede alinear.
+
+       El `translate` es el que eleva. Con el margen solo, el disco asoma 14px
+       de sus 44, que en un teléfono se lee como un error de alineación más que
+       como un botón elevado. Estos 6px extra lo llevan a 20px, o sea que queda
+       casi a la mitad. Es transform puro: NO toca el layout, así que la
+       alineación que consiguió el margen sigue intacta. */
+    margin-block-start: calc(var(--icono-casilla) - var(--disco));
+    translate: 0 -0.375rem;
+
+    box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--color-primary) 85%, transparent);
+    transition: background-color var(--duration-micro) var(--ease-standard);
+  }
+
+  /* En la casilla destacada el que reacciona es el disco, no el fondo de la
+     casilla: un rectángulo redondeado detrás de un disco de color plano se lee
+     como suciedad. */
+  .barra-movil a.barra-movil__destacado:hover {
+    background: transparent;
+  }
+
+  .barra-movil__destacado:hover .barra-movil__disco {
+    background: var(--color-primary-hover);
+  }
+
+  .barra-movil__destacado:active .barra-movil__disco {
+    background: var(--color-primary-active);
+  }
+
+  /* El foco tiene que rodear al disco, no a la casilla: el disco sobresale, y
+     un anillo rectangular que lo corta a media altura se lee como un error de
+     dibujo. Se mueve el anillo, no se elimina. */
+  .barra-movil a.barra-movil__destacado:focus-visible {
+    outline: none;
+  }
+
+  .barra-movil__destacado:focus-visible .barra-movil__disco {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 2px;
   }
 
   @media (min-width: 64rem) {
@@ -359,9 +609,16 @@
     padding-right: var(--ancho-barra-scroll, 0px);
   }
 
-  html.scroll-bloqueado .encabezado,
-  html.scroll-bloqueado .barra-movil {
+  html.scroll-bloqueado .encabezado {
     padding-right: var(--ancho-barra-scroll, 0px);
+  }
+
+  /* La isla se centra con `margin-inline: auto` dentro del <nav>, así que
+     compensarla es AGRANDAR su relleno derecho, no reemplazarlo: el margen que
+     la despega del borde tiene que sobrevivir a la compensación o la píldora
+     se corre contra el borde justo mientras el menú está abierto. */
+  html.scroll-bloqueado .barra-movil {
+    padding-right: calc(var(--margen-barra-movil) + var(--ancho-barra-scroll, 0px));
   }
 
   /* ─────────────────────────────────────────────────────────────────────────
@@ -383,18 +640,20 @@
   /* ─────────────────────────────────────────────────────────────────────────
      7. PIE
 
-     La barra móvil es `fixed` y tapa los últimos 3.5rem del viewport. El pie
+     La isla flotante es `fixed` y tapa la franja de abajo del viewport. El pie
      revelado queda anclado abajo, así que sin este colchón su línea legal
-     terminaría debajo de la barra.
+     terminaría debajo de la isla.
+
+     NO HAY MEDIA QUERY ACÁ, Y NO FALTA: `--espacio-barra-movil` ya vale cero a
+     partir de 64rem, que es donde la isla deja de existir. El corte está
+     escrito una sola vez, en la definición de la variable.
 
      ATENCION: este relleno ENTRA EN EL PRESUPUESTO DE ALTURA del pie. El
      efecto de revelado se apaga por debajo de 50rem de viewport (ver
      globals.css) porque un pie más alto que la pantalla no se puede alcanzar.
      Si el pie crece, hay que volver a medirlo y mover esos dos umbrales.
      ───────────────────────────────────────────────────────────────────────── */
-  @media (max-width: 63.999rem) {
-    .pie-sitio {
-      padding-block-end: calc(3.5rem + 1rem + env(safe-area-inset-bottom));
-    }
+  .pie-sitio {
+    padding-block-end: var(--espacio-barra-movil);
   }
 }

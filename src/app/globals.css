@@ -198,6 +198,18 @@
      mínimo de cada sección. Si se desincronizan, las secciones quedan
      cortadas o sobra un hueco. */
   --alto-nav: 4rem;
+
+  /* Geometría de la isla flotante de accesos rápidos (ver layout.css §4).
+     Están acá y no en layout.css por la misma razón que `--alto-nav`: hay
+     cuatro lugares que tienen que coincidir -la propia isla, el colchón del
+     pie, la altura del botón de volver arriba y el disco del QR, que se apoya
+     en el borde de la píldora- y ninguno puede tener su propio número.
+
+     3,5rem son 56px de alto útil: supera holgado los 44px de objetivo táctil
+     de WCAG 2.5.5 con el ícono y el rótulo adentro. El margen de 0,75rem es lo
+     que la despega del borde para que se lea como isla y no como barra. */
+  --alto-barra-movil: 3.5rem;
+  --margen-barra-movil: 0.75rem;
 }
 
 @media (min-width: 40rem) {
@@ -336,32 +348,51 @@
    Medido antes de compactarlo: 1061px de footer contra 870 de viewport dejaban
    sus primeros 191px inalcanzables para siempre.
 
-   DE DÓNDE SALEN LOS DOS UMBRALES
+   DE DÓNDE SALEN LOS UMBRALES
 
    Del alto real del footer medido en el navegador, que NO crece de forma
-   monótona con el ancho:
+   monótona con el ancho. Medición de septiembre de 2026, ya con el colchón de
+   la isla flotante y con el correo partido en dos líneas:
 
-     373px → 761 · 402px → 762 · 768px → 761 · 1024px → 604 · 1440px → 597
+     320px → 973 · 360px → 838 · 366px → 819 · 368px → 789 · 393px → 790
+     430px → 792 · 768px → 768 · 1024px → 572 · 1440px → 584
 
-   Por debajo de `lg` el contenido va apilado y el footer ronda los 760px; de
-   `lg` para arriba la fila se arma en horizontal y baja a ~600. De ahí los dos
-   umbrales, cada uno con margen sobre su peor caso. Si no llega, el footer
-   queda estático: se pierde el efecto, no el contenido.
+   Por debajo de `lg` el contenido va apilado y el footer ronda los 790px; de
+   `lg` para arriba la fila se arma en horizontal y baja a ~580. Si no llega, el
+   footer queda estático: se pierde el efecto, no el contenido.
+
+   POR QUÉ EL UMBRAL APILADO TAMBIÉN MIRA EL ANCHO
+
+   Hay un ESCALÓN entre 366px y 368px: abajo de ahí los rótulos de las nueve
+   secciones y los datos del evento pasan a dos líneas cada uno y el footer
+   salta de 789 a 819px, y sigue subiendo hasta 973 en 320px. Un `min-height`
+   solo no puede describir eso, porque el alto del footer depende del ANCHO.
+
+   Sin el guarda de ancho había un caso real y común que rompía: el Galaxy S20
+   reporta 360x800, o sea que entraba por `min-height: 50rem` con un footer de
+   838px y sus primeros 38px quedaban fuera de alcance para siempre. Con el
+   guarda, ese teléfono cae al footer estático, que es el modo correcto.
+
+   ATENCION: EL MARGEN ES DE 11px (789 contra 800) y antes era de 38. Se comió
+   la diferencia el colchón de la isla flotante (+8px) y el correo del footer
+   partido en dos líneas (+21px), que es lo que corrige el desborde horizontal.
+   Si el footer crece un renglón más, hay que volver a medir y subir el umbral.
    ═══════════════════════════════════════════════════════════════════════════ */
 @layer components {
   .footer-revelado {
     position: static;
   }
 
-  /* Apilado (< lg): peor caso medido 762px. */
-  @media (min-height: 50rem) {
+  /* Apilado (< lg): peor caso medido 792px, y solo a partir del escalón de
+     368px = 23rem. Ver arriba por qué el ancho también entra en la condición. */
+  @media (min-width: 23rem) and (min-height: 50rem) {
     .footer-revelado {
       position: sticky;
       bottom: 0;
     }
   }
 
-  /* En fila (≥ lg): peor caso medido 604px. */
+  /* En fila (≥ lg): peor caso medido 584px. */
   @media (min-width: 64rem) and (min-height: 42rem) {
     .footer-revelado {
       position: sticky;
@@ -396,6 +427,36 @@
   }
   .js [data-reveal="hidden"][data-reveal-from="right"] {
     translate: 2rem 0;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     BUG CORREGIDO: LA ENTRADA LATERAL DESBORDABA LA PÁGINA EN EL TELÉFONO
+
+     Un elemento que todavía no apareció está DESPLAZADO, y ese desplazamiento
+     cuenta para la región de scroll del documento. `from="right"` lo empuja
+     2rem hacia la derecha, así que mientras espera su turno vive 32px fuera
+     del contenedor. Medido en un viewport de 412px: la fila de la agenda
+     llegaba a 423px y el documento entero se podía arrastrar 11px.
+
+     Y en móvil eso no queda ahí. Cuando el documento desborda, el navegador
+     ENSANCHA el viewport de layout hasta el ancho desbordado, así que el
+     encabezado y la isla flotante -que son `fixed` con `inset-inline: 0`-
+     pasan a medir 423px en una pantalla de 412: la barra se ve descentrada y
+     su extremo derecho queda fuera de la pantalla.
+
+     LA CORRECCIÓN ES TAMBIÉN LA CORRECTA DE DISEÑO. Las únicas entradas
+     laterales del sitio son las dos de la fila de la agenda, y existen para
+     que las dos mitades converjan sobre el eje de la línea de tiempo. Ese eje
+     solo está en el medio a partir de 64rem: debajo la agenda es de UNA
+     columna y el empuje lateral no converge hacia ningún lado, es un temblor.
+     Así que no se recorta el desborde, se apaga el movimiento que no
+     corresponde y las dos entradas caen a la vertical, que es la del resto.
+     ───────────────────────────────────────────────────────────────────────── */
+  @media (max-width: 63.999rem) {
+    .js [data-reveal="hidden"][data-reveal-from="left"],
+    .js [data-reveal="hidden"][data-reveal-from="right"] {
+      translate: 0 2rem;
+    }
   }
 
   .js [data-reveal="shown"] {

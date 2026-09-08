@@ -1,5 +1,6 @@
 import { BrandMark } from "@/shared/components/brand/brand-mark";
 import { CONTACTO, NAV_SECTIONS, SITE, SOCIAL_LINKS } from "@/shared/constants/site";
+import { cn } from "@/shared/lib/cn";
 
 /**
  * Objetivo táctil de cada enlace del pie. `py-1` lo lleva a 24px de alto: en
@@ -43,10 +44,12 @@ const ENLACE =
  *    si es más alto que el viewport, su tope queda arriba del borde superior y
  *    no hay forma de llegar. Por eso el contenido va en dos columnas desde el
  *    teléfono y el relleno se suelta recién en `lg`. La red de seguridad son
- *    los dos umbrales de `.footer-revelado` en globals.css, medidos: peor caso
- *    762px apilado y 604px en fila. Si el pie crece, hay que volver a medir y
- *    mover esos umbrales. A ese presupuesto entra también el colchón para la
- *    barra móvil que agrega `.pie-sitio` en layout.css.
+ *    los umbrales de `.footer-revelado` en globals.css, medidos: peor caso
+ *    792px apilado -y solo de 368px de ancho para arriba, donde el pie deja de
+ *    crecer- y 584px en fila. Si el pie crece, hay que volver a medir y mover
+ *    esos umbrales. A ese presupuesto entran también el colchón para la isla
+ *    flotante que agrega `.pie-sitio` en layout.css y la segunda línea que
+ *    ocupa el correo al partirse.
  *
  * DE DÓNDE SALE LA COMPOSICIÓN
  *
@@ -64,6 +67,38 @@ const ENLACE =
  */
 export function SiteFooter() {
   const año = new Date().getFullYear();
+
+  /**
+   * ACÁ NACÍA EL DESBORDE HORIZONTAL DE TODO EL SITIO, y conviene dejar escrito
+   * el mecanismo porque no se ve leyendo el marcado.
+   *
+   * `grid-cols-2` compila a `repeat(2, minmax(0, 1fr))`, así que la columna no
+   * crece. Pero los ítems de una grilla llevan `min-width: auto`, que resuelve
+   * al TAMAÑO MÍNIMO POR CONTENIDO del ítem, y el mínimo por contenido de una
+   * palabra sin puntos de corte es la palabra entera. Medido en Chrome:
+   * "contacto@expojuy2026.com.ar" mide 204px contra una columna de 144px en un
+   * teléfono de 360px. El `<address>` se quedaba en 204px, pintaba fuera de su
+   * columna y esos píxeles entraban en la región de scroll del viewport.
+   *
+   * Y en móvil no queda ahí: cuando el documento desborda, Chrome ENSANCHA el
+   * viewport de layout hasta el ancho desbordado, así que el encabezado y la
+   * isla flotante -que son `fixed` con `inset-inline: 0`- pasaban a medir 416px
+   * en una pantalla de 393. De ahí que la página entera se pudiera arrastrar a
+   * la derecha mostrando una franja vacía.
+   *
+   * LA CORRECCIÓN SON DOS COSAS, y hacen falta las dos:
+   *
+   *   1. `<wbr />` después de la arroba: agrega un punto de corte donde la
+   *      dirección se parte bien, y baja el mínimo por contenido a "expojuy…",
+   *      que ya entra en la columna. Es el corte que se ve en un teléfono
+   *      normal.
+   *   2. `wrap-anywhere` (`overflow-wrap: anywhere`) como red: por debajo de
+   *      340px ni el dominio solo entra. Va este valor y no `break-word`
+   *      porque `break-word` NO cambia el tamaño mínimo por contenido, así que
+   *      el navegador seguiría midiendo el ítem como una palabra indivisible y
+   *      el desborde volvería exactamente igual.
+   */
+  const [usuario, dominio] = CONTACTO.email.split("@");
 
   return (
     <footer className="pie-sitio footer-revelado border-t-2 border-accent bg-surface-overlay">
@@ -118,8 +153,24 @@ export function SiteFooter() {
               <span>{SITE.venue}</span>
               <span className="font-semibold text-accent">{SITE.dates.label}</span>
               <span>
-                <a href={`mailto:${CONTACTO.email}`} className={ENLACE}>
-                  {CONTACTO.email}
+                <a
+                  href={`mailto:${CONTACTO.email}`}
+                  // EL `aria-label` REPARA LO QUE ROMPE EL `<wbr />`, no duplica
+                  // información. Detectado leyendo el árbol de accesibilidad de
+                  // Chrome, no el DOM: el `<wbr />` es un ELEMENTO, así que el
+                  // algoritmo de nombre accesible concatena los fragmentos que
+                  // separa metiendo un espacio, y la dirección se anunciaba como
+                  // "contacto@ expojuy2026.com.ar". El texto visible, el copiado
+                  // y el href siempre estuvieron bien; el defecto era solo del
+                  // nombre. Acá el nombre accesible vuelve a ser exactamente la
+                  // dirección, que además es el texto visible: WCAG 2.5.3 pide
+                  // justamente que coincidan.
+                  aria-label={CONTACTO.email}
+                  className={cn(ENLACE, "wrap-anywhere")}
+                >
+                  {usuario}@
+                  <wbr />
+                  {dominio}
                 </a>
               </span>
               <span>
