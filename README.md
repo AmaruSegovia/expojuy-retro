@@ -1,21 +1,42 @@
-# ExpoJuy 2026 - Prototipo navegable
+# ExpoJuy 2026 - Sitio integrado
 
-Propuesta para la **Primera Edición del Programa Provincial de Desafíos Tecnológicos**.
+Propuesta para la **Primera Edición del Programa Provincial de Desafíos Tecnológicos**,
+convocado por la Cámara de Comercio Exterior de Jujuy.
 Sitio institucional de ExpoJuy 2026 - _Conectando países, creando oportunidades_.
 
-> **Estado:** prototipo en desarrollo. El contenido textual, fechas y precios son
-> provisorios y están centralizados en [`src/shared/constants/site.ts`](src/shared/constants/site.ts)
-> para poder reemplazarlos en un solo lugar.
+> **Estado:** propuesta. El contenido textual, las fechas, la sede y los precios son
+> provisorios, porque el kit entregado por la organización solo incluye logotipos.
+> Están centralizados en [`src/shared/constants/site.ts`](src/shared/constants/site.ts)
+> para poder reemplazarlos en un solo lugar, y declarados como tales en la memoria
+> descriptiva.
 
 ## Cómo verlo
 
 | | |
-|---|---|
-| **Sitio** | **https://expojuy-prototipo.vercel.app** |
-| **Sistema de diseño** | [/sistema-de-diseno](https://expojuy-prototipo.vercel.app/sistema-de-diseno) - anexo técnico con la trazabilidad de cada token |
+| --- | --- |
+| **Sitio** | **https://expojuy-retro.vercel.app** |
+| **Sistema de diseño** | [/sistema-de-diseno](https://expojuy-retro.vercel.app/sistema-de-diseno), anexo técnico con la trazabilidad de cada token y su ratio de contraste |
+| **Memoria descriptiva** | [`docs/propuesta/ExpoJuy2026-MemoriaDescriptiva.pdf`](docs/propuesta/ExpoJuy2026-MemoriaDescriptiva.pdf) |
+| **Declaración de uso de IA** | [`docs/propuesta/ExpoJuy2026-DeclaracionIA.pdf`](docs/propuesta/ExpoJuy2026-DeclaracionIA.pdf) |
 
-Cada push a `main` despliega a producción automáticamente. No hace falta ningún
-paso manual ni credenciales para verlo: la URL es pública.
+La URL es pública: no hace falta instalación ni credenciales.
+
+## Qué es este repositorio
+
+No es un prototipo más. El equipo desarrolló **tres prototipos completos e
+independientes**, cada uno en un stack distinto y por un integrante distinto, se
+hizo un análisis comparado en profundidad de los tres, y este repositorio es la
+integración: para cada sección se adoptó la implementación que mejor resolvía el
+problema.
+
+| Prototipo | Autor | Stack | Rasgo dominante |
+| --- | --- | --- | --- |
+| [mockup-expojuy](https://github.com/AmaruSegovia/expojuy-2026) | Maru | Astro estático, CSS nativo | 3,2 KB de JavaScript total, plano isométrico del predio |
+| [expojuy-2026](https://github.com/IgnacioG04/expojuy-2026) | Nacho | Vite, React 19, CSS Modules | tema por sección, capa de movimiento con override del usuario |
+| [expojuy-prototipo](https://github.com/ch0ripain/expojuy-prototipo) | Leo | Next 16, Tailwind 4 | mejora progresiva sistemática, sistema de diseño medido |
+
+La procedencia sección por sección está en [`CLAUDE.md`](CLAUDE.md), y los tres
+informes de análisis completos en [`docs/integracion/`](docs/integracion/).
 
 ## Cómo correrlo
 
@@ -25,74 +46,62 @@ pnpm dev          # http://localhost:3000
 ```
 
 | Script | Qué hace |
-|---|---|
+| --- | --- |
 | `pnpm dev` | Servidor de desarrollo |
 | `pnpm build` | Build de producción |
-| `pnpm typecheck` | Genera los tipos de rutas de Next y corre `tsc --noEmit` |
-| `pnpm lint` | ESLint, incluidas las reglas de frontera de arquitectura |
-| `pnpm format` | Prettier sobre todo el proyecto |
-| `pnpm verify` | Las tres anteriores - lo mismo que corre el CI |
+| `pnpm start` | Sirve el build de producción |
+| `pnpm typecheck` | `next typegen` más `tsc --noEmit` |
+| `pnpm lint` | ESLint, incluidas las fronteras de arquitectura |
+| `pnpm format:check` | Prettier en modo verificación |
+| `pnpm verify` | Encadena typecheck, lint y formato |
+| `pnpm audit` | Lighthouse sobre el build de producción |
 
-## Stack
+## Calidad medida
 
-| Herramienta | Por qué |
-|---|---|
-| **Next.js 16** (App Router, Turbopack) | Renderizado en servidor, rutas tipadas y optimización de imágenes sin configuración |
-| **React 19** + React Compiler | Memoización automática: sin `useMemo`/`useCallback` a mano |
-| **Tailwind CSS 4** | Los tokens de diseño viven en CSS (`@theme`), no en un archivo de config JS |
-| **Lenis** | Scroll suave, degradado automáticamente con `prefers-reduced-motion` |
-| **Ambit** | Tipografía oficial provista por la organización, servida con `next/font/local` |
+Lighthouse sobre el build de producción, Chrome headless:
+
+| Perfil | Rendimiento | Accesibilidad | Buenas prácticas | SEO |
+| --- | --- | --- | --- | --- |
+| Móvil | 92 | 100 | 100 | 100 |
+| Escritorio | 100 | 100 | 100 | 100 |
+
+Chrome headless no hereda `prefers-reduced-motion` del sistema, así que la
+auditoría mide siempre el peor caso, con todas las animaciones activas.
 
 ## Arquitectura
 
-Vertical Slice sobre tres capas con dependencias **unidireccionales**:
+Vertical Slice sobre tres capas con dependencias unidireccionales:
 
 ```
-src/
-├── app/        Rutas. Capa de composición: ensambla features. Puede importar todo.
-├── features/   Slices verticales autocontenidos. NO se conocen entre sí.
-│   └── <feature>/{components,hooks,types,constants,data}
-└── shared/     Capa base transversal. No conoce a nadie por encima suyo.
-    └── {components,hooks,lib,fonts,constants,types}
+app/       composición. Solo rutas, ensambla features. Importa todo.
+features/  slices verticales autocontenidos. No se conocen entre sí.
+shared/    capa base transversal. No conoce a nadie por encima suyo.
 ```
 
-Esas fronteras **no son una convención documentada, son un test**: `eslint.config.mjs`
-las hace cumplir con `no-restricted-imports` por capa. Si un feature importa a otro,
-o si `shared/` importa un feature, el lint falla y el CI se pone en rojo.
+`eslint.config.mjs` convierte esa decisión en un invariante verificable: si un
+feature importa a otro, o si `shared/` mira hacia arriba, el lint falla y el CI se
+pone rojo. No es documentación, es un test.
 
-Dentro de un mismo feature se usan rutas relativas (`../components/X`); el alias
-`@/features/*` está prohibido dentro de `features/` justamente para que no se pueda
-colar una dependencia cruzada por descuido.
+El detalle completo del diseño transversal está en
+[`docs/system-design.md`](docs/system-design.md).
 
-## Sistema de diseño
+## Documentación
 
-Ningún valor de diseño fue elegido a ojo. La trazabilidad completa está comentada en
-[`src/app/globals.css`](src/app/globals.css) y se puede ver renderizada en `/sistema-de-diseno`.
+| Documento | Para qué sirve |
+| --- | --- |
+| [`CLAUDE.md`](CLAUDE.md) | Guía operativa: convenciones, procedencia por sección, reglas de código |
+| [`docs/system-design.md`](docs/system-design.md) | Decisiones transversales: color, movimiento, accesibilidad, responsive |
+| [`docs/integracion/`](docs/integracion/) | Los tres informes de análisis de los prototipos de origen |
+| [`AGENTS.md`](AGENTS.md) | Trampas medidas del prototipo base, heredadas |
 
-- **Colores de marca**: medidos por muestreo de píxeles sobre el logotipo oficial.
-- **Neutros**: generados en OKLCH al hue 297.8° - la media de los tres violetas de
-  marca - con croma mínimo. No son grises: están teñidos, extendiendo el criterio que
-  la propia marca ya aplica en su gris institucional (`#4B4B4D` cae en H=286.3°).
-- **Texto y bordes**: cada escalón se resolvió por búsqueda binaria hasta alcanzar su
-  ratio de contraste WCAG objetivo, no se eligió.
-- **Escala tipográfica**: modular fluida, razón 1.200 → 1.333, generada por script.
-- **Radios**: solo `0` y píldora. El isologotipo se construye con esquinas vivas y una
-  semicircunferencia; la ausencia del rango intermedio es deliberada.
+## Licencias
 
-## Accesibilidad
+Solo se usan recursos con licencia verificada, porque usar material sin licencia es
+causal de descalificación según las bases. Los pictogramas provienen de bibliotecas
+permisivas (Tabler, MIT; Lucide, ISC). El logotipo y la tipografía Ambit son
+propiedad de la organización y llegaron en el kit oficial: están para compilar este
+sitio, no para redistribuirse. No se usan fotografías de banco ni imágenes generadas
+por inteligencia artificial.
 
-Objetivo: Lighthouse ≥ 90 en todas las categorías, apuntando a 100.
-
-- Contraste verificado numéricamente en el sistema de diseño, no estimado.
-- Sobre fondo oscuro el violeta es color de relleno; los únicos acentos válidos para
-  texto son lavanda (7.83:1) y cian (9.02:1).
-- Anillo de foco en dos capas: un anillo de un solo color es invisible sobre el botón
-  primario (2.00:1).
-- `prefers-reduced-motion` respetado en CSS y en JS.
-- Las animaciones de aparición son **mejora progresiva**: el HTML se sirve visible y
-  el estado oculto vive detrás de una clase `.js`. Sin JavaScript, el contenido se ve.
-
-## Calidad
-
-Cada push corre en GitHub Actions: `typecheck` → `lint` → `format:check` → `build`.
-En local, Husky corre lint-staged en cada commit y `typecheck` antes de cada push.
+El video del inicio es material de maqueta y está señalado como tal en la memoria:
+corresponde reemplazarlo por una toma de la sede real.
