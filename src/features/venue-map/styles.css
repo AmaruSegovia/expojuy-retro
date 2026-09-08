@@ -26,12 +26,28 @@
   /* ─────────────────────────────────────────────────────────────────────────
      EL MARCO
 
-     EL PISO DE ANCHO NO ES ESTÉTICO, ES UNA COTA DE ACCESIBILIDAD. Los dos
-     marcadores más juntos quedan a 1,46 unidades uno de otro en la proyección.
-     Con áreas táctiles de 36px eso obliga a un marco de al menos 462px: por
-     debajo, dos áreas se tocan. Se redondea a 29,5rem y lo que no entra se
-     desplaza en horizontal, que es cómo se mira un mapa. La proporción cede
-     antes que la accesibilidad.
+     NO LLEVA ANCHO MÍNIMO, Y ESO ES UNA CORRECCIÓN, NO UN DESCUIDO.
+
+     Antes había `min-width: 29.5rem` con este argumento: los dos marcadores más
+     juntos quedan a 1,46 unidades y con áreas táctiles de 36px hacía falta un
+     marco de 462px. El número estaba mal. Recorriendo TODOS los ángulos
+     permitidos, el par más cercano es `stands-a` con `stands-b` y quedan a
+     0,930 unidades, no a 1,46. Con esa separación real:
+
+       marco 472px (el mínimo que se forzaba)  ->  21,9 px entre marcadores
+       para llegar a los 24px de WCAG 2.5.8    ->  harían falta 516 px
+       para llegar a los 36px que prometía     ->  harían falta 774 px
+
+     Es decir que el ancho mínimo no cumplía ninguna de las dos cotas, y a cambio
+     forzaba un scroll horizontal que en un teléfono se comía el gesto de giro:
+     al arrastrar para rotar, lo que se movía era el contenedor.
+
+     La separación no se arregla con ancho porque en un teléfono no hay ancho
+     suficiente. Se arregla con lo que ya existe: los mismos nueve lugares se
+     eligen desde el riel de tarjetas y se leen completos en la lista de texto de
+     abajo. El mapa es una de tres puertas a la misma información, no la única,
+     así que puede ceder precisión táctil en pantallas chicas sin dejar a nadie
+     afuera.
      ───────────────────────────────────────────────────────────────────────── */
   .plano-scroll {
     overflow-x: auto;
@@ -41,7 +57,6 @@
 
   .plano-marco {
     position: relative;
-    min-width: 29.5rem;
 
     /* Los cuatro tonos de la maqueta. Un solo criterio: color de marca sobre la
        superficie más clara del sistema. Los porcentajes suben con la jerarquía
@@ -80,13 +95,13 @@
   }
 
   /* `pan-y` deja pasar el scroll vertical de la página y reserva el horizontal
-     para el giro. Se declara SOLO donde la maqueta entra sin desplazamiento
-     horizontal: por debajo de 34rem el marco tiene su piso de 29,5rem y el
-     gesto horizontal le pertenece al scroll del mapa, no al giro. */
-  @media (min-width: 34rem) {
-    .js .plano-marco {
-      touch-action: pan-y;
-    }
+     para el giro. Va SIN consulta de medios: antes se declaraba solo a partir de
+     34rem, y por debajo de eso el arrastre horizontal se lo quedaba el scroll
+     del contenedor. En un teléfono eso significaba que la maqueta no se podía
+     girar, que es justamente donde más se la quiere girar. Sin ancho mínimo la
+     maqueta entra siempre, así que no hay scroll que disputar el gesto. */
+  .js .plano-marco {
+    touch-action: pan-y;
   }
 
   .plano-marco:focus-visible {
@@ -159,6 +174,18 @@
   .plano-punto:is(:hover, :focus-visible) .plano-cartel,
   .plano-punto[data-senalado] .plano-cartel {
     opacity: 1;
+  }
+
+  /* EL CARTEL VA POR ENCIMA DE LOS DEMÁS MARCADORES.
+     Los nueve botones son hermanos y se apilan por orden de documento, así que
+     el cartel de uno quedaba tapado por los puntos que vienen después: en el
+     predio los lugares están cerca y el rótulo cruza por arriba de tres o cuatro
+     vecinos. El marcador que muestra su cartel sube; el resto se queda. Es sobre
+     el BOTÓN y no sobre el cartel porque `z-index` compara dentro del mismo
+     contexto de apilado, y el del cartel es el botón. */
+  .plano-punto:is(:hover, :focus-visible),
+  .plano-punto[data-senalado] {
+    z-index: 2;
   }
 
   /* ─────────────────────────────────────────────────────────────────────────
