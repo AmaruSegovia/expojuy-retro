@@ -30,6 +30,8 @@ const PERFIL = path.join(ROOT, ".cache", "chrome-capturas");
 
 const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
 
+const CLAVE_LOADER = "expojuy:loader-visto";
+
 const ANCHO = 1280;
 const ALTO = 800;
 
@@ -134,11 +136,28 @@ async function main() {
       mobile: false,
     });
 
+    // LA PANTALLA DE CARGA SE SALTEA, NO SE ESPERA.
+    //
+    // El loader tapa la pantalla entera con el isologotipo sobre morado, y
+    // esperarlo con un temporizador fijo es frágil: con el servidor recién
+    // levantado la primera navegación tarda más y la foto sale del loader.
+    // El sitio ya tiene el mecanismo para no repetirlo, que es una marca en
+    // `sessionStorage`, así que se escribe esa marca una vez y a partir de ahí
+    // ninguna navegación lo muestra. Es el mismo camino que recorre cualquier
+    // visitante en su segunda vista, no un atajo inventado para la foto.
+    await cdp.enviar("Page.navigate", { url: ORIGEN });
+    await esperar(2000);
+    await cdp.enviar("Runtime.evaluate", {
+      expression: `sessionStorage.setItem(${JSON.stringify(CLAVE_LOADER)}, "1")`,
+    });
+
     for (const toma of TOMAS) {
       await cdp.enviar("Page.navigate", { url: ORIGEN });
-      // El loader de la primera visita tapa la pantalla: se espera a que
-      // termine y recién ahí se posiciona.
-      await esperar(4500);
+      // Sin la pantalla de carga de por medio, alcanza con darle aire a la
+      // hidratación. Preguntar por el estado desde acá no sirve: cada
+      // navegación destruye el contexto de ejecución y la consulta se evalúa
+      // contra uno que ya no existe.
+      await esperar(6000);
 
       await cdp.enviar("Runtime.evaluate", {
         expression: `

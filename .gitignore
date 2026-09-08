@@ -43,3 +43,5 @@ reports/
 
 # Capturas y perfiles temporales de Chrome
 .cache/
+
+.vercel

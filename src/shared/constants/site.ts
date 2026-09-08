@@ -20,8 +20,16 @@ export const SITE = {
     endISO: "2026-09-27",
     label: "24 al 27 de septiembre de 2026",
   },
-  /** URL de producción. Se sobreescribe con la de Vercel al desplegar. */
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://expojuy2026.vercel.app",
+  /**
+   * URL de producción. Gobierna el canonical, Open Graph, el sitemap y los
+   * datos estructurados, así que un valor equivocado acá no es cosmético: hace
+   * que el sitio se declare a sí mismo en un dominio que no existe.
+   *
+   * El valor por defecto es el dominio real donde está publicado. La variable
+   * de entorno queda para cuando la Cámara provea el dominio definitivo: se
+   * cambia ahí y no hace falta tocar código.
+   */
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://expojuy-retro.vercel.app",
   locale: "es_AR",
   description:
     "ExpoJuy 2026 reúne a la producción, la tecnología y la economía del conocimiento de Jujuy. " +
