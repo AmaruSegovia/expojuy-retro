@@ -135,6 +135,36 @@ const MS_VUELTA = 520;
  */
 const OPACIDAD_TAPADO = 0.4;
 
+/**
+ * Debajo de esta escala la maqueta nombra SOLO el lugar elegido.
+ *
+ * No es una preferencia de diseño, es que los nueve nombres no entran. El
+ * predio mide 8,5 x 18 unidades y en reposo se apoya en diagonal, que es su
+ * posición más ancha, así que el lienzo se dimensiona para 19,9 unidades de
+ * ancho. En un teléfono de 412 px eso deja la escala en 19,9 px por unidad,
+ * contra 45 en escritorio. La letra no acompaña esa reducción porque tiene piso
+ * de legibilidad en 11 px, así que pesa el doble sobre el dibujo:
+ *
+ *   escritorio   45,3 px/unidad   letra 13,6 px   =  0,30 unidades
+ *   celular      19,9 px/unidad   letra 11 px     =  0,61 unidades
+ *
+ * Y en números absolutos: nueve nombres suman unos 765 px de texto, que no
+ * entran en 412 px de ancho por más que se los acomode.
+ *
+ * El corte está en 27 px por unidad, donde la letra llega a 0,41 unidades: un
+ * 36 por ciento más gruesa que en escritorio, que es el límite en que los
+ * nombres todavía se separan. Debajo de eso el mapa nombra el lugar elegido y
+ * los otros ocho se leen donde ya estaban: el riel de tarjetas de abajo y la
+ * lista de lugares en texto.
+ *
+ * SE ELIGIÓ ESTO Y NO ACHICAR LA LETRA NI ACOTAR EL GIRO. Bajar de 11 px deja
+ * el texto ilegible justo donde más chico se ve. Apoyar el predio derecho y
+ * limitar el giro a 15 grados subiría la escala a 30,7 px por unidad y los
+ * nueve entrarían, pero a costa del giro libre en celular, que es lo que hace
+ * que la maqueta sirva de algo en un teléfono.
+ */
+const U_MINIMA_PARA_NUEVE = 27;
+
 const acotar = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
 
 /** Diferencia más corta entre dos ángulos, en el rango -180 a 180. */
@@ -554,10 +584,18 @@ export function useMaquetaCanvas({
       tinta.textAlign = "center";
       tinta.textBaseline = "middle";
       tinta.lineJoin = "round";
-      // El despeje va en PÍXELES y no en unidades del predio: separa el texto
-      // del punto del marcador, que mide 36px fijos y no se achica con la
-      // maqueta. Medido en unidades, en pantalla chica el punto se lo comía.
-      const despeje = Math.max(24, cuerpo * 2.2);
+      // EL DESPEJE ESCALA CON LA MAQUETA, CON UN PISO MEDIDO.
+      //
+      // Antes eran 24 px fijos, calculados contra los 36 px del área táctil del
+      // marcador. Pero el área táctil es invisible: lo que hay que esquivar es
+      // el punto dibujado, que mide 16 px de diámetro. Y 24 px fijos, en un
+      // teléfono, son 1,35 unidades del predio contra 0,53 en escritorio, así
+      // que cada nombre se despegaba de su edificio y todos caían en la misma
+      // franja horizontal.
+      //
+      // El piso de 17 px sale de sumar lo que de verdad hay que despejar: 8 de
+      // radio del punto, 5,5 de media letra y 3 de aire.
+      const despeje = Math.max(17, camara.u * 0.53);
 
       // Se resuelven primero las cajas de los nueve, en su posición fija.
       const cajas = GRUPOS_ROTULADOS.map((grupo) => {
@@ -590,9 +628,16 @@ export function useMaquetaCanvas({
       //
       // La atenuación es gradual, interpolando la opacidad cuadro a cuadro, así
       // que al girar los nombres se funden en vez de parpadear.
+      // EN PANTALLA CHICA SE NOMBRA SOLO EL LUGAR ELEGIDO.
+      // No es que se escondan los otros ocho: es que no entran. El porqué, con
+      // los números, está en `U_MINIMA_PARA_NUEVE`. El corte es por escala del
+      // dibujo y no por ancho de pantalla, porque lo que decide es cuánto pesa
+      // la letra sobre la maqueta, no cuántos píxeles mide el teléfono.
+      const rotulados = camara.u < U_MINIMA_PARA_NUEVE ? cajas.filter((c) => c.elegido) : cajas;
+
       const MONTE_MINIMO = 3;
-      for (const caja of cajas) {
-        const tapado = cajas.some((otra) => {
+      for (const caja of rotulados) {
+        const tapado = rotulados.some((otra) => {
           if (otra === caja || caja.elegido) return false;
           if (!otra.elegido && otra.z <= caja.z) return false;
           const solapeX = (otra.ancho + caja.ancho) / 2 - Math.abs(otra.x - caja.x);
@@ -610,7 +655,7 @@ export function useMaquetaCanvas({
       // De atrás hacia adelante: si un rótulo atenuado se pintara último, su
       // halo oscuro ensuciaría al que tiene delante. Pintando por opacidad
       // creciente, el que manda queda entero arriba.
-      const enOrden = [...cajas].sort(
+      const enOrden = [...rotulados].sort(
         (a, b) => (velo.current.get(a.grupo.id) ?? 1) - (velo.current.get(b.grupo.id) ?? 1),
       );
       for (const caja of enOrden) {
