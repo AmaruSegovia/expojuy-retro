@@ -1,3 +1,4 @@
+import { DatosEstructurados } from "./datos-estructurados";
 import { PageLoader } from "@/shared/components/brand/page-loader";
 import { ScrollProgress } from "@/shared/components/layout/scroll-progress";
 import { SiteHeader } from "@/shared/components/layout/site-header";
@@ -22,7 +23,7 @@ import { SponsorsSection } from "@/features/sponsors/components/sponsors-section
  * convención estética: `useActiveSection` recorre esa lista para marcar el
  * ítem del menú, y los enlaces del menú apuntan a estos `id`. Si las dos
  * listas se separan, el menú queda ordenado de una forma y el documento de
- * otra —ya pasó con Mapa y Noticias— y nadie avisa.
+ * otra -ya pasó con Mapa y Noticias- y nadie avisa.
  *
  * El número del copete de cada sección es su posición en NAV_SECTIONS. Es el
  * único dato duplicado que queda: vive escrito en cada feature porque forma
@@ -31,6 +32,7 @@ import { SponsorsSection } from "@/features/sponsors/components/sponsors-section
 export default function HomePage() {
   return (
     <>
+      <DatosEstructurados />
       <PageLoader />
       <ScrollProgress />
       <SiteHeader />
@@ -43,7 +45,7 @@ export default function HomePage() {
           transparente, el footer asomaría abajo todo el tiempo.
 
           Y el `relative z-[1]` es lo que lo pone por encima. La primera
-          versión lo resolvía al revés —el footer en `z-index: -10`— y el
+          versión lo resolvía al revés -el footer en `z-index: -10`- y el
           footer terminaba SIN PODER RECIBIR CLICKS: un z-index negativo se
           pinta antes que la caja del <body>, que no tapa nada a la vista
           porque su fondo se propaga al canvas, pero igual gana el hit-test.
@@ -73,7 +75,7 @@ export default function HomePage() {
         <ContactSection />
 
         {/* FRANJA DE CIERRE. No está en NAV_SECTIONS y por eso va sin copete
-            numerado — ver la invariante ahí. Va después de Contacto a
+            numerado - ver la invariante ahí. Va después de Contacto a
             propósito: separa el formulario del footer, que también lleva
             correo y redes, y hoy quedaban pegados repitiendo lo mismo.
 

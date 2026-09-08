@@ -12,13 +12,13 @@
  * literalmente "el porcentaje que falta", sin que ningún JavaScript tenga que
  * medir el path con getTotalLength() ni volver a hacerlo en cada resize.
  *
- * ⚠️ EL DEGRADADO VA EN userSpaceOnUse, Y NO ES UNA PREFERENCIA
+ * ATENCION: EL DEGRADADO VA EN userSpaceOnUse, Y NO ES UNA PREFERENCIA
  * `gradientUnits` vale `objectBoundingBox` por defecto: el degradado se mapea
  * sobre la caja del elemento pintado. La caja de una recta VERTICAL tiene
  * ancho CERO, y la especificación dice que un elemento con caja degenerada que
  * referencia un degradado en objectBoundingBox NO SE PINTA. No sale tenue ni
- * mal ubicado: no sale. Los puntos sí se veían —son fondo de CSS, no un
- * servidor de pintura de SVG— y esa asimetría es lo que delató el problema.
+ * mal ubicado: no sale. Los puntos sí se veían -son fondo de CSS, no un
+ * servidor de pintura de SVG- y esa asimetría es lo que delató el problema.
  *
  * En userSpaceOnUse las coordenadas del degradado son las del viewBox, así
  * que la caja del path deja de importar.
@@ -32,8 +32,8 @@
  *
  * POR QUÉ los colores van en `style` y no en atributos
  * `stop-color="var(--…)"` como atributo de presentación no resuelve de forma
- * confiable en todos los motores. Como propiedad CSS —que es lo que hace
- * `style`— sí. Los tokens del sistema no se duplican en hexadecimal.
+ * confiable en todos los motores. Como propiedad CSS -que es lo que hace
+ * `style`- sí. Los tokens del sistema no se duplican en hexadecimal.
  */
 
 const ID_DEGRADE = "agenda-linea-degrade";

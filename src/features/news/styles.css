@@ -1,0 +1,248 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   NOTICIAS - ver src/features/news/components/
+
+   Diseño de tarjeta del prototipo de Astro, carrusel del prototipo de Next.
+   Toda la paleta de origen quedó traducida a los tokens de globals.css: no
+   hay un solo color literal acá. El mapeo, para poder auditarlo:
+
+     --borde-fuerte  -> --color-border-strong   (filete de 2px de la tarjeta)
+     --borde         -> --color-border          (marco de la figura)
+     --text-titulo   -> --color-text
+     --text-cuerpo   -> --color-text-muted
+     --text-suave    -> --color-text-subtle     (línea de metadatos)
+     --text-accion   -> --color-link            (lavanda; sobre fondo oscuro
+                                                 el violeta es relleno, no
+                                                 acento de texto)
+     --surface-papel-2 -> --color-surface-raised (fondo de la figura)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@layer components {
+  /* ─────────────────────────────────────────────────────────────────────────
+     LOS DOS CAMINOS
+
+     El documento sale con la grilla completa. La clase `js` -que un script
+     inline del layout escribe en el <html> antes del primer pintado- es la
+     única que apaga la grilla y enciende el carrusel. Sin JavaScript quedan
+     las seis notas en grilla, que es el diseño de origen intacto.
+
+     El `display` va acá y NO como utilidad de Tailwind a propósito: las
+     utilidades viven en @layer utilities, que gana siempre, así que una clase
+     `hidden` o `grid` en el marcado dejaría estas reglas sin efecto en
+     silencio. Ninguno de estos elementos lleva utilidad de display.
+     ───────────────────────────────────────────────────────────────────────── */
+  .js .noticias-sin-js {
+    display: none;
+  }
+
+  html:not(.js) .noticias-carrusel {
+    display: none;
+  }
+
+  .noticias-grilla {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2rem;
+    margin-top: 3rem;
+  }
+
+  @media (width >= 48rem) {
+    .noticias-grilla {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1.5rem;
+    }
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     LA VENTANA DEL RIEL
+
+     El asomo de la tarjeta anterior y la siguiente se DESVANECE en vez de
+     cortarse a cuchillo: un `overflow: hidden` solo deja un borde que se lee
+     como el límite de una caja; con la máscara, el asomo se apaga y se lee
+     como que el listado sigue. El negro de la máscara no es un color del
+     sistema: una máscara lee el canal alfa, y ahí "negro" significa alfa 1.
+
+     `touch-action: pan-y` ES LA PIEZA QUE IMPIDE SECUESTRAR EL SCROLL. Con
+     esa declaración el navegador se queda con el desplazamiento vertical y lo
+     resuelve en su propio hilo, sin pasar por JavaScript; si el dedo arranca
+     hacia abajo, el flujo de punteros del arrastre se cancela solo. Es la
+     única forma de cumplir la restricción sin `preventDefault` sobre eventos
+     táctiles, que es justamente lo que la memoria del prototipo de Astro
+     prohíbe.
+     ───────────────────────────────────────────────────────────────────────── */
+  .noticias-carrusel__ventana {
+    overflow: hidden;
+    mask-image: linear-gradient(to right, transparent 0%, #000 10%, #000 90%, transparent 100%);
+    touch-action: pan-y;
+    cursor: grab;
+  }
+
+  .noticias-carrusel__ventana[data-arrastrando] {
+    cursor: grabbing;
+    /* Sin esto, arrastrar con el mouse selecciona el texto de las tarjetas y
+       el gesto termina dejando media noticia resaltada. */
+    user-select: none;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     LA TARJETA
+
+     `position: relative` NO ES DECORATIVO. Es el bloque contenedor del
+     `::after` de área completa que lleva el título cuando es enlace. La
+     trampa está en el carrusel: la PISTA lleva `translate`, y `translate`
+     crea bloque contenedor para los descendientes absolutos igual que
+     `transform`. Si la tarjeta no fuera un ancestro posicionado, ese
+     `::after` se resolvería contra la pista -que mide dieciocho tarjetas de
+     ancho- y el área clicable taparía la sección entera. Por eso el
+     `translate` va en la pista y NUNCA en el ítem ni en la tarjeta.
+
+     Hoy no hay ruta de detalle en un sitio de una sola página, así que el
+     título no es enlace: un enlace a ninguna parte es peor que ninguno. La
+     regla queda escrita porque lo que hay que cuidar es su condición, no su
+     presencia.
+     ───────────────────────────────────────────────────────────────────────── */
+  .noticia {
+    position: relative;
+    display: grid;
+    align-content: start;
+    gap: 0.5rem;
+    padding-top: 1rem;
+    border-top: 2px solid var(--color-border-strong);
+    transition: border-color var(--duration-micro) var(--ease-standard);
+  }
+
+  .noticia:hover,
+  .noticia:focus-within {
+    border-top-color: var(--color-link);
+  }
+
+  .noticia__titulo a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .noticia__titulo a::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+  }
+
+  /* La figura es el HUECO EXACTO donde va a ir la fotografía: la relación de
+     aspecto la reserva ella, no la imagen, así que el día que llegue la foto
+     el layout no se mueve un píxel. `overflow: hidden` es lo que recorta el
+     relleno cuando se levanta al señalar la nota. */
+  .noticia__figura {
+    position: relative;
+    aspect-ratio: 5 / 3;
+    margin-bottom: 0.5rem;
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface-raised);
+    overflow: hidden;
+  }
+
+  /* Se extiende TRES PÍXELES por debajo del marco, que son exactamente los
+     que sube al señalar la nota: así el borde inferior queda a ras en las dos
+     posiciones y nunca aparece una ranura de fondo. Se anima `translate` y no
+     `transform` para no pisar transformaciones de las utilidades, y porque es
+     de las pocas propiedades que el compositor resuelve sin recalcular
+     layout. `display: grid` sin más: el relleno es el único hijo y estira. */
+  .noticia__visual {
+    position: absolute;
+    inset: 0 0 -3px;
+    display: grid;
+    transition: translate var(--duration-control) var(--ease-standard);
+  }
+
+  .noticia:hover .noticia__visual,
+  .noticia:focus-within .noticia__visual {
+    translate: 0 -3px;
+  }
+
+  .noticia__titulo {
+    font-size: var(--text-lg);
+    line-height: var(--text-lg--line-height);
+    font-weight: 600;
+    /* Los títulos de nota son largos: apretar el interletrado un pelo evita
+       que el segundo renglón se abra respecto del cuerpo. */
+    letter-spacing: -0.008em;
+    color: var(--color-text);
+    text-wrap: balance;
+  }
+
+  .noticia__resumen {
+    font-size: var(--text-sm);
+    line-height: var(--text-sm--line-height);
+    color: var(--color-text-muted);
+    text-wrap: pretty;
+  }
+
+  /* Fecha y categoría separadas por un filete vertical, el mismo recurso que
+     ordena el resto del prototipo de origen. */
+  .noticia__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 0.75rem;
+    margin-top: 0.25rem;
+    font-size: var(--text-xs);
+    line-height: var(--text-xs--line-height);
+    color: var(--color-text-subtle);
+  }
+
+  .noticia__meta > * + * {
+    padding-inline-start: 0.75rem;
+    border-inline-start: 1px solid var(--color-border-strong);
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     LA TARJETA DENTRO DEL CARRUSEL, EN PANTALLA GRANDE
+
+     La tarjeta de origen es una columna: figura arriba y texto abajo. Ahí
+     vivía en una grilla de tres columnas, o sea a un tercio del ancho. Acá
+     ocupa el 80% del riel, que a 1024px son ~819px: con la figura apaisada
+     encima del texto, la tarjeta pasaba de 700px de alto y no entraba en una
+     pantalla de portátil junto con sus controles.
+
+     De 64rem para arriba las mismas cuatro piezas se acomodan en dos
+     columnas, figura a la izquierda. Es el mismo diseño en otra retícula, no
+     otro diseño: no cambia ni el orden del marcado ni una sola pieza.
+     ───────────────────────────────────────────────────────────────────────── */
+  @media (width >= 64rem) {
+    .noticias-carrusel .noticia {
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+      grid-template-rows: auto auto 1fr;
+      column-gap: 2rem;
+    }
+
+    .noticias-carrusel .noticia__figura {
+      grid-column: 1;
+      grid-row: 1 / span 3;
+      margin-bottom: 0;
+    }
+
+    .noticias-carrusel .noticia__titulo,
+    .noticias-carrusel .noticia__resumen,
+    .noticias-carrusel .noticia__meta {
+      grid-column: 2;
+    }
+
+    .noticias-carrusel .noticia__titulo {
+      font-size: var(--text-xl);
+      line-height: var(--text-xl--line-height);
+    }
+
+    .noticias-carrusel .noticia__resumen {
+      font-size: var(--text-base);
+      line-height: var(--text-base--line-height);
+    }
+  }
+
+  /* Con movimiento reducido la figura no se levanta. Quitar la animación no
+     debe quitar ninguna función, y acá no había ninguna: el levante es
+     énfasis puro. */
+  @media (prefers-reduced-motion: reduce) {
+    .noticia:hover .noticia__visual,
+    .noticia:focus-within .noticia__visual {
+      translate: none;
+    }
+  }
+}

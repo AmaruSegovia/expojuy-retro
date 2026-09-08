@@ -16,7 +16,7 @@ import {
 } from "../constants/entradas";
 
 /**
- * ENTRADAS — mitad píldoras de tipo de entrada, mitad collage; abajo, el riel
+ * ENTRADAS - mitad píldoras de tipo de entrada, mitad collage; abajo, el riel
  * de medios de pago.
  *
  * MEJORA PROGRESIVA: LOS TRES PANELES SE SIRVEN VISIBLES
@@ -157,7 +157,7 @@ export function TicketsSection() {
             ))}
           </div>
 
-          {/* COLLAGE — tres visuales inclinados y superpuestos.
+          {/* COLLAGE - tres visuales inclinados y superpuestos.
               PROVISORIO: sin fotografías institucionales todavía.
 
               Se esconde en pantallas chicas, como las franjas de Preguntas y
@@ -245,7 +245,7 @@ function Panel({
             maqueta sin advertencia es el único dato del sitio que alguien
             podría anotar y presupuestar. */}
         <p className="mt-1.5 text-xs text-text-subtle">
-          Precio de referencia — sujeto a confirmación de la organización
+          Precio de referencia - sujeto a confirmación de la organización
         </p>
 
         <p className="mt-5 text-base text-pretty text-text-muted">{t.para}</p>
@@ -276,7 +276,7 @@ function Panel({
 }
 
 /**
- * MODAL DE PAGO — ejemplo ilustrativo.
+ * MODAL DE PAGO - ejemplo ilustrativo.
  *
  * NO SIMULA UN CHECKOUT. El prototipo no tiene pasarela de pago, así que el
  * modal dice qué iría en su lugar en vez de pedir datos de tarjeta. Un
@@ -288,8 +288,8 @@ function Panel({
  *
  * `showModal()` trae resuelto, del navegador, todo lo que un modal a mano
  * suele hacer mal: el foco entra al abrir y VUELVE SOLO al botón que lo abrió
- * al cerrar, el resto de la página queda inerte —ni el tabulador ni el lector
- * de pantalla se escapan afuera—, Escape cierra, y el fondo se pinta con
+ * al cerrar, el resto de la página queda inerte -ni el tabulador ni el lector
+ * de pantalla se escapan afuera-, Escape cierra, y el fondo se pinta con
  * `::backdrop` sin agregar un elemento.
  *
  * LO ÚNICO QUE HAY QUE HACER A MANO ES FRENAR A LENIS. El scroll suave escucha
@@ -318,7 +318,7 @@ function ModalPago({ tipo, onCerrar }: { tipo: TipoEntrada | null; onCerrar: () 
     const dialogo = ref.current;
     if (!dialogo) return;
 
-    // `close` cubre los tres caminos —botón, Escape y click en el fondo—, así
+    // `close` cubre los tres caminos -botón, Escape y click en el fondo-, así
     // que reanudar el scroll y avisar hacia arriba se escribe una sola vez.
     const alCerrar = () => {
       lenis?.start();
@@ -346,7 +346,7 @@ function ModalPago({ tipo, onCerrar }: { tipo: TipoEntrada | null; onCerrar: () 
           Formulario de pago
         </h2>
         <p id="pago-desc" className="mt-3 text-sm text-pretty text-text-muted">
-          Acá irían los métodos de pago aceptados —transferencia, checkout de la pasarela— con el
+          Acá irían los métodos de pago aceptados -transferencia, checkout de la pasarela- con el
           detalle de la compra.
           {tipo ? ` Entrada ${tipo.nombre}, ${tipo.precio}.` : ""}
         </p>
@@ -425,7 +425,7 @@ function Lamina({
 function Medio({ nombre, duplicado }: { nombre: string; duplicado?: boolean }) {
   return (
     <li className="medios__item" aria-hidden={duplicado || undefined}>
-      {/* PROVISORIO — acá va el logotipo del medio de pago. Hasta que exista,
+      {/* PROVISORIO - acá va el logotipo del medio de pago. Hasta que exista,
           el nombre ocupa su lugar, que es además su futuro texto alternativo. */}
       <span className="grid h-14 place-items-center border border-border bg-surface-raised px-7 text-sm font-semibold text-text-muted">
         {nombre}

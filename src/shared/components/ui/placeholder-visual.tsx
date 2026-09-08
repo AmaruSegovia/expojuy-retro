@@ -3,7 +3,7 @@ import { cn } from "@/shared/lib/cn";
 /**
  * Visual provisorio, en lugar de una fotografía institucional.
  *
- * ⚠️ El kit entregado por la organización NO incluye fotografías. Esto ocupa
+ * ATENCION: El kit entregado por la organización NO incluye fotografías. Esto ocupa
  * su lugar hasta que existan. Reemplazar por <Image> cuando lleguen: quien lo
  * usa ya reserva la relación de aspecto, así que el cambio no mueve el layout.
  *

@@ -1,37 +1,44 @@
-"use client";
-
-import { ArrowLeft, ArrowRight } from "lucide-react";
-import { cn } from "@/shared/lib/cn";
 import { Reveal } from "@/shared/components/motion/reveal";
-import { PlaceholderVisual } from "@/shared/components/ui/placeholder-visual";
-import { useCarruselCircular } from "@/shared/hooks/use-carrusel-circular";
-import { NOTICIAS, type Noticia, fechaLarga } from "../constants/noticias";
+import { NOTICIAS } from "../constants/noticias";
+import { NoticiaTarjeta } from "./noticia-tarjeta";
+import { NoticiasCarrusel } from "./noticias-carrusel";
 
 /**
- * NOTICIAS — slider horizontal de tarjetas con asomo del 10%.
+ * NOTICIAS - tarjeta y grilla del prototipo de Astro, carrusel del de Next.
  *
- * La máquina de estados del ciclo vive en `useCarruselCircular`, en shared/:
- * la comparten esta sección, las láminas de "Sobre ExpoJuy" y el riel de
- * lugares del Mapa. Acá queda solo lo propio de Noticias, que es cómo se ve
- * una tarjeta.
+ * ES UN SERVER COMPONENT. El `"use client"` está una capa más abajo, en el
+ * carrusel, que es lo único con estado. La cabecera, la grilla de respaldo y
+ * la tarjeta se renderizan en el servidor y no cuestan bundle.
  *
- * Se ve UNA por vez con un pedazo de la anterior y la siguiente a los lados, y
- * la navegación da la vuelta en los dos sentidos sin saltos.
+ * MEJORA PROGRESIVA: SE SIRVEN LOS DOS CAMINOS, Y EL QUE MANDA ES EL ESTÁTICO
+ *
+ * El HTML sale con la grilla COMPLETA de seis notas, que es el diseño de
+ * origen tal cual y no un resumen de emergencia. La clase `js` -que un script
+ * inline del layout agrega al <html> antes del primer pintado- es la que
+ * apaga la grilla y enciende el carrusel. Si el JavaScript no corre, la clase
+ * nunca aparece, la regla nunca aplica y quedan las seis notas leíbles.
+ *
+ * Al revés no funcionaría: el carrusel monta la lista tres veces y muestra
+ * una tarjeta por vez, así que servirlo como estado por defecto dejaría
+ * dieciocho copias apiladas y cinco de seis noticias inalcanzables.
+ *
+ * POR QUÉ LA CABECERA CONSERVA EL COPETE NUMERADO
+ *
+ * Porque Noticias SÍ está en NAV_SECTIONS, en la séptima posición. El número
+ * es el mismo con el que el menú identifica la sección: quien llega desde el
+ * índice encuentra la misma marca. La sección de origen numeraba igual, con
+ * el número en una columna a la izquierda; acá se usa el copete del sistema
+ * de destino para no dejar una sola sección con otra cabecera.
+ *
+ * POR QUÉ LA APARICIÓN NO SE ESCALONA TARJETA POR TARJETA
+ *
+ * En el origen, la lista llevaba `data-revelar-grupo`, que reparte un `--i`
+ * por hijo directo y escalona el retardo. Un carrusel CLONA sus hijos -son
+ * dieciocho, no seis- y los reordena, así que ese conteo pierde sentido: el
+ * escalonado quedaría en tarjetas que nadie ve. La aparición se aplica al
+ * bloque, una sola vez.
  */
 export function NewsSection() {
-  const {
-    enRiel,
-    repetidos,
-    reacomodando,
-    desplazamiento,
-    posicion,
-    activo,
-    total,
-    mover,
-    irA,
-    alTerminarTransicion,
-  } = useCarruselCircular(NOTICIAS);
-
   return (
     <section
       id="noticias"
@@ -52,158 +59,18 @@ export function NewsSection() {
         </Reveal>
       </div>
 
-      {/* A sangre completa: el asomo de la tarjeta anterior y la siguiente
-          necesita ancho para leerse como que el listado sigue, y no como dos
-          tarjetas cortadas contra el borde de una caja. */}
-      <div className="relative mt-12">
-        {/* `min-w-0` NO es decorativo: un ítem de flex o grid trae
-            `min-width: auto` y se niega a achicarse por debajo de su contenido,
-            así que el riel repetido estiraría el contenedor y sacaría todo de
-            eje. El recorte de adentro no alcanza. */}
-        <div className="noticias-riel mx-auto max-w-5xl min-w-0 px-5 sm:px-10">
-          <ul
-            role="list"
-            className={cn(
-              "flex gap-4",
-              reacomodando
-                ? "transition-none"
-                : "transition-[translate] duration-scene ease-in-out-quint",
-            )}
-            style={{ translate: desplazamiento }}
-            onTransitionEnd={alTerminarTransicion}
-          >
-            {/* 4/5 exacto: el hook calcula el desplazamiento con ese mismo 80%,
-                así que cambiar el ancho acá y no allá descentra todo el riel. */}
-            {repetidos.map((n, i) => (
-              <li key={`${n.id}-${i}`} className="flex w-4/5 shrink-0">
-                <Tarjeta noticia={n} activa={i === enRiel} sinTransicion={reacomodando} />
-              </li>
-            ))}
-          </ul>
-        </div>
+      {/* CAMINO SIN JAVASCRIPT. Es el estado por defecto del documento. */}
+      <div className="container-content noticias-sin-js">
+        <ul role="list" className="noticias-grilla">
+          {NOTICIAS.map((n) => (
+            <li key={n.id}>
+              <NoticiaTarjeta noticia={n} />
+            </li>
+          ))}
+        </ul>
       </div>
 
-      <div className="container-content mt-8">
-        <div className="flex items-center justify-between gap-6">
-          {/* Los puntos: el punto visible mide 8px, pero el BOTÓN mide 24×24,
-              que es el mínimo de área táctil que pide WCAG 2.5.8. El riel va
-              sin `gap` porque el relleno lateral de cada botón ya separa. */}
-          <ul role="list" className="flex items-center">
-            {NOTICIAS.map((n, i) => {
-              const esActiva = i === activo;
-              return (
-                <li key={n.id}>
-                  <button
-                    type="button"
-                    aria-label={`Ir a ${n.titulo}`}
-                    aria-current={esActiva ? "true" : undefined}
-                    onClick={() => irA(i)}
-                    className="group grid h-6 place-items-center px-2"
-                  >
-                    <span
-                      className={cn(
-                        "h-2 rounded-full transition-all duration-control ease-standard",
-                        esActiva
-                          ? "w-8 bg-link"
-                          : "w-2 bg-border-strong group-hover:bg-text-subtle",
-                      )}
-                    />
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-
-          <div className="flex shrink-0 items-center gap-3">
-            <Flecha etiqueta="Noticia anterior" onClick={() => mover(posicion - 1)}>
-              <ArrowLeft className="size-4" aria-hidden="true" />
-            </Flecha>
-            <Flecha etiqueta="Noticia siguiente" onClick={() => mover(posicion + 1)}>
-              <ArrowRight className="size-4" aria-hidden="true" />
-            </Flecha>
-          </div>
-        </div>
-
-        {/* Se ANUNCIA pero no se ve: la tarjeta ya dice cuál es. Sin esto, mover
-            el riel no produce ningún efecto perceptible para un lector de
-            pantalla. */}
-        <p aria-live="polite" className="sr-only-focusable">
-          {`Noticia ${activo + 1} de ${total}: ${NOTICIAS[activo].titulo}`}
-        </p>
-      </div>
+      <NoticiasCarrusel />
     </section>
-  );
-}
-
-function Flecha({
-  etiqueta,
-  onClick,
-  children,
-}: {
-  etiqueta: string;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={etiqueta}
-      onClick={onClick}
-      className="grid size-11 place-items-center rounded-full border border-border-strong text-text-muted transition-colors duration-micro ease-standard hover:border-link hover:text-link"
-    >
-      {children}
-    </button>
-  );
-}
-
-function Tarjeta({
-  noticia: n,
-  activa,
-  sinTransicion,
-}: {
-  noticia: Noticia;
-  activa: boolean;
-  sinTransicion: boolean;
-}) {
-  return (
-    <article
-      // Solo la tarjeta activa participa del foco y del árbol de
-      // accesibilidad: sin esto, Tab se metería en las copias fuera de la vista
-      // y el foco desaparecería de la pantalla.
-      inert={!activa}
-      aria-hidden={activa ? undefined : true}
-      className={cn(
-        // La proporción cambia con el ancho porque la tarjeta ocupa SIEMPRE el
-        // 80% del riel: en escritorio eso son ~755px, y con 3/4 la tarjeta se
-        // iba a más de 1000px de alto. Parada en móvil, apaisada en grande.
-        "relative flex aspect-[4/5] w-full flex-col overflow-hidden border border-border bg-surface-raised sm:aspect-[4/3] lg:aspect-[16/9]",
-        sinTransicion ? "transition-none" : "transition-opacity duration-scene ease-in-out-quint",
-        // Las que asoman quedan atenuadas: el foco visual va a la activa y el
-        // asomo se lee como contexto, no como contenido a medio mostrar.
-        activa ? "opacity-100" : "opacity-30",
-      )}
-    >
-      <PlaceholderVisual paleta={n.paleta} className="absolute inset-0 size-full" />
-
-      {/* Velo. El texto va SOBRE la imagen y los rellenos son claros —la
-          lavanda llega al 73% de luminosidad—, así que sin esto el contraste no
-          está garantizado. Mismos cortes que la Agenda, donde se calcularon. */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 bg-gradient-to-b from-surface-sunken/0 from-25% via-surface-sunken/90 via-65% to-surface-sunken/98"
-      />
-
-      <div className="relative mt-auto p-6">
-        <p className="text-xs font-semibold tracking-[0.16em] text-accent uppercase">{n.tema}</p>
-        {/* Dos líneas el título y dos el copete, SIN puntos suspensivos:
-            `recorte-*` recorta con `text-overflow: clip`. Los textos de
-            `noticias.ts` están escritos cortos para que ni llegue a activarse. */}
-        <h3 className="mt-2 recorte-2 text-lg font-bold text-balance text-text">{n.titulo}</h3>
-        <p className="mt-2 recorte-2 text-sm text-pretty text-text-muted">{n.copete}</p>
-        <p className="mt-4 text-sm text-text-subtle">
-          <time dateTime={n.fecha}>{fechaLarga(n.fecha)}</time>
-        </p>
-      </div>
-    </article>
   );
 }

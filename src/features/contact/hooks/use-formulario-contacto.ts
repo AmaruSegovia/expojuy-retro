@@ -2,15 +2,16 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CONTACTO } from "@/shared/constants/site";
-import { ASUNTO_CORREO, CAMPOS, CLAVES_VALIDEZ, type CampoId } from "../constants/campos";
+import {
+  ASUNTO_CORREO,
+  CAMPOS,
+  CLAVES_VALIDEZ,
+  ORDEN_VALIDACION,
+  type CampoId,
+} from "../constants/campos";
 
 type Control = HTMLInputElement | HTMLTextAreaElement;
 type Errores = Partial<Record<CampoId, string>>;
-
-/** El orden en que se recorren los campos al validar: es el orden visual, así
- *  que "el primer campo con error" es el primero que se ve, no el primero que
- *  se declaró. */
-const ORDEN: CampoId[] = ["email", "telefono", "mensaje"];
 
 /**
  * Traduce el `ValidityState` de un control al mensaje que le corresponde.
@@ -20,16 +21,15 @@ function mensajeDeError(id: CampoId, control: Control): string | null {
   const { minimo, errores } = CAMPOS[id];
 
   // El largo mínimo se comprueba acá y no se delega en `tooShort`: esa entrada
-  // de ValidityState solo se activa si el valor fue editado por el usuario, y
+  // de ValidityState sólo se activa si el valor fue editado por el usuario, y
   // esa condición la hace invisible para cualquier automatización. Ver
-  // MINIMO_MENSAJE. Va ANTES del corto por `valid` justamente porque el
+  // MINIMO_MENSAJE. Va ANTES del corte por `valid` justamente porque el
   // navegador considera válido un valor que para nosotros es corto.
   const valor = control.value.trim();
 
   // Un `<textarea>` con tres espacios satisface `required`: el navegador mira
   // que el valor no esté vacío, no que diga algo. Para quien lo escribió está
-  // igual de vacío, así que lo tratamos como faltante. (Un `type="email"` sí
-  // recorta solo, por eso esto hace falta sobre todo en el mensaje.)
+  // igual de vacío, así que lo tratamos como faltante.
   if (control.required && valor.length === 0) {
     return errores.valueMissing ?? null;
   }
@@ -50,6 +50,15 @@ function mensajeDeError(id: CampoId, control: Control): string | null {
 /**
  * ESTADO Y VALIDACIÓN DEL FORMULARIO DE CONTACTO.
  *
+ * DOS CAPAS DE VALIDACIÓN, Y NINGUNA DEPENDE DE LA OTRA
+ *
+ * 1. CSS `:user-invalid`, que es lo que trae el prototipo de origen: engrosa
+ *    el borde del campo apenas la persona lo tocó y lo dejó mal. No necesita
+ *    JavaScript, así que es lo que queda si el script no corre.
+ * 2. Este hook, que agrega lo que el CSS no puede: `aria-invalid` y un mensaje
+ *    en texto con ícono. El color nunca es el único indicador (WCAG 1.4.1), y
+ *    un borde grueso sin texto no dice QUÉ está mal.
+ *
  * MEJORA PROGRESIVA: LA VALIDACIÓN NATIVA SE APAGA DESDE JAVASCRIPT
  *
  * `noValidate` NO se escribe como prop en el JSX. Si estuviera ahí, viajaría
@@ -59,8 +68,10 @@ function mensajeDeError(id: CampoId, control: Control): string | null {
  * el JavaScript esté vivo: si no corre, el atributo nunca aparece y el
  * navegador valida solo, con sus burbujas feas pero funcionando.
  *
- * Es la misma idea que el acordeón de Preguntas —el estado degradado es el que
- * se sirve— aplicada a un comportamiento en vez de a un contenido.
+ * Apagar la validación nativa NO apaga `:user-invalid`: `novalidate` sólo
+ * evita que el navegador bloquee el envío y muestre la burbuja, pero el
+ * control sigue siendo candidato a validación y su pseudoclase sigue
+ * aplicando. Las dos capas conviven.
  *
  * CUÁNDO SE MUESTRA UN ERROR
  *
@@ -83,7 +94,7 @@ export function useFormularioContacto() {
   const control = (id: CampoId) => refFormulario.current?.elements.namedItem(id) as Control | null;
 
   /**
-   * Revalida UN campo. Solo actúa si ya estaba marcado: la primera vez que se
+   * Revalida UN campo. Sólo actúa si ya estaba marcado: la primera vez que se
    * sale de un campo vacío no se lo señala, porque todavía no se intentó nada.
    */
   const revalidar = useCallback((id: CampoId) => {
@@ -107,7 +118,7 @@ export function useFormularioContacto() {
     const encontrados: Errores = {};
     let primerInvalido: Control | null = null;
 
-    for (const id of ORDEN) {
+    for (const id of ORDEN_VALIDACION) {
       const el = formulario.elements.namedItem(id) as Control | null;
       if (!el) continue;
       const mensaje = mensajeDeError(id, el);
@@ -130,15 +141,17 @@ export function useFormularioContacto() {
 
     const datos = new FormData(formulario);
     const texto = (id: CampoId) => String(datos.get(id) ?? "").trim();
-    const telefono = texto("telefono");
+    const empresa = texto("empresa");
 
-    // El cuerpo se arma acá y no coincide con el que produciría el envío
-    // nativo (`enctype="text/plain"`, que serializa "campo=valor"). Es la
+    // El cuerpo se arma acá y no coincide con el que produciría un envío
+    // nativo con `enctype="text/plain"`, que serializaría "campo=valor". Es la
     // única asimetría entre los dos caminos y es a favor: el nativo es la red
     // de seguridad, este es el que va a ver el 99% de la gente.
     const cuerpo = [
+      `Nombre: ${texto("nombre")}`,
+      empresa ? `Empresa u organismo: ${empresa}` : null,
       `Correo: ${texto("email")}`,
-      telefono ? `Teléfono: ${telefono}` : null,
+      `Motivo: ${texto("motivo")}`,
       "",
       texto("mensaje"),
     ]

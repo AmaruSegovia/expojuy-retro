@@ -5,7 +5,7 @@
  * Es importado tanto por el layout (Server Component) como por el page loader
  * (Client Component), y ese es justamente el motivo de que exista.
  *
- * Si estas constantes vivieran en el módulo del loader —que sí es cliente—, el
+ * Si estas constantes vivieran en el módulo del loader -que sí es cliente-, el
  * layout recibiría un *proxy de referencia de cliente* en vez del string, y al
  * interpolarlo en el script inline emitiría código roto. Ya pasó: el script
  * quedaba con `sessionStorage.getItem("function() { throw new Err...` y moría

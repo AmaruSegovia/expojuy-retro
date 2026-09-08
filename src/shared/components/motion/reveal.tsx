@@ -19,7 +19,7 @@ type RevealProps = {
 /**
  * Aparición al entrar en viewport.
  *
- * MEJORA PROGRESIVA — el estado oculto NO se aplica desde el servidor. El
+ * MEJORA PROGRESIVA - el estado oculto NO se aplica desde el servidor. El
  * HTML sale visible; la regla que lo oculta vive detrás de la clase `.js`
  * que un script inline agrega al <html> antes del primer pintado. Si el JS
  * no corre, la clase nunca aparece, la regla nunca aplica y el contenido se

@@ -17,7 +17,7 @@ import { cn } from "@/shared/lib/cn";
  * POR QUÉ EL POSTER ES UNA <Image> APARTE Y NO EL ATRIBUTO `poster`
  * Con `poster` el navegador sirve el JPEG tal cual. Como imagen de Next, en
  * cambio, pasa por el optimizador y llega en AVIF/WebP, bastante más liviana.
- * Además puede marcarse `priority`, así es ella —y no el video— la que define
+ * Además puede marcarse `priority`, así es ella -y no el video- la que define
  * el LCP.
  *
  * El video se monta con `src` vacío y solo empieza a cargar después de que la

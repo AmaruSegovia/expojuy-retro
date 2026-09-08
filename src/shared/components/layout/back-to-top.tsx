@@ -38,7 +38,10 @@ export function BackToTop() {
       inert={!visible}
       aria-hidden={!visible}
       className={cn(
-        "fixed right-5 bottom-5 z-[85] sm:right-8 sm:bottom-8",
+        // Por debajo de 64rem la barra móvil ocupa los últimos 3.5rem del
+        // viewport: el botón se apoya arriba de ella (3.5rem + 1rem de aire)
+        // en vez de quedar pisado. De `lg` para arriba la barra no existe.
+        "fixed right-5 bottom-[calc(4.5rem_+_env(safe-area-inset-bottom))] z-[85] sm:right-8 lg:bottom-8",
         "grid size-12 place-items-center rounded-full",
         "border border-border-strong bg-surface-overlay/90 text-text backdrop-blur-md",
         "hover:border-primary hover:bg-primary hover:text-on-primary",

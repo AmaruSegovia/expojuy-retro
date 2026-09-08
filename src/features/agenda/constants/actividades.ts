@@ -1,7 +1,7 @@
 /**
  * Programa de actividades de ExpoJuy 2026.
  *
- * ⚠️ CONTENIDO PROVISORIO. La organización todavía no entregó el cronograma:
+ * ATENCION: CONTENIDO PROVISORIO. La organización todavía no entregó el cronograma:
  * el kit incluye solo logotipos y tipografías. Títulos, horarios, descripciones
  * y expositores son de maqueta y deben reemplazarse antes de publicar.
  *
@@ -15,7 +15,7 @@
  * provisorias. Están acá en ISO y no como texto suelto para que <time> pueda
  * exponerlas legibles por máquina.
  *
- * ⚠️ LARGO DEL TEXTO. La tarjeta muestra el título en UNA línea y la
+ * ATENCION: LARGO DEL TEXTO. La tarjeta muestra el título en UNA línea y la
  * descripción en TRES como máximo; de eso se encarga el CSS, que recorta con
  * puntos suspensivos si hace falta. Para que hoy no recorte nada, estos textos
  * provisorios están escritos cortos: hasta ~31 caracteres el título y ~78 la

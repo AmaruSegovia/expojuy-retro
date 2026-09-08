@@ -1,7 +1,7 @@
 /**
  * Fuentes del video de fondo del hero.
  *
- * ⚠️ PROVISORIO — el clip actual es una aérea nocturna de una ciudad de EE.UU.
+ * ATENCION: PROVISORIO - el clip actual es una aérea nocturna de una ciudad de EE.UU.
  * (licencia libre, sin marca de agua). Sirve para maquetar, pero antes de la
  * entrega debe reemplazarse por material de la Ciudad Cultural de Jujuy:
  * "identidad institucional" es criterio de evaluación explícito.
@@ -25,7 +25,7 @@
  *
  * Las palabras de la IZQUIERDA no son inventadas: son los valores que la
  * organización declara en las consignas técnicas del desafío. Lo de la
- * DERECHA sí es ⚠️ PROVISORIO — baja cada valor abstracto a algo concreto que
+ * DERECHA sí es ATENCION: PROVISORIO - baja cada valor abstracto a algo concreto que
  * el visitante pueda imaginar, pero hay que reemplazarlo por lo que la expo
  * realmente vaya a tener.
  *

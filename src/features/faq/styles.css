@@ -1,0 +1,97 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   ACORDEÓN DE PREGUNTAS - ver src/features/faq/components/acordeon.tsx
+
+   ANIMAR HASTA "ALTO AUTOMÁTICO" SIN MEDIR NADA
+
+   El panel es una grilla de una sola fila que va de `0fr` a `1fr`, con el hijo
+   en `overflow: hidden`. Se anima `grid-template-rows` y no `height`, así no
+   hay que medir el contenido con JavaScript ni volver a medirlo cuando cambie:
+   la respuesta puede ocupar dos renglones o diez y el cierre sigue siendo el
+   mismo. Cero JavaScript de animación.
+
+   EL ESTADO DE REPOSO ES "ABIERTO"
+
+   Todo lo que pliega vive detrás de `.js`, la clase que un script inline
+   agrega al <html> antes del primer pintado. Sin JavaScript las seis
+   respuestas se ven, que es la regla de mejora progresiva del sitio.
+
+   POR QUÉ `visibility` Y NO EL ATRIBUTO `hidden`
+
+   El original marcaba el panel cerrado con `hidden` y enseguida lo anulaba con
+   `.panel[hidden] { display: grid }`, porque `display: none` no admite
+   transición. El resultado era un panel que volvía al árbol de accesibilidad:
+   recortado a cero píxeles de alto, pero legible para un lector de pantalla.
+   O sea que las respuestas cerradas se seguían leyendo.
+
+   `visibility` resuelve las dos cosas de una vez: saca el panel del árbol de
+   accesibilidad y del recorrido del teclado, y ADEMÁS admite transición. Se
+   interpola por pasos con una regla útil: cualquier valor intermedio cuenta
+   como `visible`, así que al cerrar el panel se mantiene visible durante toda
+   la transición y desaparece recién al final, mientras que al abrir aparece en
+   el primer fotograma. Es exactamente el orden que hace falta.
+
+   MOVIMIENTO REDUCIDO: no hace falta ninguna regla acá. La capa base de
+   globals.css ya fuerza `transition-duration: 0.01ms !important` bajo
+   `prefers-reduced-motion`, así que el panel abre y cierra de golpe. Quitar la
+   animación nunca quita el contenido: se sigue pudiendo abrir.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+  .acordeon__panel {
+    display: grid;
+    /* Valor de reposo: abierto. */
+    grid-template-rows: 1fr;
+  }
+
+  .acordeon__contenido {
+    /* Lo que recorta la respuesta mientras la fila se colapsa. */
+    overflow: hidden;
+  }
+
+  .js .acordeon__panel {
+    transition:
+      grid-template-rows var(--duration-control) var(--ease-standard),
+      visibility var(--duration-control) var(--ease-standard);
+  }
+
+  .js .acordeon__item:not([data-abierta]) .acordeon__panel {
+    grid-template-rows: 0fr;
+    visibility: hidden;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     EL SIGNO. Dos barras cruzadas: la horizontal siempre, la vertical solo
+     cuando la pregunta está cerrada. Abrir gira la vertical hasta apoyarla
+     sobre la otra, así que el más se convierte en un menos sin cambiar de
+     figura. En reposo -sin JavaScript- las dos están acostadas, que es
+     coherente con los paneles abiertos.
+     ───────────────────────────────────────────────────────────────────────── */
+  .acordeon__icono {
+    position: relative;
+    /* `flex: none` porque el botón es flex y una pregunta larga, si no, le
+       come el ancho al signo hasta hacerlo desaparecer. */
+    flex: none;
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .acordeon__icono::before,
+  .acordeon__icono::after {
+    content: "";
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: 1rem;
+    height: 2px;
+    /* Hereda el color del botón, así que acompaña el hover sin repetir el
+       token ni fijar un color propio. */
+    background: currentColor;
+    translate: -50% -50%;
+  }
+
+  .js .acordeon__icono::after {
+    transition: rotate var(--duration-control) var(--ease-standard);
+  }
+
+  .js .acordeon__item:not([data-abierta]) .acordeon__icono::after {
+    rotate: 90deg;
+  }
+}

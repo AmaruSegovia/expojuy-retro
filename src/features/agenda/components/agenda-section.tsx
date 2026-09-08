@@ -8,7 +8,7 @@ import { ActividadFila } from "./actividad-fila";
 import { LineaTiempo } from "./linea-tiempo";
 
 /**
- * Agenda de actividades — línea de tiempo que se dibuja al scrollear.
+ * Agenda de actividades - línea de tiempo que se dibuja al scrollear.
  *
  * LA LÍNEA ES UN EJE, NO UN ADORNO. `--eje` guarda su posición horizontal y
  * la heredan los dos que tienen que coincidir con ella: el SVG y los nodos de
@@ -55,9 +55,9 @@ export function AgendaSection() {
               EL ALTO VA EXPLÍCITO, NO CON `bottom-0`. Un <svg> con viewBox y
               sin alto declarado es un elemento reemplazado con proporción
               intrínseca: con `height: auto` el navegador usa su alto
-              intrínseco e IGNORA `bottom`. Se detectó midiendo el DOM —la
+              intrínseco e IGNORA `bottom`. Se detectó midiendo el DOM -la
               línea medía 1000px, el alto del viewBox, contra los 3611px de la
-              lista— y en una captura habría pasado por un detalle de estilo. */}
+              lista- y en una captura habría pasado por un detalle de estilo. */}
           <LineaTiempo className="absolute top-6 left-[var(--eje)] h-[calc(100%-1.5rem)] w-6 -translate-x-1/2" />
 
           {ACTIVIDADES.map((actividad, i) => (

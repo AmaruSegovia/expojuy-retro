@@ -31,7 +31,7 @@ const ETIQUETA_CATEGORIA: Record<Punto["categoria"], string> = {
 };
 
 /**
- * MAPA — plano del predio con un riel de lugares y el recorrido desde el acceso.
+ * MAPA - plano del predio con un riel de lugares y el recorrido desde el acceso.
  *
  * UN SOLO ESTADO PARA DOS CONTROLES. El plano y el riel no se sincronizan
  * entre sí: los dos leen la misma posición. Tocar un punto del plano mueve el
@@ -42,7 +42,7 @@ const ETIQUETA_CATEGORIA: Record<Punto["categoria"], string> = {
  * primera se avanza uno hacia adelante, no ocho hacia atrás: el destino se
  * calcula como diferencia CON SIGNO sobre el anillo.
  *
- * CÓMO SE LOGRA EL CICLO SIN SALTOS — mismo mecanismo que "Sobre ExpoJuy": el
+ * CÓMO SE LOGRA EL CICLO SIN SALTOS - mismo mecanismo que "Sobre ExpoJuy": el
  * riel monta la lista tres veces y trabaja sobre la copia del medio. La
  * posición puede salirse del rango; al terminar la transición se normaliza y
  * el riel se recoloca, y ese reacomodo es invisible porque muestra la misma
@@ -276,8 +276,8 @@ function Tarjeta({
     >
       <PlaceholderVisual paleta={punto.paleta} className="absolute inset-0 size-full" />
 
-      {/* Velo. El texto va SOBRE la imagen y los rellenos son claros —lavanda
-          llega al 73% de luminosidad—, así que sin esto el contraste no está
+      {/* Velo. El texto va SOBRE la imagen y los rellenos son claros -lavanda
+          llega al 73% de luminosidad-, así que sin esto el contraste no está
           garantizado. Mismos cortes que la Agenda, donde se calcularon. */}
       <div
         aria-hidden="true"
@@ -312,8 +312,8 @@ function Tarjeta({
  * leía pesado y los bordes parecían recortes, no trazos.
  *
  * Ahora manda el TRAZO. Todo se dibuja con líneas finas de lavanda a distintas
- * opacidades —una sola familia de color, así el conjunto se lee como un sistema
- * y no como piezas sueltas— y el relleno es apenas un velo donde hace falta
+ * opacidades -una sola familia de color, así el conjunto se lee como un sistema
+ * y no como piezas sueltas- y el relleno es apenas un velo donde hace falta
  * distinguir una masa. La jerarquía la da la opacidad del trazo, no el peso:
  * naves 0.5, stands 0.4, servicios 0.28.
  *
@@ -366,7 +366,7 @@ function Plano({ ruta, destino }: { ruta: [number, number][] | null; destino: st
     >
       <defs>
         {/* Todo lo de adentro se recorta contra el contorno. Sin esto las masas
-            verdes —que son polígonos aproximados— se derraman fuera de la
+            verdes -que son polígonos aproximados- se derraman fuera de la
             parcela y el plano parece mal dibujado. */}
         <clipPath id="recorte-parcela">
           <polygon points={PARCELA.map((p) => p.join(",")).join(" ")} />

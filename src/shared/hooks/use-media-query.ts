@@ -15,7 +15,7 @@ import { useCallback, useMemo, useSyncExternalStore } from "react";
  * QUÉ DEVUELVE EL SERVIDOR
  *
  * `false`. No hay viewport en el servidor, así que se emite la variante más
- * chica —mobile first— y `useSyncExternalStore` corrige en el cliente si la
+ * chica -mobile first- y `useSyncExternalStore` corrige en el cliente si la
  * pantalla es más grande. El HTML servido sigue siendo válido y completo: la
  * corrección cambia la disposición, nunca el contenido.
  */

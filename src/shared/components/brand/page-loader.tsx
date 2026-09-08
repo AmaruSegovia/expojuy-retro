@@ -73,7 +73,7 @@ export function PageLoader() {
   return (
     <div
       // Sin `grid place-items-center`: ese layout lo define .page-loader en
-      // globals.css. Ver el comentario ahí — usar utilidades acá haría que
+      // globals.css. Ver el comentario ahí - usar utilidades acá haría que
       // ningún `display: none` pudiera ocultarlo (las capas ganan a la
       // especificidad).
       className="page-loader fixed inset-0 z-[200]"

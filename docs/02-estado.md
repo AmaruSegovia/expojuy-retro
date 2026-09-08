@@ -1,4 +1,4 @@
-# Estado — ExpoJuy 2026
+# Estado - ExpoJuy 2026
 
 > Actualizado: 8 de septiembre de 2026. Cierre el 8 a las 23:59.
 
@@ -41,8 +41,8 @@ loader de 3.1s con la "J" y salida tipo intro de Los Simpsons.
 El footer va `sticky` contra el borde inferior con z-index negativo, tapado
 por el fondo opaco de `main`; al terminar el documento el borde de main sube y
 lo destapa. El recorrido del efecto es exactamente el alto del footer, así que
-no hay altura que reservar ni número mágico. Antes se intentaba al revés —la
-última sección fijada y el footer subiendo a taparla— y no funcionaba; el
+no hay altura que reservar ni número mágico. Antes se intentaba al revés -la
+última sección fijada y el footer subiendo a taparla- y no funcionaba; el
 porqué, y por qué esa dirección no podía funcionar con un formulario de 1177px,
 está en `03-pendientes.md`.
 
@@ -61,7 +61,7 @@ altura de pantalla que el frente del trazo, así parece que los enciende la
 línea al pasar.
 
 **Expositores.** Bento de tres columnas que se deslizan en bucle infinito
-—izquierda y derecha suben, la del medio baja—, cada tarjeta con la imagen a
+-izquierda y derecha suben, la del medio baja-, cada tarjeta con la imagen a
 sangre y el texto encima. La tarjeta ocupa DOS módulos de la ventana: el alto
 que antes ocupaban dos tarjetas apiladas, con el hueco del medio incluido. Así
 el paso del riel queda en el doble exacto y por ventana entra 1,5 de paso, o
@@ -77,14 +77,14 @@ pasó de 240 a 480px en escritorio y de 176 a 352px en móvil.
 La velocidad se fija con `SEGUNDOS_POR_TARJETA`, que es un TIEMPO POR PASO: más
 bajo es más rápido. Vale 12 en escritorio y 6 en móvil. Móvil va al doble a
 propósito: en escritorio las tres columnas corren en paralelo y los doce
-expositores desfilan en el tiempo de una columna —4 pasos—, mientras que en
-móvil hay una sola columna con los doce en fila —12 pasos—, así que a igual
+expositores desfilan en el tiempo de una columna -4 pasos-, mientras que en
+móvil hay una sola columna con los doce en fila -12 pasos-, así que a igual
 tiempo por paso recorrer la muestra entera costaría el triple en el teléfono.
 
 Medido muestreando el `translate` real, no leyendo la duración declarada:
 escritorio 48s por columna a 40 px/s, móvil 72s a 58,7 px/s.
 
-⚠️ Igualar los segundos por paso NO iguala la velocidad en píxeles: el paso
+ATENCION: Igualar los segundos por paso NO iguala la velocidad en píxeles: el paso
 mide 480px en escritorio y 352 en móvil, así que las dos cosas no pueden
 coincidir. Lo que se empareja es el ritmo con que cambian las tarjetas, que es
 lo que se percibe. (Una versión anterior de este documento decía que ambos
@@ -97,8 +97,8 @@ cambia el marcado y no la apariencia. Ahí además se puede arrastrar con el
 dedo en los dos sentidos, y al soltar retoma solo: el arrastre mueve el
 `currentTime` de la propia animación vía Web Animations API, así que la
 continuidad no se calcula, está garantizada. Pausar y reanudar, en cambio,
-son siempre del CSS —el arrastre marca `data-arrastrando`, el botón marca
-`data-pausado`—: un `pause()` por API le sacaría al botón la autoridad sobre
+son siempre del CSS -el arrastre marca `data-arrastrando`, el botón marca
+`data-pausado`-: un `pause()` por API le sacaría al botón la autoridad sobre
 la animación de forma permanente.
 
 **Mapa.** Plano esquemático del predio de la Ciudad Cultural: derecho y
@@ -123,13 +123,13 @@ lado, puntos y flechas, y el borde del asomo desvanecido con máscara.
 
 La máquina del ciclo dejó de estar duplicada: vive en `useCarruselCircular`, en
 shared/, y la comparten esta sección y el riel del Mapa. Sube solo la LÓGICA
-—lista montada tres veces, normalización sin temporizadores, salto por el lado
-más corto del anillo—; el marcado de cada tarjeta queda en su feature porque no
+-lista montada tres veces, normalización sin temporizadores, salto por el lado
+más corto del anillo-; el marcado de cada tarjeta queda en su feature porque no
 se parecen en nada. "Sobre ExpoJuy" todavía tiene su copia: migra cuando haya
 que tocarlo.
 
-**Preguntas frecuentes.** Acordeón excluyente de cinco preguntas —una sola
-abierta a la vez, y volver a tocarla la cierra—, con una franja visual de un
+**Preguntas frecuentes.** Acordeón excluyente de cinco preguntas -una sola
+abierta a la vez, y volver a tocarla la cierra-, con una franja visual de un
 quinto de ancho a la derecha que acompaña el alto del acordeón sin ningún alto
 fijo. En pantallas chicas la franja no se muestra.
 
@@ -149,7 +149,7 @@ fila; en pantallas chicas la franja no se muestra.
 
 El formulario no reimplementa ninguna regla de validación: lee el
 `ValidityState` del propio control y solo aporta el texto, que es lo único que
-el navegador hace mal —sin traducir, sin estilar y desaparece solo—. La
+el navegador hace mal -sin traducir, sin estilar y desaparece solo-. La
 validación nativa se apaga desde un efecto y NO desde el JSX: si `noValidate`
 viajara en el HTML servido, un fallo del script dejaría el formulario sin
 ninguna validación. Verificado con `curl`: el HTML servido no trae `novalidate`
@@ -162,14 +162,14 @@ persona con todo listo.
 El camino sin JavaScript cambió de forma el 8/9. Era un `action="mailto:"` con
 `enctype="text/plain"`, que serializaba los campos en el cuerpo, y funcionaba
 mejor que lo que hay ahora; pero Chrome trata cualquier `action` con esquema
-distinto de https como CONTENIDO MIXTO —aunque un `mailto:` no mande nada por
-la red— y eso dejaba Buenas prácticas en 77 contra el objetivo de 90. Ahora el
+distinto de https como CONTENIDO MIXTO -aunque un `mailto:` no mande nada por
+la red- y eso dejaba Buenas prácticas en 77 contra el objetivo de 90. Ahora el
 camino sin JavaScript es un ENLACE `mailto:` con el destinatario y el asunto
 puestos, que Lighthouse no marca. Se resigna que los campos escritos viajen en
 el cuerpo.
 
 Los dos se excluyen por CSS y no por JavaScript: sin la clase `.js` no se
-muestra el botón —no podría hacer nada— y sí el enlace; con `.js`, al revés. Se
+muestra el botón -no podría hacer nada- y sí el enlace; con `.js`, al revés. Se
 sirve el estado degradado, como en todo el resto del proyecto. Verificado
 sacando la clase en vivo y con `curl`: el HTML servido no trae `action` ni
 `novalidate`, y sí trae el enlace, `required`, `pattern` y `minlength`.
@@ -182,8 +182,8 @@ hasta 4.5:1 contra `surface-overlay`. Un solo token sirve para el texto del
 error y para el borde del campo. Está renderizado en `/sistema-de-diseno`.
 
 Verificado en el navegador con los ocho pasos de la máquina de validación,
-incluido un mensaje de 25 espacios —que el navegador da por válido y nosotros
-no— y un teléfono con letras. Contraste medido: 5.54:1 el texto del error sobre
+incluido un mensaje de 25 espacios -que el navegador da por válido y nosotros
+no- y un teléfono con letras. Contraste medido: 5.54:1 el texto del error sobre
 la sección, 5.13:1 el borde sobre el campo.
 
 **Entradas.** Mitad píldoras y mitad collage de tres visuales inclinados, con
@@ -191,12 +191,12 @@ el riel de medios de pago abajo. En pantallas chicas el collage no se muestra,
 como las franjas de Preguntas y Contacto.
 
 Las píldoras son PESTAÑAS de verdad: `tablist`/`tab`/`tabpanel` con tabindex
-rotante —la lista entera es una sola parada del tabulador— y navegación por
+rotante -la lista entera es una sola parada del tabulador- y navegación por
 flechas, Inicio y Fin. Muestran tipos de entrada con precio y no métodos de
 pago: el riel de abajo ya cubre los medios, y leído literal el plan pedía las
 dos cosas diciendo lo mismo.
 
-Son TRES —Estudiantes, General y Empresas— y con tres la fila no envuelve ni en
+Son TRES -Estudiantes, General y Empresas- y con tres la fila no envuelve ni en
 un teléfono de 390px: 338px de píldoras y huecos contra 350 de contenido. Con
 cuatro caían en dos filas y se leía como una grilla de opciones en vez de un
 selector.
@@ -205,11 +205,11 @@ Los tres paneles SE SIRVEN VISIBLES y los pliega una regla de CSS detrás de
 `.js`, igual que el acordeón de Preguntas. Con el atributo `hidden`, un fallo
 del script dejaría dos de los tres precios inalcanzables. Verificado sacando la
 clase en vivo: los altos pasan de [397, 0, 0] a [440, 440, 440], y el nombre
-del tipo —escondido por `.js` porque la píldora activa ya lo dice— reaparece en
+del tipo -escondido por `.js` porque la píldora activa ya lo dice- reaparece en
 los tres. El HTML servido trae los tres precios y ningún `hidden`.
 
 "Comprar" abre un FORMULARIO DE PAGO ILUSTRATIVO. No simula un checkout: dice
-qué iría en su lugar —tres métodos genéricos, sin marcas— y lo declara con un
+qué iría en su lugar -tres métodos genéricos, sin marcas- y lo declara con un
 estado vacío, la "J" en monocromía sobre un borde punteado. Un checkout falso
 que acepte un número de tarjeta y responda "listo" es la clase de maqueta que
 se confunde con la realidad, y encima entrena a alguien a tipear una tarjeta en
@@ -233,7 +233,7 @@ resto de la sección. Lo que evita que se lea como una lista recortada no es el
 ancho sino la máscara: los dos bordes se desvanecen, así que el riel se apaga
 en vez de chocar contra un corte recto. Se mueve solo, así que lleva el
 requisito completo de WCAG 2.2.2. Verificado midiendo el objeto `Animation`: 216,7ms de avance
-corriendo, 0 pausado, 222,3 al reanudar. El bucle cierra EXACTO —error de 0px—
+corriendo, 0 pausado, 222,3 al reanudar. El bucle cierra EXACTO -error de 0px-
 aunque los once ítems tengan once anchos distintos: cada uno carga su propio
 `margin-right`, así que el riel mide el doble justo de una copia. Con
 `prefers-reduced-motion` la fila se despliega en vez de congelarse: pasa de 56
@@ -251,8 +251,8 @@ de una ficha a otra. Es un solo elemento del tamaño exacto de una celda que
 únicamente cambia `translate`: como las dieciséis celdas son idénticas, nunca
 necesita cambiar de tamaño.
 
-Y NO SE MIDE, SE CALCULA. Su posición sale de dos números —`--sponsors-i`, que
-escribe el componente, y `--sponsors-cols`, que declara el CSS por breakpoint—
+Y NO SE MIDE, SE CALCULA. Su posición sale de dos números -`--sponsors-i`, que
+escribe el componente, y `--sponsors-cols`, que declara el CSS por breakpoint-
 con `mod()` para la columna y `round(down, …)` para la fila. No hay un solo
 `getBoundingClientRect`, ni `ResizeObserver`, ni listener de resize: al cambiar
 el breakpoint la posición se reacomoda sola. Los porcentajes del `translate` se
@@ -261,21 +261,21 @@ de la grilla en los dos ejes sin escribir ninguna medida. Verificado: cero
 desalineados en las 16 fichas a 402, 767, 768, 1440 y 1920.
 
 El marcador señala la ÚLTIMA ficha activa y se queda ahí. El puntero es quien
-la activa —filtrando por `pointerType === "mouse"`, para que un dedo no entre
-nunca en ese camino— y una vez que tomó el mando se lo queda: sacar el mouse no
+la activa -filtrando por `pointerType === "mouse"`, para que un dedo no entre
+nunca en ese camino- y una vez que tomó el mando se lo queda: sacar el mouse no
 desactiva nada, porque apuntar una ficha es una acción y dejar de apuntarla no
 es otra. Mientras el puntero no haya intervenido manda el scroll, que en un
 teléfono es siempre.
 
 Nada se mueve solo, así que esta sección NO hereda el control de pausa del
-bento. La especificación original —tres sliders horizontales infinitos— sí lo
+bento. La especificación original -tres sliders horizontales infinitos- sí lo
 habría necesitado.
 
 La "J" ocupa el lugar del logotipo del auspiciante, en monocromía vía un
 `monocromo` nuevo en `BrandMark` que pinta las piezas con `currentColor`: a
 todo color, dieciséis isologotipos dirían que ExpoJuy se auspicia a sí misma.
-Contraste medido: esquinas violeta 3,20:1 sobre la ficha activa —pasa WCAG
-1.4.11— y la "J" activa 6,38:1.
+Contraste medido: esquinas violeta 3,20:1 sobre la ficha activa -pasa WCAG
+1.4.11- y la "J" activa 6,38:1.
 
 Va sin copete numerado y fuera de la nav, como franja de cierre después de
 Contacto. Ver la invariante en `site.ts`.
@@ -285,10 +285,10 @@ Contacto. Ver la invariante en `site.ts`.
 **Las seis fases están cerradas.** La fase 4 quedó medida en los dos perfiles
 de Lighthouse y la fase 6 entregó los dos documentos en `docs/propuesta/`:
 
-- `memoria-descriptiva-purple.html` — memoria y explicación conceptual, con capturas
+- `memoria-descriptiva-purple.html` - memoria y explicación conceptual, con capturas
   del prototipo, paleta y los números medidos. Diseño «expediente retro» en
   papel claro, pensado para exportarse a PDF desde el navegador.
-- `declaracion-ia-purple.html` — herramientas, método (especificar → implementar →
+- `declaracion-ia-purple.html` - herramientas, método (especificar → implementar →
   medir → aprobar → commit), documentación IA-first y límites de uso.
 
 Ambos son HTML autocontenidos: tipografía Ambit y capturas embebidas en

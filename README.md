@@ -1,7 +1,7 @@
-# ExpoJuy 2026 — Prototipo navegable
+# ExpoJuy 2026 - Prototipo navegable
 
 Propuesta para la **Primera Edición del Programa Provincial de Desafíos Tecnológicos**.
-Sitio institucional de ExpoJuy 2026 — _Conectando países, creando oportunidades_.
+Sitio institucional de ExpoJuy 2026 - _Conectando países, creando oportunidades_.
 
 > **Estado:** prototipo en desarrollo. El contenido textual, fechas y precios son
 > provisorios y están centralizados en [`src/shared/constants/site.ts`](src/shared/constants/site.ts)
@@ -12,7 +12,7 @@ Sitio institucional de ExpoJuy 2026 — _Conectando países, creando oportunidad
 | | |
 |---|---|
 | **Sitio** | **https://expojuy-prototipo.vercel.app** |
-| **Sistema de diseño** | [/sistema-de-diseno](https://expojuy-prototipo.vercel.app/sistema-de-diseno) — anexo técnico con la trazabilidad de cada token |
+| **Sistema de diseño** | [/sistema-de-diseno](https://expojuy-prototipo.vercel.app/sistema-de-diseno) - anexo técnico con la trazabilidad de cada token |
 
 Cada push a `main` despliega a producción automáticamente. No hace falta ningún
 paso manual ni credenciales para verlo: la URL es pública.
@@ -31,7 +31,7 @@ pnpm dev          # http://localhost:3000
 | `pnpm typecheck` | Genera los tipos de rutas de Next y corre `tsc --noEmit` |
 | `pnpm lint` | ESLint, incluidas las reglas de frontera de arquitectura |
 | `pnpm format` | Prettier sobre todo el proyecto |
-| `pnpm verify` | Las tres anteriores — lo mismo que corre el CI |
+| `pnpm verify` | Las tres anteriores - lo mismo que corre el CI |
 
 ## Stack
 
@@ -70,8 +70,8 @@ Ningún valor de diseño fue elegido a ojo. La trazabilidad completa está comen
 [`src/app/globals.css`](src/app/globals.css) y se puede ver renderizada en `/sistema-de-diseno`.
 
 - **Colores de marca**: medidos por muestreo de píxeles sobre el logotipo oficial.
-- **Neutros**: generados en OKLCH al hue 297.8° — la media de los tres violetas de
-  marca — con croma mínimo. No son grises: están teñidos, extendiendo el criterio que
+- **Neutros**: generados en OKLCH al hue 297.8° - la media de los tres violetas de
+  marca - con croma mínimo. No son grises: están teñidos, extendiendo el criterio que
   la propia marca ya aplica en su gris institucional (`#4B4B4D` cae en H=286.3°).
 - **Texto y bordes**: cada escalón se resolvió por búsqueda binaria hasta alcanzar su
   ratio de contraste WCAG objetivo, no se eligió.

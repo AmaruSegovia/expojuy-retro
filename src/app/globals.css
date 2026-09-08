@@ -1,8 +1,17 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Hojas de estilo de cada slice vertical.
+   Van acá arriba y no al final por una razón dura de CSS: un `@import` que
+   aparece después de cualquier otra regla se ignora en silencio.
+   El orden entre ellas no importa porque cada una está acotada a las clases de
+   su propio feature, y las custom properties se resuelven en el momento de uso,
+   no en el de parseo, así que ninguna necesita ver el `@theme` de más abajo. */
+@import "../features/about/styles.css";
+@import "../features/contact/styles.css";
+
 /* ═══════════════════════════════════════════════════════════════════════════
-   SISTEMA DE DISEÑO — ExpoJuy 2026
+   SISTEMA DE DISEÑO - ExpoJuy 2026
 
    Ningún valor de este archivo fue elegido a ojo. Cada token es (a) un color
    medido del logotipo oficial, (b) derivado de esos colores por una regla
@@ -12,29 +21,29 @@
 
 @theme {
   /* ───────────────────────────────────────────────────────────────────────
-     1. COLORES DE MARCA — medidos por muestreo de píxeles sobre
+     1. COLORES DE MARCA - medidos por muestreo de píxeles sobre
         RecursosExpoJuy/RGB/expojuy26.png (canal alfa > 200).
         Estos cinco valores son la única fuente de verdad cromática.
      ─────────────────────────────────────────────────────────────────────── */
   --color-brand-violet-deep: #820cd0; /* bloque "E" y contraforma de la J */
-  --color-brand-violet: #774ff0; /* asta vertical de la J — color primario */
+  --color-brand-violet: #774ff0; /* asta vertical de la J - color primario */
   --color-brand-lavender: #bb8cff; /* base curva de la J */
   --color-brand-cyan: #25c0d4; /* acento superior */
   --color-brand-graphite: #4b4b4d; /* wordmark EXPOJUY */
 
   /* ───────────────────────────────────────────────────────────────────────
-     2. NEUTROS — generados en OKLCH al hue 297.8° (media de los tres
+     2. NEUTROS - generados en OKLCH al hue 297.8° (media de los tres
         violetas oficiales) con croma mínimo. No son grises neutros: están
         teñidos hacia el violeta, extendiendo el criterio que la propia
         marca ya aplica en su gris institucional (#4B4B4D → H=286.3°).
      ─────────────────────────────────────────────────────────────────────── */
   --color-surface-sunken: #040307; /* fondo de página, letterbox de video */
-  --color-surface: #0b0911; /* superficie base — referencia de contraste */
+  --color-surface: #0b0911; /* superficie base - referencia de contraste */
   --color-surface-raised: #16131d; /* card, panel */
   --color-surface-overlay: #231f2b; /* popover, dropdown, footer superpuesto */
 
   /* ───────────────────────────────────────────────────────────────────────
-     3. TEXTO Y BORDES — la lightness de cada escalón NO se eligió: se
+     3. TEXTO Y BORDES - la lightness de cada escalón NO se eligió: se
         resolvió por búsqueda binaria en OKLCH, conservando hue y croma,
         hasta alcanzar su ratio WCAG objetivo.
 
@@ -46,7 +55,7 @@
         llega al umbral sobre la base FALLA sobre card y sobre footer.
 
         Medido en producción: --color-text-subtle daba 4.69:1 sobre la base
-        —un 4% de margen— y caía a 4.34:1 sobre --color-surface-raised y a
+        -un 4% de margen- y caía a 4.34:1 sobre --color-surface-raised y a
         3.82:1 sobre --color-surface-overlay. Lighthouse lo marcó en cuatro
         nodos del footer. --color-border-strong tenía el mismo defecto
         (2.88:1 y 2.54:1) y NO lo marcó: axe no audita contraste no textual.
@@ -56,14 +65,14 @@
         Satisfacer la más clara satisface todas las demás por construcción.
         El ratio anotado al lado es el del PEOR caso, no el de la base.
      ─────────────────────────────────────────────────────────────────────── */
-  --color-text: #e8e6eb; /* 13.01:1 — AAA holgado */
-  --color-text-muted: #a19ea7; /*  6.12:1 — AA holgado */
-  --color-text-subtle: #888691; /*  4.50:1 — AA exacto, L+0.040 en OKLCH */
-  --color-border-strong: #6c6975; /*  3.01:1 — AA no textual, L+0.040 */
-  --color-border: #36323e; /*  1.29:1 — solo separación decorativa */
+  --color-text: #e8e6eb; /* 13.01:1 - AAA holgado */
+  --color-text-muted: #a19ea7; /*  6.12:1 - AA holgado */
+  --color-text-subtle: #888691; /*  4.50:1 - AA exacto, L+0.040 en OKLCH */
+  --color-border-strong: #6c6975; /*  3.01:1 - AA no textual, L+0.040 */
+  --color-border: #36323e; /*  1.29:1 - solo separación decorativa */
 
   /* ───────────────────────────────────────────────────────────────────────
-     4. ROLES SEMÁNTICOS — la indirección que permite recolorear el sitio
+     4. ROLES SEMÁNTICOS - la indirección que permite recolorear el sitio
         sin tocar un solo componente.
 
         REGLA DE ACCESIBILIDAD (derivada de la medición, ver §3 del doc):
@@ -72,28 +81,28 @@
         --color-brand-violet-deep queda prohibido para texto (2.74:1).
      ─────────────────────────────────────────────────────────────────────── */
   --color-primary: var(--color-brand-violet);
-  --color-primary-hover: #6e43e4; /* OKLCH L−0.035 — se OSCURECE, ver §4 */
+  --color-primary-hover: #6e43e4; /* OKLCH L−0.035 - se OSCURECE, ver §4 */
   --color-primary-active: #6334d6; /* OKLCH L−0.075 */
   --color-on-primary: #ffffff; /* 5.05:1 sobre --color-primary */
   --color-accent: var(--color-brand-cyan);
-  --color-on-accent: var(--color-surface); /* 9.02:1 — blanco sobre cian FALLA (2.19:1) */
+  --color-on-accent: var(--color-surface); /* 9.02:1 - blanco sobre cian FALLA (2.19:1) */
   --color-link: var(--color-brand-lavender); /* 7.83:1 sobre surface */
   --color-focus-ring: var(--color-brand-lavender);
 
   /* Error de formulario. Como el resto del sistema, NO se eligió: se derivó.
 
-     HUE — ni el sistema ni la marca tienen un rojo, así que no hay de dónde
+     HUE - ni el sistema ni la marca tienen un rojo, así que no hay de dónde
      medirlo. La regla escrita es el COMPLEMENTARIO DEL CIAN: el cian oficial
      está en H=208.67° y su opuesto en la rueda OKLCH cae en 28.67°. Es el
      único rojo justificable a partir de un color de marca en vez de elegido a
      ojo, y por construcción queda lo más lejos posible del acento con el que
      un error jamás debe confundirse.
 
-     CROMA — el máximo que el gamut sRGB admite para esa L y ese hue: 0.234.
+     CROMA - el máximo que el gamut sRGB admite para esa L y ese hue: 0.234.
      No hizo falta acotarlo: cae dentro del rango de croma que la marca ya
      usa (cian 0.122 … violeta profundo 0.251), así que no desentona.
 
-     LIGHTNESS — resuelta por búsqueda binaria hasta 4.5:1 contra
+     LIGHTNESS - resuelta por búsqueda binaria hasta 4.5:1 contra
      --color-surface-overlay, el mismo criterio de peor caso de §3.
      Medido: sunken 5.75:1 · surface 5.54:1 · raised 5.13:1 · overlay 4.51:1.
 
@@ -103,7 +112,7 @@
 
      El color NUNCA es el único indicador de error (WCAG 1.4.1): siempre va
      acompañado de texto, un ícono y aria-invalid. */
-  --color-danger: #ff392e; /* 4.51:1 — OKLCH L 0.6522 C 0.234 H 28.67° */
+  --color-danger: #ff392e; /* 4.51:1 - OKLCH L 0.6522 C 0.234 H 28.67° */
 
   /* Fondo de la pantalla de carga.
      NO se puede usar --color-brand-violet-deep acá: es exactamente el color de
@@ -116,7 +125,7 @@
   --color-loader-backdrop: #230048;
 
   /* ───────────────────────────────────────────────────────────────────────
-     5. TIPOGRAFÍA — escala modular fluida generada por script.
+     5. TIPOGRAFÍA - escala modular fluida generada por script.
 
         Pasos ≥ 0: razón 1.200 (360px) → 1.333 (1440px). La jerarquía se
         dramatiza al crecer el viewport.
@@ -149,7 +158,7 @@
   --text-5xl--line-height: 0.95;
 
   /* ───────────────────────────────────────────────────────────────────────
-     6. RADIOS — leídos de la geometría del isologotipo. La "J" se construye
+     6. RADIOS - leídos de la geometría del isologotipo. La "J" se construye
         con rectángulos de esquina viva y UNA semicircunferencia completa.
         La marca no usa radios intermedios, así que el sistema tampoco:
         o esquina viva, o píldora. La ausencia del rango medio es deliberada.
@@ -159,11 +168,11 @@
   --radius-full: 9999px;
 
   /* ───────────────────────────────────────────────────────────────────────
-     7. MOVIMIENTO — cuatro duraciones, una por tipo de intención.
+     7. MOVIMIENTO - cuatro duraciones, una por tipo de intención.
         Nada se anima "porque queda lindo": cada duración tiene un uso.
      ─────────────────────────────────────────────────────────────────────── */
-  --duration-micro: 150ms; /* hover, focus — respuesta táctil inmediata */
-  --duration-control: 250ms; /* acordeón, tab, filtro — cambio de estado */
+  --duration-micro: 150ms; /* hover, focus - respuesta táctil inmediata */
+  --duration-control: 250ms; /* acordeón, tab, filtro - cambio de estado */
   --duration-enter: 600ms; /* entrada de elemento en viewport */
   --duration-scene: 900ms; /* transición de escena, page loader */
 
@@ -172,7 +181,7 @@
   --ease-in-out-quint: cubic-bezier(0.83, 0, 0.17, 1); /* escenas: arranca y frena */
 
   /* ───────────────────────────────────────────────────────────────────────
-     8. LAYOUT — el plan fija dos anchos: hero/nav/footer a sangre completa,
+     8. LAYOUT - el plan fija dos anchos: hero/nav/footer a sangre completa,
         el resto del contenido tope 1024px.
      ─────────────────────────────────────────────────────────────────────── */
   --container-content: 64rem; /* 1024px */
@@ -284,16 +293,16 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   FOOTER REVELADO — ver src/shared/components/layout/site-footer.tsx
+   FOOTER REVELADO - ver src/shared/components/layout/site-footer.tsx
 
    El footer queda pegado al borde INFERIOR del viewport, escondido detrás del
    fondo opaco de <main>. Al terminar el documento, el borde de main sube y lo
    destapa.
 
-   ⚠️ EL FOOTER NO LLEVA Z-INDEX NEGATIVO, Y ES A PROPÓSITO. Esa fue la primera
+   ATENCION: EL FOOTER NO LLEVA Z-INDEX NEGATIVO, Y ES A PROPÓSITO. Esa fue la primera
    versión y tenía un defecto que no se ve: el footer se pintaba bien, pero SUS
    ENLACES NO SE PODÍAN CLICKEAR. Con `z-index: -10` el footer se pinta en el
-   paso 3 del algoritmo de apilado, y la caja del <body> —un bloque en flujo—
+   paso 3 del algoritmo de apilado, y la caja del <body> -un bloque en flujo-
    se pinta en el paso 4, o sea DESPUÉS. El body no tapa nada visualmente
    porque su fondo se propaga al canvas, pero su caja sigue existiendo para el
    hit-test y le gana. Medido: `elementFromPoint` sobre el centro de un enlace
@@ -301,8 +310,8 @@
    apagada y el footer vuelve al flujo normal.
 
    La solución invierte quién se mueve: el footer se queda en `z-index: auto`
-   —positivo por ser `sticky`, así que se pinta en el paso 8, por encima del
-   body— y es <main> el que SUBE, con `relative z-[1]`, para pasarle por encima
+   -positivo por ser `sticky`, así que se pinta en el paso 8, por encima del
+   body- y es <main> el que SUBE, con `relative z-[1]`, para pasarle por encima
    durante el recorrido. Mismo efecto visual, y los enlaces reciben el click.
 
    POR QUÉ ESTÁ ACÁ Y NO COMO UTILIDADES EN EL COMPONENTE
@@ -356,7 +365,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   APARICIÓN POR SCROLL — ver src/shared/components/motion/reveal.tsx
+   APARICIÓN POR SCROLL - ver src/shared/components/motion/reveal.tsx
 
    Todo el bloque está detrás de `.js`. Esa clase la agrega un script inline
    en el <head> antes del primer pintado. Si el JavaScript no corre, la clase
@@ -402,7 +411,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   ROTADOR DEL HERO — ver src/features/hero/components/hero-rotador.tsx
+   ROTADOR DEL HERO - ver src/features/hero/components/hero-rotador.tsx
 
    Cada par es una LÍNEA completa; todas se apilan en la misma celda de una
    grilla centrada, así cada par queda centrado por sí mismo sin importar
@@ -509,15 +518,15 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   PANTALLA DE CARGA — ver src/shared/components/brand/page-loader.tsx
+   PANTALLA DE CARGA - ver src/shared/components/brand/page-loader.tsx
 
-   ENTRADA — las cuatro piezas del isologotipo entran una por una:
-     2 · gancho lavanda  — se revela en abanico radial desde la izquierda
-     4 · barra púrpura   — pop desde el centro de la propia pieza
-     3 · asta violeta    — ídem, apenas después
-     1 · barra cian      — cae desde arriba y rebota sobre la pieza 4
+   ENTRADA - las cuatro piezas del isologotipo entran una por una:
+     2 · gancho lavanda  - se revela en abanico radial desde la izquierda
+     4 · barra púrpura   - pop desde el centro de la propia pieza
+     3 · asta violeta    - ídem, apenas después
+     1 · barra cian      - cae desde arriba y rebota sobre la pieza 4
 
-   SALIDA — efecto intro de Los Simpsons. La "J" no se desvanece: ES un
+   SALIDA - efecto intro de Los Simpsons. La "J" no se desvanece: ES un
    agujero en el morado. Al crecer, el hero se ve a través de ella y el morado
    queda empujado fuera del viewport.
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -565,7 +574,7 @@
 
   /* La visibilidad la gobierna el atributo que pone el script de arranque del
      layout, no React. Como se marca antes del primer pintado, cuando el loader
-     corresponde el morado está desde el frame cero — no después de que ya se
+     corresponde el morado está desde el frame cero - no después de que ya se
      haya visto el hero. */
   html:not([data-loader]) .page-loader {
     display: none;
@@ -634,7 +643,7 @@
      SVG. Sin eso el origen queda fuera del elemento y el "pop" desde el
      centro se ve como un desplazamiento. */
 
-  /* 2 · gancho — revelado RADIAL desde el borde izquierdo. Un `inset()` daría
+  /* 2 · gancho - revelado RADIAL desde el borde izquierdo. Un `inset()` daría
      un frente recto vertical, que contra una curva se lee como una persiana;
      el círculo acompaña la forma del gancho y parece que se dibuja la
      sonrisa. 135% alcanza la esquina más lejana desde ese origen. */
@@ -642,7 +651,7 @@
     animation: loader-barrido var(--l-barrido) var(--ease-standard) both;
   }
 
-  /* 4 · barra púrpura — tiene que estar en su lugar antes de que la pieza 1
+  /* 4 · barra púrpura - tiene que estar en su lugar antes de que la pieza 1
      le rebote encima, así que entra durante el barrido. */
   .page-loader__mark .brand-mark__bar-low {
     transform-box: fill-box;
@@ -657,7 +666,7 @@
     animation: loader-pop var(--l-pieza) var(--ease-out-expo) 400ms both;
   }
 
-  /* 1 · barra cian — arranca justo cuando termina el barrido del gancho. */
+  /* 1 · barra cian - arranca justo cuando termina el barrido del gancho. */
   .page-loader__mark .brand-mark__bar-high {
     transform-box: fill-box;
     /* `linear` a propósito: el ritmo del rebote lo marca cada keyframe con su
@@ -776,7 +785,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   AGENDA — LÍNEA DE TIEMPO
+   AGENDA - LÍNEA DE TIEMPO
    ver src/features/agenda/components/agenda-section.tsx
 
    `--avance` va de 0 a 1 y lo escribe useAvanceLinea sobre la lista, no sobre
@@ -786,7 +795,7 @@
    alcanzaría. Declarándolo en el contenedor, el estilo inline gana y el trazo
    lo hereda.
 
-   MEJORA PROGRESIVA — en reposo vale 1: la línea se sirve DIBUJADA. La clase
+   MEJORA PROGRESIVA - en reposo vale 1: la línea se sirve DIBUJADA. La clase
    `.js`, que un script inline agrega antes del primer pintado, es la que la
    borra para que el scroll pueda dibujarla. Si el JavaScript no corre, la
    clase nunca aparece y la línea se ve entera. Nunca al revés.
@@ -844,7 +853,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   BENTO DE EXPOSITORES — ver src/features/exhibitors/components/
+   BENTO DE EXPOSITORES - ver src/features/exhibitors/components/
 
    Tres columnas que se deslizan en bucle: la izquierda y la derecha suben, la
    del medio baja. Cada tarjeta ocupa dos módulos de la ventana, así que se ve
@@ -907,8 +916,8 @@
     touch-action: none;
     cursor: grab;
     /* SIN ESTO, ARRASTRAR SUBRAYA EL TEXTO. `touch-action` frena el scroll,
-       no la selección: son mecanismos distintos. Con mouse —y la emulación
-       móvil de DevTools usa mouse— el arrastre selecciona SIEMPRE; con un dedo
+       no la selección: son mecanismos distintos. Con mouse -y la emulación
+       móvil de DevTools usa mouse- el arrastre selecciona SIEMPRE; con un dedo
        se ve menos, porque en táctil la selección pide pulsación larga, pero
        una pulsación larga seguida de arrastre igual la dispara.
 
@@ -929,7 +938,7 @@
   .bento__riel {
     display: flex;
     flex-direction: column;
-    /* Sin `gap` A PROPÓSITO — ver el encabezado del bloque. */
+    /* Sin `gap` A PROPÓSITO - ver el encabezado del bloque. */
     /* --bento-dur la escribe el componente, normalizada por la cantidad de
        tarjetas de la columna: en móvil el riel lleva doce en vez de cuatro y
        con una duración fija iría al triple de velocidad. El respaldo solo
@@ -948,8 +957,8 @@
     /* UNA TARJETA OCUPA DOS MÓDULOS: exactamente el alto que antes ocupaban dos
        tarjetas apiladas, contando el hueco que quedaba entre ellas.
 
-       Escrito así y no como un número suelto, el paso del riel —tarjeta más
-       hueco— queda en el DOBLE EXACTO del anterior. Eso importa: el bucle se
+       Escrito así y no como un número suelto, el paso del riel -tarjeta más
+       hueco- queda en el DOBLE EXACTO del anterior. Eso importa: el bucle se
        cierra porque el riel se desplaza la mitad de su alto y esa mitad tiene
        que caer en un múltiplo entero de pasos. Con el paso duplicado la
        cuenta sigue dando entero, porque la cantidad de tarjetas no cambió.
@@ -980,7 +989,7 @@
     }
   }
 
-  /* PAUSA — WCAG 2.2.2. El botón es el mecanismo obligatorio; el foco es
+  /* PAUSA - WCAG 2.2.2. El botón es el mecanismo obligatorio; el foco es
      comodidad, para poder leer una tarjeta sin perseguirla con el teclado. */
   .bento[data-pausado] .bento__riel,
   .bento[data-arrastrando] .bento__riel,
@@ -992,7 +1001,7 @@
      
      Sin esta guarda rompía el arrastre en táctil: al apoyar el dedo el
      elemento entra en `:hover`, el CSS pausa, y al soltar sigue pausado
-     —el hover táctil es PEGAJOSO, no se va hasta tocar otra cosa—. El
+     -el hover táctil es PEGAJOSO, no se va hasta tocar otra cosa-. El
      riel quedaba clavado y parecía que la animación había muerto. */
   @media (hover: hover) and (pointer: fine) {
     .bento:hover .bento__riel {
@@ -1000,7 +1009,7 @@
     }
   }
 
-  /* MOVIMIENTO REDUCIDO — la columna se DESPLIEGA, no se congela.
+  /* MOVIMIENTO REDUCIDO - la columna se DESPLIEGA, no se congela.
      
      Congelar el riel dejaba visibles solo las tres primeras tarjetas de cada
      columna. En escritorio da igual, pero en móvil hay una sola columna con
@@ -1009,7 +1018,7 @@
      movimiento nunca debe quitar el contenido.
      
      Así que la ventana suelta su alto y su recorte, y la copia que servía para
-     el bucle —que ya está `aria-hidden`— se esconde para no duplicar a la
+     el bucle -que ya está `aria-hidden`- se esconde para no duplicar a la
      vista lo que un lector de pantalla tampoco lee dos veces. */
   @media (prefers-reduced-motion: reduce) {
     .bento__riel {
@@ -1029,7 +1038,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   RECORRIDO DEL MAPA — ver src/features/venue-map/components/
+   RECORRIDO DEL MAPA - ver src/features/venue-map/components/
 
    El trazo se dibuja de A a B al elegir un lugar. `pathLength="1"` normaliza
    el largo de la polilínea, así el dibujado es `stroke-dashoffset: 1 → 0` sin
@@ -1064,7 +1073,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   RIEL DEL MAPA — ver src/features/venue-map/components/
+   RIEL DEL MAPA - ver src/features/venue-map/components/
 
    El asomo de la tarjeta anterior y la siguiente no termina en un corte recto
    sino que se DESVANECE. Un `overflow: hidden` solo, corta a cuchillo y ese
@@ -1098,7 +1107,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   PULSO DEL PUNTO DE ACCESO — ver src/features/venue-map/components/
+   PULSO DEL PUNTO DE ACCESO - ver src/features/venue-map/components/
 
    Un anillo que sale del punto de entrada cuando el lugar activo es el acceso.
    Marca de dónde arranca todo el recorrido.
@@ -1106,11 +1115,11 @@
    LATE MIENTRAS EL ACCESO SEA EL LUGAR ACTIVO, y se apaga al elegir otro: el
    elemento deja de existir. No hace falta ningún temporizador para eso.
 
-   SOBRE WCAG 2.2.2 — el criterio pide control de pausa para el movimiento que
+   SOBRE WCAG 2.2.2 - el criterio pide control de pausa para el movimiento que
    arranca solo y dura más de cinco segundos, y exceptúa el movimiento que es
    ESENCIAL para la actividad. Acá el pulso es justamente eso: es la marca de
    dónde nace el recorrido, la razón por la que el punto se distingue de los
-   otros ocho. No transporta información que haya que leer —va `aria-hidden`—
+   otros ocho. No transporta información que haya que leer -va `aria-hidden`-
    ni compite con texto. Con `prefers-reduced-motion` no late.
 
    Es una decisión tomada, no un descuido: queda anotada en 03-pendientes.md.
@@ -1142,7 +1151,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   RIEL DE NOTICIAS — ver src/features/news/components/
+   RIEL DE NOTICIAS - ver src/features/news/components/
 
    Mismo criterio que el riel del mapa: el asomo de la tarjeta anterior y la
    siguiente se DESVANECE en vez de cortarse a cuchillo. Un `overflow: hidden`
@@ -1157,7 +1166,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   ACORDEÓN DE PREGUNTAS — ver src/features/faq/components/
+   ACORDEÓN DE PREGUNTAS - ver src/features/faq/components/
 
    SE SIRVE ABIERTO. El estado plegado no está en el marcado: es esta regla, y
    solo aplica detrás de `.js`, la clase que un script inline agrega al <html>
@@ -1173,7 +1182,7 @@
    lugar. Con `clip-path` el panel se recortaría pero seguiría ocupando su
    alto, y quedaría un hueco.
 
-   Se anima `grid-template-rows` de 0fr a 1fr —y no `height` de 0 a auto— para
+   Se anima `grid-template-rows` de 0fr a 1fr -y no `height` de 0 a auto- para
    no tener que medir el contenido con JavaScript ni volver a medirlo cuando
    cambie. El recálculo es aceptable porque ocurre UNA VEZ por clic, en
    respuesta a una acción del usuario, y no una vez por frame de scroll, que es
@@ -1204,7 +1213,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   GRILLA DE SPONSORS — ver src/features/sponsors/components/
+   GRILLA DE SPONSORS - ver src/features/sponsors/components/
 
    Dieciséis fichas en 4×4 y un marcador de esquinas que VIAJA de una a otra.
 
@@ -1231,7 +1240,7 @@
    En `translate`, un porcentaje se resuelve contra la caja del PROPIO
    elemento: el primero contra su ancho y el segundo contra su alto. Y el
    marcador mide exactamente una celda. Entonces `100% + hueco` es el paso de
-   la grilla —celda más separación— en los dos ejes a la vez, sin que ninguno
+   la grilla -celda más separación- en los dos ejes a la vez, sin que ninguno
    de los dos valores tenga que escribirse en ningún lado.
    ═══════════════════════════════════════════════════════════════════════════ */
 @layer components {
@@ -1241,8 +1250,8 @@
        Una sola columna se probó y se descartó por una razón medible: con una
        columna el ancho de la ficha es el de la grilla entera y su alto sale
        del ratio, así que la sección se ESTIRA a medida que crece la pantalla
-       —2420px a 402px de ancho, 4848px a 767px, casi seis pantallas de puros
-       logos—. Con dos columnas el ancho de la ficha se parte al medio y las
+       -2420px a 402px de ancho, 4848px a 767px, casi seis pantallas de puros
+       logos-. Con dos columnas el ancho de la ficha se parte al medio y las
        dieciséis entran en 8 filas en vez de 16. */
     --sponsors-cols: 2;
     --sponsors-hueco: 0.75rem;
@@ -1301,7 +1310,7 @@
     pointer-events: none;
   }
 
-  /* Las cuatro "L". Van con esquinas VIVAS —radio 0— como todo el sistema, y
+  /* Las cuatro "L". Van con esquinas VIVAS -radio 0- como todo el sistema, y
      desbordan tres píxeles hacia afuera para que se lean como un corchete que
      encierra la ficha y no como un borde pegado a ella. */
   .sponsors__marcador > span {
@@ -1347,20 +1356,20 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   ENTRADAS — ver src/features/tickets/components/
+   ENTRADAS - ver src/features/tickets/components/
 
    LOS TRES PANELES SE SIRVEN VISIBLES, igual que el acordeón de Preguntas.
    El estado oculto no está en el marcado sino en estas reglas, que solo
    aplican detrás de `.js`. Sin JavaScript la sección es una lista de tres
    tarjetas de precio, una abajo de la otra.
 
-   Al revés —ocultar con el atributo `hidden` y mostrar con JavaScript— un
+   Al revés -ocultar con el atributo `hidden` y mostrar con JavaScript- un
    fallo del script dejaría dos de los tres precios inalcanzables.
 
-   ⚠️ EL PANEL NO PUEDE LLEVAR UNA UTILIDAD DE DISPLAY. Esta regla vive en
+   ATENCION: EL PANEL NO PUEDE LLEVAR UNA UTILIDAD DE DISPLAY. Esta regla vive en
    @layer components y las utilidades de Tailwind en @layer utilities, que va
    después: un `grid` o un `block` sobre `.entradas-panel` le ganaría por capa
-   —no por especificidad— y el panel no se ocultaría nunca. El layout va en el
+   -no por especificidad- y el panel no se ocultaría nunca. El layout va en el
    hijo.
 
    EL RIEL DE MEDIOS DE PAGO se separa con `margin-right` y NO con `gap`, por
@@ -1403,7 +1412,7 @@
   }
 
   .medios__item {
-    /* Sin `gap` A PROPÓSITO — ver el encabezado del bloque. */
+    /* Sin `gap` A PROPÓSITO - ver el encabezado del bloque. */
     margin-right: var(--medios-hueco);
     flex: none;
   }
@@ -1417,7 +1426,7 @@
     }
   }
 
-  /* PAUSA — WCAG 2.2.2. El botón es el mecanismo obligatorio; el foco es
+  /* PAUSA - WCAG 2.2.2. El botón es el mecanismo obligatorio; el foco es
      comodidad, para poder leer sin perseguir. El CSS es el único dueño del
      estado de reproducción: nadie llama a `pause()` por API. */
   .medios[data-pausado] .medios__riel,
@@ -1434,7 +1443,7 @@
     }
   }
 
-  /* MOVIMIENTO REDUCIDO — el riel se DESPLIEGA, no se congela. Congelarlo
+  /* MOVIMIENTO REDUCIDO - el riel se DESPLIEGA, no se congela. Congelarlo
      dejaría visibles los primeros medios de pago y el resto inalcanzable, sin
      animación que los traiga. Quitar el movimiento nunca debe quitar el
      contenido: la fila envuelve y la copia del bucle se esconde. */
@@ -1457,14 +1466,14 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   FORMULARIO DE PAGO — modal ilustrativo de Entradas.
+   FORMULARIO DE PAGO - modal ilustrativo de Entradas.
 
    Es un `<dialog>` NATIVO abierto con `showModal()`. El navegador resuelve el
    foco al abrir y su devolución al cerrar, la inertización del resto de la
    página, el cierre con Escape y el fondo por `::backdrop`. Acá solo va la
    apariencia.
 
-   ⚠️ HAY QUE RESETEAR AL AGENTE DE USUARIO. Un `<dialog>` trae borde, relleno
+   ATENCION: HAY QUE RESETEAR AL AGENTE DE USUARIO. Un `<dialog>` trae borde, relleno
    y fondo BLANCO propios, y sobre un sitio oscuro eso se ve como un error.
    ═══════════════════════════════════════════════════════════════════════════ */
 @layer components {
@@ -1516,7 +1525,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   CONTACTO — los dos caminos del envío.
+   CONTACTO - los dos caminos del envío.
 
    Con JavaScript manda el botón: valida contra `ValidityState`, compone el
    correo con los campos escritos y abre el cliente. Sin JavaScript el botón no
@@ -1525,20 +1534,20 @@
 
    POR QUÉ NO ALCANZABA CON `action="mailto:"`
 
-   Es lo que había, y funcionaba mejor —serializaba los campos en el cuerpo—,
+   Es lo que había, y funcionaba mejor -serializaba los campos en el cuerpo-,
    pero Chrome trata cualquier `action` con esquema distinto de https como
    contenido mixto, aunque un `mailto:` no mande nada por la red. Lighthouse lo
    cobraba en dos auditorías, `is-on-https` (peso 5) e `inspector-issues`
    (peso 1), y dejaba Buenas prácticas en 77 contra el objetivo de 90 que fija
    el plan. Los `mailto:` de un ENLACE no los marca; los de un `action`, sí.
 
-   ⚠️ NI EL BOTÓN NI EL PÁRRAFO PUEDEN LLEVAR UNA UTILIDAD DE DISPLAY. Estas
+   ATENCION: NI EL BOTÓN NI EL PÁRRAFO PUEDEN LLEVAR UNA UTILIDAD DE DISPLAY. Estas
    reglas viven en @layer components y las utilidades de Tailwind en @layer
    utilities, que va después: un `block` o un `inline-flex` les ganaría por
    capa, no por especificidad, y el elemento no se ocultaría nunca.
    ═══════════════════════════════════════════════════════════════════════════ */
 @layer components {
-  /* Sin `.js` —el script no corrió— el botón no aparece. */
+  /* Sin `.js` -el script no corrió- el botón no aparece. */
   html:not(.js) .contacto-enviar {
     display: none;
   }

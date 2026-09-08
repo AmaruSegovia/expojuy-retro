@@ -9,7 +9,7 @@ import { useCruzoLectura } from "../hooks/use-linea-tiempo";
 /**
  * Una fila de la agenda: tarjeta a un lado de la línea, datos del otro.
  *
- * ALTERNANCIA — la tarjeta cae a la izquierda en las filas pares y a la
+ * ALTERNANCIA - la tarjeta cae a la izquierda en las filas pares y a la
  * derecha en las impares, y los datos siempre enfrente. El zigzag es lo que
  * hace que la línea se lea como un eje y no como un borde.
  *
@@ -93,12 +93,12 @@ export function ActividadFila({ actividad, indice }: { actividad: Actividad; ind
           tarjetaIzquierda ? "lg:col-start-1" : "lg:col-start-2",
         )}
       >
-        {/* PROVISORIO — sin fotografías institucionales todavía. Ocupa toda la
+        {/* PROVISORIO - sin fotografías institucionales todavía. Ocupa toda la
             tarjeta, así que cambiar esto por <Image> no va a mover el layout. */}
         <PlaceholderVisual paleta={actividad.paleta} className="absolute inset-0 size-full" />
 
-        {/* Velo. NO es un adorno: los rellenos del visual son claros —la
-            lavanda llega al 73% de luminosidad— y el texto va encima. Se
+        {/* Velo. NO es un adorno: los rellenos del visual son claros -la
+            lavanda llega al 73% de luminosidad- y el texto va encima. Se
             oscurece solo hacia abajo, que es donde se apoya el contenido,
             dejando ver el color arriba.
 
@@ -114,7 +114,7 @@ export function ActividadFila({ actividad, indice }: { actividad: Actividad; ind
         <div className="relative p-5 sm:p-6">
           {/* Una línea, siempre. `line-clamp` corta en la palabra y no en
               mitad de una letra, que es lo que haría `truncate`. El tamaño
-              baja a text-lg —no text-xl— porque en una columna de ~430px el
+              baja a text-lg -no text-xl- porque en una columna de ~430px el
               renglón no da para más sin recortar títulos normales. */}
           <h3 className="line-clamp-1 text-base font-bold text-text sm:text-lg">
             {actividad.titulo}

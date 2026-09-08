@@ -1,7 +1,7 @@
 /**
  * Fuente única de verdad de los datos institucionales del sitio.
  *
- * ⚠️ CONTENIDO PROVISORIO — el kit entregado por la organización solo incluye
+ * ATENCION: CONTENIDO PROVISORIO - el kit entregado por la organización solo incluye
  * logotipos. No hay fechas, sede confirmada, precios ni textos oficiales.
  * Todo lo marcado con `PROVISORIO` es contenido de maqueta y debe reemplazarse
  * con datos reales antes de cualquier publicación. Está centralizado acá
@@ -12,9 +12,9 @@ export const SITE = {
   name: "ExpoJuy 2026",
   claim: "Conectando países, creando oportunidades",
   organizer: "Cámara de Comercio Exterior de Jujuy",
-  /** PROVISORIO — confirmar con la organización */
+  /** PROVISORIO - confirmar con la organización */
   venue: "Ciudad Cultural, San Salvador de Jujuy",
-  /** PROVISORIO — confirmar con la organización */
+  /** PROVISORIO - confirmar con la organización */
   dates: {
     startISO: "2026-09-24",
     endISO: "2026-09-27",
@@ -31,7 +31,7 @@ export const SITE = {
 /**
  * Canales de contacto institucionales.
  *
- * ⚠️ PROVISORIO — la organización no entregó ninguno. Son de maqueta y hay que
+ * ATENCION: PROVISORIO - la organización no entregó ninguno. Son de maqueta y hay que
  * reemplazarlos antes de publicar: el formulario de la sección Contacto abre
  * el cliente de correo apuntando a `email`, así que un valor inventado ahí no
  * es un texto de relleno, es un envío que no llega a ningún lado.
@@ -46,7 +46,7 @@ export const CONTACTO = {
   direccion: "Ciudad Cultural, San Salvador de Jujuy",
 } as const;
 
-/** PROVISORIO — reemplazar por los perfiles oficiales de la organización. */
+/** PROVISORIO - reemplazar por los perfiles oficiales de la organización. */
 export const SOCIAL_LINKS = [
   { label: "Instagram", href: "https://instagram.com" },
   { label: "Facebook", href: "https://facebook.com" },
@@ -60,7 +60,7 @@ export const SOCIAL_LINKS = [
  * así no pueden desincronizarse.
  *
  * El orden sigue un embudo: todo lo que va antes de Entradas responde "¿vale
- * la pena ir?" —qué es, qué pasa, quiénes están, dónde queda— y Entradas
+ * la pena ir?" -qué es, qué pasa, quiénes están, dónde queda- y Entradas
  * responde "sí, ¿cómo entro?". Noticias y Preguntas quedan después como cola
  * informativa, y Contacto cierra.
  *

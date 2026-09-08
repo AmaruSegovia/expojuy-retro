@@ -1,7 +1,7 @@
 /**
  * Marcas que acompañan la edición 2026.
  *
- * ⚠️ PROVISORIO, Y ACÁ LA ADVERTENCIA PESA MÁS QUE EN EL RESTO DEL SITIO.
+ * ATENCION: PROVISORIO, Y ACÁ LA ADVERTENCIA PESA MÁS QUE EN EL RESTO DEL SITIO.
  *
  * Una noticia inventada se lee como maqueta; un auspiciante inventado AFIRMA
  * un vínculo comercial que nadie confirmó. Por eso ninguno de estos nombres
@@ -32,7 +32,7 @@
 
 export type Sponsor = {
   id: string;
-  /** PROVISORIO — nombre de fantasía, no es una empresa real. */
+  /** PROVISORIO - nombre de fantasía, no es una empresa real. */
   nombre: string;
 };
 

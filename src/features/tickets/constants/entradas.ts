@@ -1,7 +1,7 @@
 /**
  * Tipos de entrada y medios de pago.
  *
- * ⚠️ PROVISORIO — TODO, y los precios son el dato más delicado de este
+ * ATENCION: PROVISORIO - TODO, y los precios son el dato más delicado de este
  * archivo. La organización no confirmó ninguno, y varias respuestas de
  * Preguntas frecuentes ya dependen de ellos: si acá cambian, allá hay que
  * revisar.
@@ -20,7 +20,7 @@ export type TipoEntrada = {
   id: string;
   /** Texto de la píldora. Corto: las tres tienen que entrar en una fila. */
   nombre: string;
-  /** PROVISORIO — sin confirmar por la organización. */
+  /** PROVISORIO - sin confirmar por la organización. */
   precio: string;
   /** Para quién es, en una línea. PROVISORIO. */
   para: string;
@@ -32,7 +32,7 @@ export type TipoEntrada = {
  *  con la escala, así que la píldora más barata es la primera.
  *
  *  SON TRES. Con tres, las píldoras entran en UNA sola fila hasta en un
- *  teléfono de 390px —339px de píldoras y huecos contra 350 de contenido—, así
+ *  teléfono de 390px -339px de píldoras y huecos contra 350 de contenido-, así
  *  que la fila se lee como un selector y no como una grilla de opciones. */
 export const TIPOS_ENTRADA: TipoEntrada[] = [
   {
@@ -69,7 +69,7 @@ export const TIPOS_ENTRADA: TipoEntrada[] = [
 /**
  * Medios de pago del riel.
  *
- * ⚠️ PROVISORIO, y con un matiz que conviene no perder: nombrar una marca acá
+ * ATENCION: PROVISORIO, y con un matiz que conviene no perder: nombrar una marca acá
  * AFIRMA que ExpoJuy la acepta, y eso no está confirmado por nadie. Es el
  * mismo problema que los auspiciantes, un escalón más abajo.
  *

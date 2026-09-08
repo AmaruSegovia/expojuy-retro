@@ -1,0 +1,507 @@
+<div class="hoja">
+<p class="aviso-export">EXPORTAR A PDF · Ctrl+P → «Guardar como PDF» → activar «Gráficos de fondo». Este aviso no se imprime.</p>
+
+<header class="portada salto">
+  <span class="sello">Fase 1 · Propuesta</span>
+  <p class="kicker">Primera Edición · Programa Provincial de Desafíos Tecnológicos</p>
+@@SVG@@
+  <h1>ExpoJuy 2026</h1>
+  <p class="subtitulo">Memoria descriptiva de la propuesta: tres prototipos completos, un análisis comparado y una integración resuelta por evidencia.</p>
+  <p class="claim">«Conectando países, creando oportunidades»</p>
+  <dl class="ficha">
+    <dt>Equipo</dt><dd>Equipo Retro · tres integrantes: Maru, Nacho y Leandro</dd>
+    <dt>Convocante</dt><dd>Cámara de Comercio Exterior de Jujuy</dd>
+    <dt>Fecha</dt><dd>8 de septiembre de 2026</dd>
+    <dt>Sitio integrado</dt><dd>@@URL_INTEGRADO@@</dd>
+    <dt>Prototipo base</dt><dd><a href="https://expojuy-prototipo.vercel.app">expojuy-prototipo.vercel.app</a>, con el anexo <a href="https://expojuy-prototipo.vercel.app/sistema-de-diseno">/sistema-de-diseno</a></dd>
+    <dt>Acceso</dt><dd>Sitio publicado. Se navega desde cualquier navegador, sin instalación ni credenciales.</dd>
+    <dt>Anexo</dt><dd>Declaración de uso de inteligencia artificial, documento adjunto.</dd>
+  </dl>
+</header>
+
+<nav class="indice">
+  <ol>
+    <li><span class="n">01</span> Concepto general del proyecto</li>
+    <li><span class="n">02</span> Objetivos perseguidos</li>
+    <li><span class="n">03</span> Organización del contenido</li>
+    <li><span class="n">04</span> Criterios de diseño</li>
+    <li><span class="n">05</span> Tecnologías previstas para el desarrollo</li>
+    <li><span class="n">06</span> Estrategia de accesibilidad</li>
+    <li><span class="n">07</span> Estrategia responsive</li>
+    <li><span class="n">08</span> Uso previsto de Inteligencia Artificial</li>
+    <li><span class="n">A</span> Datos provisorios y licencias</li>
+    <li><span class="n">B</span> Estado de avance y continuidad</li>
+  </ol>
+</nav>
+
+<section>
+  <h2><span class="n">01</span> Concepto general del proyecto</h2>
+  <p>ExpoJuy 2026 reúne producción, tecnología y economía del conocimiento de la provincia.
+  La propuesta lo cuenta en <strong>un sitio institucional de página única</strong>, de fondo
+  oscuro y paleta violeta, construido íntegramente sobre la identidad entregada: cada color
+  del sitio fue medido por muestreo de píxeles sobre el isologotipo oficial y la geometría de
+  la marca se extrajo del PDF institucional sin modificar un solo punto.</p>
+
+  <h3>Lo que distingue a esta propuesta</h3>
+  <p>El equipo no presentó una maqueta y su justificación. Presentó <strong>tres prototipos
+  navegables, completos e independientes</strong>, cada uno desarrollado por un integrante
+  distinto y en un stack distinto, y recién después decidió qué se llevaba a la propuesta final.
+  Cada prototipo resolvió las mismas diez secciones exigidas por las bases, de punta a punta,
+  con sus propias decisiones de arquitectura, movimiento y accesibilidad.</p>
+
+  <table>
+    <caption>Los tres prototipos de referencia</caption>
+    <thead><tr><th>Integrante</th><th>Repositorio</th><th>Stack</th><th>Rasgo distintivo</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Maru</td><td>mockup-expojuy</td><td>Astro 7, CSS nativo</td>
+        <td style="white-space:normal">Sitio estático de 26 páginas con <strong>una sola dependencia de producción</strong>, 3,2&nbsp;KB de JavaScript en total y cero archivos JavaScript externos. LCP declarado de 110&nbsp;ms. Maqueta isométrica del predio construida solo con CSS.</td>
+      </tr>
+      <tr>
+        <td>Nacho</td><td>expojuy-2026</td><td>Vite 8, React 19, CSS Modules</td>
+        <td style="white-space:normal">Ritmo claro y oscuro declarado sección por sección, con anulación por parte del visitante, y una capa de movimiento de tres niveles que persiste su elección.</td>
+      </tr>
+      <tr>
+        <td>Leandro</td><td>expojuy-prototipo</td><td>Next 16, Tailwind 4</td>
+        <td style="white-space:normal">Mejora progresiva sistemática y sistema de diseño con cada token trazado a una medición.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>Sobre esos tres se hizo un <strong>análisis comparado sección por sección</strong>, con los
+  informes completos versionados en el repositorio. La propuesta que se presenta es la
+  <strong>fusión basada en evidencia</strong>: para cada sección se adoptó la implementación que
+  mejor resolvía el problema, medida contra las otras dos, y no la del autor más insistente.
+  Tres secciones no eligieron un ganador y quedaron como híbrido explícito, porque la mejor
+  solución estaba repartida.</p>
+
+  <p class="panel panel--nota">Ese proceso es el punto: no es una maqueta que habrá que
+  averiguar si se puede construir. Es una propuesta con <strong>tres implementaciones de
+  referencia ya construidas y medidas</strong>, y una integración cuya justificación está
+  escrita sección por sección. La factibilidad técnica no se declara, se demuestra con el
+  código que ya existe.</p>
+
+  <figure class="captura">
+@@IMG_INICIO@@
+    <figcaption>Inicio: video cenital nocturno, rotador de conceptos y doble llamada a la acción. Captura del prototipo base, sobre el que se injertan las piezas de los otros dos.</figcaption>
+  </figure>
+
+  <table>
+    <caption>Decisión de integración, sección por sección</caption>
+    <thead><tr><th>Sección</th><th>Implementación adoptada</th><th>Origen</th></tr></thead>
+    <tbody>
+      <tr><td>Pantalla de carga</td><td style="white-space:normal">Máscara animada de la «J» del isologotipo</td><td>Leandro</td></tr>
+      <tr><td>Inicio</td><td style="white-space:normal">Video cenital, rotador 3D de conceptos, doble llamada a la acción</td><td>Leandro</td></tr>
+      <tr><td>Sobre ExpoJuy</td><td style="white-space:normal">Relato de los ejes de la feria</td><td>Maru</td></tr>
+      <tr><td>Agenda</td><td style="white-space:normal">Línea de tiempo con trazo SVG que se dibuja al desplazar</td><td>Leandro</td></tr>
+      <tr><td>Expositores</td><td style="white-space:normal">Buscador y filtro por rubro, con el resultado anunciado a lectores de pantalla</td><td>Nacho</td></tr>
+      <tr><td>Mapa del predio</td><td style="white-space:normal">Recorrido calculado sobre grafo de circulación, con la profundidad isométrica del plano</td><td>híbrido: Leandro y Maru</td></tr>
+      <tr><td>Entradas</td><td style="white-space:normal">Tres tipos en pestañas accesibles y medios de pago</td><td>Leandro</td></tr>
+      <tr><td>Noticias</td><td style="white-space:normal">Listado editorial, con el carrusel circular sobre él</td><td>híbrido: Maru y Leandro</td></tr>
+      <tr><td>Preguntas frecuentes</td><td style="white-space:normal">Acordeón servido abierto, con ARIA de divulgación completa</td><td>Nacho</td></tr>
+      <tr><td>Contacto</td><td style="white-space:normal">Formulario que marca el error recién cuando la persona tocó el campo, y canales directos</td><td>Maru</td></tr>
+      <tr><td>Sponsors</td><td style="white-space:normal">Muro de auspiciantes por nivel, con el marcador animado</td><td>híbrido: Maru y Leandro</td></tr>
+      <tr><td>Navegación</td><td style="white-space:normal">Barra fija de escritorio y menú de pantalla completa, con iconografía</td><td>híbrido: Nacho y Maru</td></tr>
+      <tr><td>Pie de página</td><td style="white-space:normal">Mapa del sitio, canales, redes y efecto de revelado</td><td>híbrido: Maru y Leandro</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2><span class="n">02</span> Objetivos perseguidos</h2>
+  <p>La propuesta persigue seis objetivos, y cada uno se planteó de modo que pudiera
+  verificarse en el propio sitio y no solo afirmarse en este documento.</p>
+  <ul class="lista">
+    <li><strong>Representar la identidad institucional sin interpretarla.</strong> Ningún valor
+    de diseño se eligió a ojo: cada color es un píxel medido del isologotipo, un derivado por
+    regla escrita, o un valor resuelto contra un objetivo de contraste WCAG.</li>
+    <li><strong>Comunicar la feria en un solo recorrido.</strong> Una página ordenada como
+    embudo de decisión, sin manual de uso y sin que el visitante tenga que elegir por dónde
+    empezar.</li>
+    <li><strong>Accesibilidad medida, no estimada.</strong> Contrastes calculados uno por uno,
+    control de pausa en todo movimiento autónomo y contenido legible sin JavaScript.</li>
+    <li><strong>Rendimiento en un teléfono real.</strong> La vara es el perfil móvil de
+    auditoría, con red lenta y procesador cuatro veces más lento, no el escritorio del
+    desarrollador.</li>
+    <li><strong>Escalabilidad demostrable.</strong> Fronteras de arquitectura que el linter hace
+    cumplir: cruzarlas no es un comentario en una revisión, es un build en rojo.</li>
+    <li><strong>Honestidad de prototipo.</strong> Los botones hacen lo que dicen y lo que no
+    existe no se simula. Todo dato que la organización todavía no confirmó está marcado como
+    provisorio, en el código y, cuando podría tomarse por real, también en pantalla.</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="n">03</span> Organización del contenido</h2>
+  <p>El orden de la página es un <strong>embudo de decisión</strong>. Todo lo anterior a
+  Entradas responde «¿vale la pena ir?»: qué es la feria, qué pasa, quiénes están y dónde
+  queda. Entradas responde «sí, ¿cómo entro?». Después viene la cola informativa, Noticias y
+  Preguntas frecuentes, y Contacto cierra el recorrido. Una sola lista en el código gobierna a
+  la vez el menú y el orden del documento, de modo que no puedan desincronizarse.</p>
+
+  <p>Las bases exigen diez secciones mínimas. Las diez están cubiertas y ninguna quedó como
+  enlace muerto ni como marcador de posición.</p>
+
+  <table>
+    <caption>Las diez secciones exigidas por las bases</caption>
+    <thead><tr><th>Nº</th><th>Sección</th><th>Cómo se resuelve</th></tr></thead>
+    <tbody>
+      <tr><td>01</td><td>Inicio</td><td style="white-space:normal">Video cenital de fondo con imagen de póster optimizada, rotador tridimensional de conceptos y doble llamada a la acción. La pantalla de carga dibuja la «J» del isologotipo.</td></tr>
+      <tr><td>02</td><td>Sobre ExpoJuy 2026</td><td style="white-space:normal">Carrusel circular de los cuatro ejes declarados por la organización, con asomo lateral, navegación por botones, puntos y teclado.</td></tr>
+      <tr><td>03</td><td>Agenda</td><td style="white-space:normal">Línea de tiempo vertical con un trazo SVG que se dibuja conforme se desplaza la página; los hitos se encienden a su paso.</td></tr>
+      <tr><td>04</td><td>Expositores</td><td style="white-space:normal">Fichas de expositores con rubro, día y número de stand, en una disposición que se recorre sin salir de la página.</td></tr>
+      <tr><td>05</td><td>Plano del predio</td><td style="white-space:normal">Plano esquemático con volumen isométrico. Al elegir un lugar, el recorrido desde el acceso se calcula sobre un grafo de circulación y se dibuja sobre el plano.</td></tr>
+
+      <tr><td>06</td><td>Noticias</td><td style="white-space:normal">Novedades en carrusel circular, con puntos, flechas y anuncio para lectores de pantalla en cada cambio.</td></tr>
+      <tr><td>07</td><td>Sponsors</td><td style="white-space:normal">Franja de cierre con la grilla de auspiciantes y un marcador de esquinas que sigue al puntero o al desplazamiento.</td></tr>
+      <tr><td>08</td><td>Contacto</td><td style="white-space:normal">Formulario con validación nativa y mensajes propios, más los canales directos: correo, teléfono y sede.</td></tr>
+      <tr><td>09</td><td>Preguntas frecuentes</td><td style="white-space:normal">Acordeón excluyente que se sirve abierto: sin JavaScript las respuestas quedan a la vista.</td></tr>
+      <tr><td>10</td><td>Redes sociales</td><td style="white-space:normal">Bloque permanente en el pie de página, con navegación propia rotulada, junto a los canales directos de Contacto que lo preceden.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Sobre Redes sociales, que es la que suele darse por supuesta</h3>
+  <p>Redes sociales no necesita una parada con desplazamiento propio: necesita estar siempre a
+  mano. Por eso se resuelve en <strong>dos lugares, el pie de página y Contacto</strong>. En el pie
+  es un bloque permanente con su propia navegación rotulada para lectores de pantalla; en Contacto
+  acompaña a los canales directos, correo, teléfono y sede, que es donde alguien que quiere
+  escribirle a la organización va a mirar primero. En los dos casos cada enlace lleva los atributos
+  de seguridad que corresponden a una apertura en pestaña nueva y un aviso, solo para lectores de
+  pantalla, de que la pestaña se abre aparte. Es una decisión de ubicación, no una omisión: la
+  sección está, y está en los dos lugares donde se la busca.</p>
+
+  <p>La franja de Sponsors se ubica después de Contacto y no lleva número en el menú por una
+  razón deliberada: es crédito institucional, no un destino al que alguien navegue. Está
+  presente y accesible, pero no compite por un lugar en la barra de navegación.</p>
+
+  <h3>El plano, como ejemplo de qué significa fusionar por evidencia</h3>
+  <p>El plano del predio es el caso donde la decisión no eligió un ganador, y se ve por qué. Del
+  prototipo base viene el <strong>cálculo del recorrido</strong>: el camino de un punto a otro no es
+  una recta, porque una recta atravesaría naves y canteros y se leería como un error de dibujo. Hay
+  un grafo de circulación con los tramos de la calle interna, sus ramales y el pasillo transversal,
+  y el camino más corto se resuelve con el algoritmo de Dijkstra, una vez por selección y nunca por
+  cuadro de animación.</p>
+  <p>Del prototipo en Astro viene el <strong>volumen</strong>: la maqueta es una proyección
+  ortográfica, sin punto de fuga, que es justamente lo que permite leerla como planta, porque dos
+  pabellones del mismo tamaño se dibujan iguales estén donde estén. Cada bloque se arma con cinco
+  caras, la luz es una sola y viene de arriba a la izquierda, y el orden de dibujo se resuelve por
+  la suma de las coordenadas del bloque en lugar de con capas apiladas a mano. Todo eso es CSS: no
+  hay motor 3D ni biblioteca de gráficos.</p>
+
+  <figure class="captura">
+@@IMG_MAPA@@
+    <figcaption>Plano del predio: el recorrido se calcula sobre un grafo de circulación y se dibuja desde el acceso hasta el lugar elegido.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2><span class="n">04</span> Criterios de diseño</h2>
+  <p><strong>Regla dura: no se inventan valores.</strong> Todo token del sistema es una de tres
+  cosas: un color medido del isologotipo por muestreo de píxeles, un derivado obtenido por una
+  regla escrita, o un valor resuelto contra un objetivo de contraste WCAG. La trazabilidad
+  completa está renderizada en el anexo <em>/sistema-de-diseno</em>, que es una página del propio
+  sitio y no un documento aparte.</p>
+
+  <figure class="paleta">
+    <div class="sw"><div class="chip" style="background:#820cd0"></div><figcaption>#820CD0<br>violeta profundo</figcaption></div>
+    <div class="sw"><div class="chip" style="background:#774ff0"></div><figcaption>#774FF0<br>violeta · primario</figcaption></div>
+    <div class="sw"><div class="chip" style="background:#bb8cff"></div><figcaption>#BB8CFF<br>lavanda</figcaption></div>
+    <div class="sw"><div class="chip" style="background:#25c0d4"></div><figcaption>#25C0D4<br>cian · acento</figcaption></div>
+    <div class="sw"><div class="chip" style="background:#4b4b4d"></div><figcaption>#4B4B4D<br>grafito</figcaption></div>
+  </figure>
+
+  <p>Los cinco colores salieron del archivo oficial del isologotipo, muestreando los píxeles con
+  canal alfa por encima de 200, y se confirmaron después contra los operadores de color del PDF
+  institucional. Son la única fuente de verdad cromática del sitio: no hay un solo color literal
+  escrito en un componente.</p>
+
+  <h3>La decisión cromática se tomó midiendo</h3>
+  <p>El turquesa oficial es el ejemplo que ordenó todo lo demás. Sobre blanco da
+  <strong>2,19:1</strong>, muy por debajo del mínimo exigido para texto, así que un sitio claro
+  obligaba a desteñirlo o a relegarlo a decoración. Sobre superficie oscura, en cambio, es un color
+  de texto holgadamente conforme: <strong>8,12:1</strong> sobre la tinta del prototipo en Astro y
+  <strong>9,02:1</strong> sobre la superficie base del sitio integrado, que es más oscura todavía.
+  Los tres prototipos llegaron por separado a la misma conclusión, y esa coincidencia es la que
+  justifica que el sitio sea oscuro: no es una preferencia estética, es la condición para usar el
+  color de marca como acento legible en vez de como adorno.</p>
+
+  <p>La misma lógica ordenó los acentos. Sobre fondo oscuro el violeta es color de relleno: los
+  únicos acentos válidos para texto son la lavanda y el cian. El violeta profundo queda
+  <strong>prohibido para texto</strong> por regla escrita, porque da 2,74:1, y el grafito
+  también, porque da 2,27:1. La regla vive en la documentación del repositorio, no en la memoria
+  de quien la descubrió.</p>
+
+  <ul class="lista">
+    <li><strong>Neutros teñidos, no grises.</strong> Se generaron en OKLCH al matiz 297,8°, que
+    es la media de los tres violetas oficiales, con croma mínimo. Es el mismo criterio que la
+    propia marca ya aplica en su gris institucional, que no es neutro sino que está corrido
+    hacia el violeta.</li>
+    <li><strong>Radios: cero o píldora.</strong> El isologotipo se construye con esquinas vivas y
+    una semicircunferencia. La ausencia del rango intermedio es deliberada y hace que el sitio se
+    lea como la marca aunque no haya un logotipo a la vista.</li>
+    <li><strong>Movimiento con intención.</strong> Cuatro duraciones, una por tipo de gesto:
+    150&nbsp;ms para respuesta táctil, 250&nbsp;ms para cambio de estado, 600&nbsp;ms para entrada
+    de un elemento y 900&nbsp;ms para transición de escena. Solo se animan propiedades que el
+    compositor resuelve sin recalcular el layout.</li>
+    <li><strong>Marca de fuente única.</strong> Los trazados de la «J» se extrajeron del flujo
+    comprimido del PDF oficial y están sin modificar, para que cualquiera pueda verificarlos con
+    una comparación. De esa única fuente salen el logotipo visible, la máscara de la pantalla de
+    carga y el favicon.</li>
+    <li><strong>Tipografía oficial.</strong> Ambit, la del kit institucional, servida como fuente
+    local optimizada, con una escala tipográfica fluida generada por script en vez de elegida
+    tamaño por tamaño.</li>
+    <li><strong>Color derivado incluso donde la marca no llega.</strong> El sitio necesitaba un
+    rojo de error y ni la marca ni el sistema tenían uno. En lugar de elegirlo, se derivó: es el
+    complementario del cian oficial en la rueda OKLCH, con el croma máximo que admite el gamut y
+    la luminosidad resuelta hasta alcanzar su objetivo de contraste.</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="n">05</span> Tecnologías previstas para el desarrollo</h2>
+  <p>El stack de la propuesta integrada es el del prototipo base, elegido porque ya corría con las
+  diez secciones construidas y aportaba varias de ellas sin costo de portado. Las piezas adoptadas
+  de los otros dos prototipos se trasladan a este stack traduciendo su CSS a los tokens del sistema,
+  no arrastrando la paleta de origen.</p>
+
+  <div class="dos-columnas">
+    <table>
+      <caption>Stack de la propuesta integrada</caption>
+      <tbody>
+        <tr><td>Next.js 16.3.4</td><td>framework y render</td></tr>
+        <tr><td>React 19.2.8</td><td>con React Compiler activado</td></tr>
+        <tr><td>Tailwind CSS 4</td><td>tokens declarados en CSS</td></tr>
+        <tr><td>TypeScript 5</td><td>modo estricto, sin escapes</td></tr>
+        <tr><td>Lenis</td><td>desplazamiento suave</td></tr>
+        <tr><td>lucide-react</td><td>iconografía</td></tr>
+        <tr><td>pnpm 10.17.1</td><td>gestor fijado en el proyecto</td></tr>
+        <tr><td>Vercel</td><td>despliegue continuo</td></tr>
+        <tr><td>GitHub Actions</td><td>tipos, lint, formato y build</td></tr>
+      </tbody>
+    </table>
+    <div>
+      <p><strong>Arquitectura Vertical Slice</strong> en tres capas con dependencias en un solo
+      sentido: <span class="tag">app/</span> compone y puede importar todo,
+      <span class="tag">features/</span> son slices autocontenidos que no se conocen entre sí, y
+      <span class="tag">shared/</span> no conoce a nadie por encima suyo.</p>
+      <p>Esas fronteras no son una convención escrita en un documento que alguien puede no leer:
+      están declaradas como reglas de ESLint. Si un feature importa a otro, o si la capa
+      compartida mira hacia arriba, el lint falla y el build queda en rojo. La arquitectura
+      dejó de ser documentación y pasó a ser un test.</p>
+      <p><strong>Sin librerías de animación.</strong> Todo el movimiento es CSS nativo. Menos
+      dependencias, menos peso, y el navegador como único dueño del estado de reproducción.</p>
+    </div>
+  </div>
+
+  <p><strong>Por qué esta arquitectura escala.</strong> Cada sección del sitio es un slice
+  independiente con sus propios componentes, constantes, hooks y estilos. Sumar una sección nueva
+  en una edición futura es agregar una carpeta y una línea en la composición, sin tocar lo que ya
+  funciona. La integración de los tres prototipos fue, en la práctica, la primera prueba de esa
+  propiedad: se injertaron piezas de dos bases de código distintas sin reescribir las secciones
+  vecinas.</p>
+
+  <p><strong>Seguridad y mantenimiento.</strong> El sitio es estático, no pide permisos del
+  navegador y no recoge datos personales en un servidor propio: el formulario de contacto compone
+  un correo real en el cliente del visitante. HTTPS y certificados los provee la plataforma. Cada
+  push pasa por verificación automática de tipos, lint, formato y build antes de desplegar, y hay
+  ganchos de pre-commit y pre-push que corren lo mismo en la máquina de quien programa. El
+  contenido editorial vive centralizado en constantes tipadas: reemplazar lo provisorio por lo
+  oficial es editar un archivo, no rastrear cadenas por el proyecto.</p>
+</section>
+
+<section>
+  <h2><span class="n">06</span> Estrategia de accesibilidad</h2>
+  <p>El criterio de la propuesta es <strong>medir, no suponer</strong>. La lightness de cada
+  escalón de texto y de borde no se eligió: se resolvió por búsqueda binaria en OKLCH,
+  conservando matiz y croma, hasta alcanzar su ratio WCAG objetivo.</p>
+
+  <p>Y se resolvió contra la superficie correcta, que fue una lección pagada. El sistema tiene
+  cuatro superficies y dos son más claras que la base. Un token calculado contra la base pasaba
+  ahí y fallaba sobre las tarjetas y sobre el pie: el gris de texto secundario daba 4,69:1 sobre
+  la base pero caía a 4,34:1 sobre la superficie elevada y a 3,82:1 sobre la superpuesta. La
+  regla quedó escrita: <strong>cada escalón se resuelve contra la superficie más clara donde
+  puede aparecer</strong>, porque satisfacer a la más clara satisface a todas las demás por
+  construcción. El ratio anotado junto a cada token es el del peor caso.</p>
+
+  <table>
+    <caption>Contraste medido de cada escalón, en el peor caso</caption>
+    <thead><tr><th>Token</th><th>Valor</th><th class="cent">Ratio</th><th>Uso</th></tr></thead>
+    <tbody>
+      <tr><td>text</td><td>#E8E6EB</td><td class="cent">13,01:1</td><td style="white-space:normal">Texto principal. AAA con holgura.</td></tr>
+      <tr><td>text-muted</td><td>#A19EA7</td><td class="cent">6,12:1</td><td style="white-space:normal">Texto secundario. AA con holgura.</td></tr>
+      <tr><td>text-subtle</td><td>#888691</td><td class="cent">4,50:1</td><td style="white-space:normal">Texto terciario. AA exacto por construcción.</td></tr>
+      <tr><td>border-strong</td><td>#6C6975</td><td class="cent">3,01:1</td><td style="white-space:normal">Borde perceptible. AA no textual.</td></tr>
+      <tr><td>border</td><td>#36323E</td><td class="cent">1,29:1</td><td style="white-space:normal">Separación decorativa. No transmite información.</td></tr>
+      <tr><td>lavanda</td><td>#BB8CFF</td><td class="cent">7,83:1</td><td style="white-space:normal">Acento válido para texto y enlaces.</td></tr>
+      <tr><td>cian</td><td>#25C0D4</td><td class="cent">9,02:1</td><td style="white-space:normal">Acento válido para texto.</td></tr>
+      <tr><td>violeta profundo</td><td>#820CD0</td><td class="cent">2,74:1</td><td style="white-space:normal">Relleno únicamente. Prohibido para texto.</td></tr>
+    </tbody>
+  </table>
+
+  <p>De medir salieron reglas que la intuición no habría dado. El hover del botón primario
+  <strong>se oscurece</strong> en lugar de aclararse, porque aclararlo bajaba el texto blanco de
+  5,05:1 a 3,98:1 y rompía el nivel AA. El anillo de foco va en dos capas, contorno más
+  desplazamiento, porque un anillo de un solo color da 2,00:1 contra el botón violeta y es
+  invisible justo donde más falta hace.</p>
+
+  <h3>Mejora progresiva, que acá es estructural</h3>
+  <p>Un script en línea agrega una clase al documento antes del primer pintado, y todo estado
+  oculto o plegado vive detrás de esa clase. La consecuencia es que <strong>el HTML se sirve
+  siempre en su estado final y legible</strong>: sin JavaScript la agenda se ve dibujada, las
+  respuestas de Preguntas frecuentes llegan abiertas y los precios de las entradas están a la
+  vista. No es una concesión a un caso raro: ya evitó un fallo real en el que el script murió al
+  parsearse y el sitio se vio igual.</p>
+
+  <ul class="lista">
+    <li><strong>Control de pausa en todo lo que se mueve solo</strong>, según WCAG 2.2.2: botón
+    con estado accesible anunciado, pausa también al pasar el puntero y al recibir el foco.</li>
+    <li><strong>La preferencia de movimiento reducido se respeta en CSS y en JavaScript</strong>,
+    y quitar la animación nunca quita el contenido: un riel que deja de girar se convierte en
+    grilla completa, no en un hueco.</li>
+    <li><strong>Áreas táctiles de 36 píxeles</strong> como mínimo, por encima de los 24 que exige
+    WCAG 2.5.8, sin engordar el dibujo del control.</li>
+    <li><strong>El color nunca es el único indicador de estado.</strong> Un error de formulario
+    lleva siempre texto, icono y atributo de estado accesible, además del rojo.</li>
+    <li><strong>Todo componente interactivo es alcanzable y operable por teclado</strong>, con
+    ARIA correcto en lo plegable, en los diálogos y en los contadores que cambian solos.</li>
+    <li><strong>No se bloquea el zoom.</strong> El viewport no declara escala máxima ni desactiva
+    el escalado del usuario, porque hacerlo viola WCAG 1.4.4.</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="n">07</span> Estrategia responsive</h2>
+  <div class="fila-figuras">
+    <div>
+      <p>La validación se hace <strong>midiendo el DOM en el navegador</strong>, no mirando
+      capturas: se comprueban las cajas reales a 390, 820 y 1440&nbsp;px, y los casos conflictivos
+      se revisan además en los anchos exactos donde aparecieron, con emulación táctil real para
+      los gestos. El presupuesto de cada texto lo fija el peor caso, que es el ancho mínimo de su
+      tarjeta y no el del escritorio.</p>
+      <p>El principio es que <strong>el diseño reorganiza, no encoge</strong>. Las disposiciones
+      de varias columnas se convierten en una sola recorrible con el dedo, la grilla de
+      auspiciantes cambia de proporción en vez de achicar las fichas, y las láminas informativas
+      reducen su relato al eje y la cifra cuando el ancho no da para más. Los tamaños de texto no
+      saltan por breakpoint: la escala tipográfica es fluida y se interpola entre 360 y
+      1440&nbsp;px.</p>
+      <p>Varias de las trampas del proyecto salieron de acá y quedaron anotadas: un contenedor
+      que estiraba una fila entera a 390&nbsp;px, un riel que a ese ancho recortaba las fichas, un
+      pie de página que medía 761&nbsp;px a 373&nbsp;px de ancho y 861&nbsp;px a 768. Ninguna se
+      habría visto en una captura.</p>
+    </div>
+    <figure class="captura">
+@@IMG_ENTRADAS@@
+      <figcaption>Entradas a 390 px de ancho.</figcaption>
+    </figure>
+  </div>
+
+  <table>
+    <caption>Auditoría Lighthouse del prototipo base, 08/09/2026</caption>
+    <thead><tr><th>Perfil</th><th class="cent">Rendim.</th><th class="cent">Accesib.</th><th class="cent">B.&nbsp;práct.</th><th class="cent">SEO</th></tr></thead>
+    <tbody>
+      <tr><td style="white-space:normal">Móvil (red 4G lenta, CPU ×4 más lenta)</td><td class="cent">93</td><td class="cent">100</td><td class="cent">100</td><td class="cent">100</td></tr>
+      <tr><td>Escritorio</td><td class="cent">99</td><td class="cent">100</td><td class="cent">100</td><td class="cent">100</td></tr>
+    </tbody>
+  </table>
+
+  <p class="panel panel--nota"><strong>Alcance de esta medición.</strong> Los puntajes de la tabla
+  corresponden a la build del prototipo base publicado, con sus diez secciones, y no al sitio
+  integrado. <strong>El sitio integrado todavía no fue auditado</strong>: la auditoría se corre
+  una vez cerrado el portado de las piezas de los otros dos prototipos, y el número que salga es
+  el que se va a informar. Se declara así a propósito: sería más cómodo presentar estos puntajes
+  como si fueran los del sitio final, y sería falso.</p>
+</section>
+
+<section>
+  <h2><span class="n">08</span> Uso previsto de Inteligencia Artificial</h2>
+  <p>El proyecto se desarrolló con <strong>Claude Code</strong>, de Anthropic, como herramienta de
+  apoyo, bajo dirección, validación y aprobación humanas en cada fase. El ciclo fue siempre el
+  mismo: el equipo especifica, la herramienta implementa y mide, el equipo valida en el navegador
+  y aprueba, y recién entonces se registra el cambio. La aprobación previa a cada commit es
+  siempre de una persona.</p>
+
+  <table>
+    <caption>Usos declarados</caption>
+    <thead><tr><th>Tarea</th><th>Alcance</th></tr></thead>
+    <tbody>
+      <tr><td>Análisis de repositorios</td><td style="white-space:normal">Lectura y comparación de los tres prototipos, sección por sección, con las mediciones que sostienen la decisión de integración.</td></tr>
+      <tr><td>Portado entre stacks</td><td style="white-space:normal">Traslado de piezas de Astro y de Vite al stack de la propuesta, traduciendo su CSS a los tokens del sistema.</td></tr>
+      <tr><td>Implementación</td><td style="white-space:normal">Escritura de código bajo especificación del equipo, y medición en un navegador real: geometría del DOM, contrastes y animaciones.</td></tr>
+      <tr><td>Redacción técnica</td><td style="white-space:normal">Documentación del repositorio, mensajes de commit y este documento.</td></tr>
+    </tbody>
+  </table>
+
+  <p><strong>Qué no se hizo con IA.</strong> No se generaron imágenes con inteligencia artificial:
+  los espacios visuales usan un patrón derivado del módulo geométrico del propio isologotipo hasta
+  contar con fotografías institucionales. Tampoco se usan fotografías de banco de imágenes. La
+  geometría de la marca se extrajo del PDF oficial sin modificar un solo punto. Las decisiones de
+  diseño, contenido, orden y descarte son del equipo.</p>
+
+  <p>El detalle completo de herramientas, método, evidencia auditable y límites está en el
+  documento adjunto <em>Declaración de uso de inteligencia artificial</em>.</p>
+</section>
+
+<section>
+  <h2><span class="n">A</span> Datos provisorios y licencias</h2>
+  <p><strong>El kit entregado por la organización solo incluyó logotipos.</strong> No hay fechas
+  confirmadas, sede confirmada, precios, textos oficiales, expositores, auspiciantes ni canales de
+  contacto. Todo eso existe en el sitio porque un prototipo sin contenido no se puede evaluar,
+  pero <strong>es contenido de maqueta y está declarado como tal</strong>.</p>
+
+  <p>Está marcado en el código, centralizado para que reemplazarlo sea una edición y no una
+  cacería, y cuando el dato podría tomarse por real, también está advertido en la interfaz: los
+  precios de las entradas se muestran como precio de referencia sujeto a confirmación, porque son
+  el dato más consultable de todos y alguien podría presupuestar con ellos. Ningún auspiciante
+  corresponde a una empresa real: son nombres de fantasía y no hay un solo logotipo de terceros.</p>
+
+  <table>
+    <caption>Inventario de contenido provisorio</caption>
+    <thead><tr><th>Ámbito</th><th>Qué es de maqueta</th></tr></thead>
+    <tbody>
+      <tr><td>Institucional</td><td style="white-space:normal">Fechas, sede, canales de contacto y perfiles de redes sociales.</td></tr>
+      <tr><td>Programación</td><td style="white-space:normal">Actividades de la agenda con sus horarios, expositores con rubro y stand, y lugares del predio.</td></tr>
+      <tr><td>Editorial</td><td style="white-space:normal">Láminas de Sobre ExpoJuy, noticias y respuestas de Preguntas frecuentes.</td></tr>
+      <tr><td>Comercial</td><td style="white-space:normal">Los tres precios de entradas, lo que incluye cada una, los medios de pago y los auspiciantes.</td></tr>
+      <tr><td>Multimedia</td><td style="white-space:normal">El video del inicio es material de licencia libre usado para maquetar; hay que reemplazarlo por una toma de la sede real.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Licencias</h3>
+  <p>Usar material sin licencia es causal de descalificación según las bases, así que la propuesta
+  lo trata como un requisito y no como un detalle. Solo se usan recursos con licencia verificada.</p>
+  <ul class="lista">
+    <li><strong>Iconografía.</strong> Los iconos de Tabler se distribuyen bajo licencia MIT y su
+    aviso está transcrito íntegro en el registro de licencias del repositorio.</li>
+    <li><strong>Logotipo y tipografía Ambit.</strong> Son propiedad de la organización. Están en el
+    proyecto para compilar el sitio, no para redistribuirse.</li>
+    <li><strong>Video.</strong> El clip del inicio es de licencia libre y sin marca de agua. Un
+    primer clip candidato se descartó justamente por tener marca de agua: quitarla habría sido
+    sortear el mecanismo que protege una licencia que ese material no tenía.</li>
+    <li><strong>Sin imágenes generadas por IA y sin fotografías de banco.</strong> Los espacios
+    todavía sin foto oficial se resuelven con un patrón derivado del propio isologotipo.</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="n">B</span> Estado de avance y continuidad</h2>
+  <p>Los tres prototipos de referencia están construidos y navegables. El análisis comparado está
+  cerrado y versionado. La integración avanza sobre la base elegida, con las secciones heredadas ya
+  en producción y las piezas portadas incorporándose una por una, cada una con su verificación de
+  tipos, lint, formato y build antes de entrar.</p>
+
+  <p>Lo que queda para la fase siguiente está identificado y acotado: la auditoría del sitio
+  integrado, el reemplazo del video del inicio por una toma de la sede real, y la sustitución del
+  contenido provisorio por el material oficial. Ninguna de esas tres tareas requiere rediseñar
+  nada, porque el layout ya está preparado para recibirlas y el contenido ya está centralizado.</p>
+
+  <p>El proyecto queda publicado con integración continua: cada mejora sale con un push, verificada
+  automáticamente antes de desplegar. Esa es la razón por la que la propuesta se presenta como un
+  sitio y no como un archivo: lo que el jurado ve es lo que hay, y lo que se corrija después se ve
+  en el mismo lugar.</p>
+</section>
+
+<div class="pie-doc"><span>ExpoJuy 2026 · Memoria descriptiva</span><span>Equipo Retro · 08/09/2026</span></div>
+
+</div>
+</body>
+</html>

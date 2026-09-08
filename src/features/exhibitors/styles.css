@@ -1,0 +1,30 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   BUSCADOR DE EXPOSITORES - ver src/features/exhibitors/components/
+
+   Casi toda la sección se resuelve con utilidades. Acá vive lo único que no
+   se puede expresar con una: un pseudo-elemento propietario del navegador.
+
+   LA CRUZ DE LIMPIAR DEL CAMPO DE BÚSQUEDA
+
+   El prototipo de origen la teñía con `filter: invert(1)`, incondicional,
+   apoyado en que su sección era oscura. Eso está mal en este sitio por dos
+   motivos distintos y ninguno de los dos es el tema claro:
+
+   1. El sitio declara `color-scheme: dark` en el viewport, así que el
+      navegador YA dibuja la cruz en claro. Invertirla la devuelve a oscuro:
+      el filtro no la arreglaba, la rompía.
+   2. La cruz nativa no tiene nombre accesible, no entra en el recorrido del
+      tabulador y su tamaño lo decide el navegador, así que queda por debajo
+      del área táctil mínima de 36px que pide el sistema.
+
+   Por eso no se la tiñe: se la apaga, y el botón de limpiar lo dibuja el
+   componente con un ícono, un `sr-only` que lo nombra y 36px de área. El
+   comportamiento deja de depender del navegador.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+  .expositores__campo::-webkit-search-cancel-button,
+  .expositores__campo::-webkit-search-decoration {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+}

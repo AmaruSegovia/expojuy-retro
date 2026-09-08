@@ -5,7 +5,7 @@ type BrandMarkProps = {
   className?: string;
   /**
    * Texto alternativo. Si se omite, la marca se trata como decorativa y se
-   * oculta a los lectores de pantalla — que es lo correcto cuando va al lado
+   * oculta a los lectores de pantalla - que es lo correcto cuando va al lado
    * de un texto que ya dice "ExpoJuy 2026".
    */
   title?: string;
@@ -26,7 +26,7 @@ type BrandMarkProps = {
 };
 
 /**
- * Isologotipo de ExpoJuy 2026 — la "J".
+ * Isologotipo de ExpoJuy 2026 - la "J".
  * La geometría y su procedencia están documentadas en `brand-mark-paths.ts`.
  */
 export function BrandMark({ className, title, monocromo }: BrandMarkProps) {

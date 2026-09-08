@@ -2,13 +2,13 @@
 
 # This is NOT the Next.js you know
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+This version has breaking changes - APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
 
-This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+This block is written and re-added by `next dev` - verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
 
-# ExpoJuy 2026 — prototipo
+# ExpoJuy 2026 - prototipo
 
 Sitio institucional para la Primera Edición del Programa Provincial de Desafíos
 Tecnológicos. Equipo Retro. Producción: https://expojuy-prototipo.vercel.app
@@ -24,7 +24,7 @@ Tecnológicos. Equipo Retro. Producción: https://expojuy-prototipo.vercel.app
 | `pnpm typecheck` | `next typegen && tsc --noEmit` |
 | `pnpm lint` | ESLint, incluidas las fronteras de arquitectura |
 | `pnpm format` | Prettier |
-| `pnpm verify` | Las tres anteriores — lo mismo que corre el CI |
+| `pnpm verify` | Las tres anteriores - lo mismo que corre el CI |
 
 `pnpm`, nunca npm ni yarn. La versión sale de `packageManager` en `package.json`.
 
@@ -76,7 +76,7 @@ comentada en `src/app/globals.css` y renderizada en `/sistema-de-diseno`.
   que la marca ya aplica en su gris institucional.
 - **Texto y bordes**: cada escalón se resolvió por búsqueda binaria en OKLCH
   hasta su ratio WCAG objetivo, medido contra `--color-surface-overlay`
-  (#231F2B) — la superficie **más clara** del sistema, no la base. Satisfacer
+  (#231F2B) - la superficie **más clara** del sistema, no la base. Satisfacer
   la más clara satisface a las otras tres por construcción. El ratio anotado
   al lado de cada token es el del **peor caso**.
 - **Radios**: solo `0` o píldora. El isologotipo se construye con esquinas vivas
@@ -121,7 +121,7 @@ animación.
 
 **Lo que se mueve solo lleva control de pausa.** No es opcional: WCAG 2.2.2 lo
 exige para todo movimiento que arranque solo, dure más de cinco segundos y
-conviva con otro contenido —un bucle infinito cumple las tres—. El bento de
+conviva con otro contenido -un bucle infinito cumple las tres-. El bento de
 Expositores es el precedente: botón de pausa con `aria-pressed`, pausa también
 al puntero y al foco, y con `prefers-reduced-motion` no arranca. Un slider
 nuevo que se mueva solo hereda el requisito completo.
@@ -132,7 +132,7 @@ compositor resuelve sin recalcular layout. Nunca `width`, `height`, `top`.
 **La única excepción es el acordeón de Preguntas**, y no se puede evitar: para
 que el contenido de abajo suba al plegarse, el panel tiene que dejar de ocupar
 lugar, y con `clip-path` se recortaría pero seguiría ocupando su alto. Se anima
-`grid-template-rows` de `0fr` a `1fr` —no `height` de 0 a `auto`— para no tener
+`grid-template-rows` de `0fr` a `1fr` -no `height` de 0 a `auto`- para no tener
 que medir el contenido con JavaScript. El recálculo pasa UNA VEZ POR CLIC, no
 una vez por frame de scroll, que es lo que la regla existe para evitar. Si
 aparece otro caso así, la vara es esa: ¿lo dispara el usuario o el scroll?
@@ -147,7 +147,7 @@ Nunca servir `opacity: 0` desde el servidor. Ya salvó un bug real en el que el
 script moría al parsearse y el sitio igual se veía perfecto.
 
 `prefers-reduced-motion` se respeta en CSS y en JS. **Quitar la animación nunca
-debe quitar el contenido** — de ahí los `opacity: 1 !important` en el media
+debe quitar el contenido** - de ahí los `opacity: 1 !important` en el media
 query.
 
 ## Rendimiento
@@ -191,8 +191,8 @@ Cosas que costaron tiempo. No repetirlas:
   geometría: `entrada.boundingClientRect.top` contra `rootBounds.bottom`. El
   `rootMargin` queda solo para que el navegador avise en el cruce.
 - **La caja de una recta vertical tiene ancho CERO**, y un elemento con caja
-  degenerada que referencia un degradado en `objectBoundingBox` —el valor por
-  defecto de `gradientUnits`— **no se pinta**. No sale tenue: no sale. Usar
+  degenerada que referencia un degradado en `objectBoundingBox` -el valor por
+  defecto de `gradientUnits`- **no se pinta**. No sale tenue: no sale. Usar
   `userSpaceOnUse`.
 - **`vector-effect="non-scaling-stroke"` pasa los dashes a espacio de
   pantalla**, así que rompe la normalización de `pathLength`. Si el trazo se
@@ -207,7 +207,7 @@ Cosas que costaron tiempo. No repetirlas:
   como fondo. El póster del hero está optimizado pero *no* es el elemento LCP,
   así que optimizarlo más no mueve la métrica.
 - **Un token de color no se valida contra una sola superficie.** `text-subtle`
-  daba 4,69:1 sobre la base —4% de margen— y caía a 3,82:1 sobre el footer.
+  daba 4,69:1 sobre la base -4% de margen- y caía a 3,82:1 sobre el footer.
   Y `border-strong` fallaba igual sin que Lighthouse lo dijera: **axe no
   audita contraste no textual** (WCAG 1.4.11). Si un token nuevo va a tocar
   cards, medirlo contra `surface-overlay`.
@@ -218,23 +218,23 @@ Cosas que costaron tiempo. No repetirlas:
   2N tarjetas dejan 2N−1 huecos, así que `translate: -50%` se queda MEDIO HUECO
   corto y el bucle pega un tirón en cada vuelta. Las tarjetas se separan con
   `margin-bottom`: así cada una mide siempre tarjeta+hueco y la media vuelta
-  cae en un múltiplo entero. Se verifica midiendo —`(altoRiel/2) / paso` tiene
-  que dar un entero exacto—, no mirando.
+  cae en un múltiplo entero. Se verifica midiendo -`(altoRiel/2) / paso` tiene
+  que dar un entero exacto-, no mirando.
 - **`getComputedStyle(el).transform` NO refleja la propiedad `translate`.** Son
-  propiedades independientes. Al animar `translate` —que es lo que corresponde,
-  para no pisar transformaciones de las utilidades—, leer `transform` devuelve
+  propiedades independientes. Al animar `translate` -que es lo que corresponde,
+  para no pisar transformaciones de las utilidades-, leer `transform` devuelve
   `none` y parece que la animación está muerta. Hay que leer `translate`.
 - **Para arrastrar algo que ya anima, se mueve el reloj de la animación, no el
   elemento.** `el.getAnimations()[0]` devuelve el objeto que el navegador ya
   reproduce: arrastrar es escribir su `currentTime` y soltar es `play()`. El
-  camino alternativo —apagar con `animation: none`, escribir `translate` a mano
-  y reenganchar con un `animation-delay` negativo— reconstruye a mano un estado
+  camino alternativo -apagar con `animation: none`, escribir `translate` a mano
+  y reenganchar con un `animation-delay` negativo- reconstruye a mano un estado
   que el navegador ya tiene, y cualquier discrepancia se ve como un SALTO.
 - **`setPointerCapture` lanza `NotFoundError`** si el `pointerId` no
   corresponde a un puntero activo. Va al final del handler y dentro de un
   `try`: si está antes, la excepción aborta el resto y el arrastre queda a
-  medias. Ojo al depurar con eventos sintéticos: solo `pointerId: 1` —el del
-  mouse real de Chrome— no falla, así que una prueba con ese id puede dar
+  medias. Ojo al depurar con eventos sintéticos: solo `pointerId: 1` -el del
+  mouse real de Chrome- no falla, así que una prueba con ese id puede dar
   "todo bien" mientras el resto está roto.
 - **`touch-action: none` no impide seleccionar texto.** Frena el scroll, que es
   otro mecanismo. Al arrastrar con mouse el texto se subraya SIEMPRE; con el
@@ -249,11 +249,11 @@ Cosas que costaron tiempo. No repetirlas:
 - **`Animation.pause()` le quita a CSS la autoridad sobre esa animación PARA
   SIEMPRE.** Después de una llamada así, `animation-play-state` deja de
   gobernarla: se puede ver la propiedad computada en `running` y el objeto
-  obstinadamente en `paused`. Si el control de pausa funciona por CSS —como el
-  del bento—, cualquier `pause()` por API se lo rompe en silencio.
+  obstinadamente en `paused`. Si el control de pausa funciona por CSS -como el
+  del bento-, cualquier `pause()` por API se lo rompe en silencio.
   **La regla: un solo dueño del estado de reproducción, y es el CSS.** La Web
-  Animations API se usa únicamente para lo que CSS no sabe hacer —mover el
-  `currentTime`—; pausar y reanudar van siempre por atributo. El arrastre marca
+  Animations API se usa únicamente para lo que CSS no sabe hacer -mover el
+  `currentTime`-; pausar y reanudar van siempre por atributo. El arrastre marca
   `data-arrastrando`, el botón marca `data-pausado`, y la hoja de estilos
   resuelve. Así una pausa pedida por el usuario sobrevive al arrastre sin
   ninguna lógica que la recuerde.
@@ -308,12 +308,12 @@ Cosas que costaron tiempo. No repetirlas:
 - **…pero un z-index negativo TAMBIÉN PIERDE EL HIT-TEST contra el `<body>`, y
   eso no se ve.** El elemento se pinta en el paso 3 del algoritmo de apilado y
   la caja del body en el paso 4, así que el body gana el click aunque no tape
-  nada —su fondo se propagó al canvas y no pinta—. Síntoma exacto: el footer se
+  nada -su fondo se propagó al canvas y no pinta-. Síntoma exacto: el footer se
   veía perfecto y sus trece enlaces eran inertes;
   `document.elementFromPoint` sobre el centro de un enlace devolvía `BODY`.
   **La solución no es hundir, es subir**: el que TAPA va con `relative` y un
-  z-index bajo —`main` quedó en 1, contra 80 del header y 85 del volver
-  arriba— y el TAPADO se queda en `auto`. Ojo con dónde aparece el síntoma: en
+  z-index bajo -`main` quedó en 1, contra 80 del header y 85 del volver
+  arriba- y el TAPADO se queda en `auto`. Ojo con dónde aparece el síntoma: en
   móvil el efecto está apagado por umbral de altura, así que ahí funcionaba y
   parecía un problema exclusivo de escritorio.
 - **Un `pattern` de formulario tiene DOS formas de morir en silencio, y las
@@ -327,7 +327,7 @@ Cosas que costaron tiempo. No repetirlas:
   que el campo pasa a aceptar cualquier cosa. Ninguna de las dos avisa por
   consola. Se comprueba con `new RegExp("^(?:" + patron + ")$", "v")`.
 - **`tooShort` es la única entrada CONDICIONAL de `ValidityState`.** Solo se
-  activa si el valor fue editado por el usuario —la "bandera de valor sucio"—,
+  activa si el valor fue editado por el usuario -la "bandera de valor sucio"-,
   una regla que existe para que un valor corto precargado por el servidor no
   aparezca en rojo antes de que nadie lo toque. Consecuencia práctica: un valor
   puesto por asignación, o por `execCommand("insertText")`, da `tooShort: false`
@@ -348,8 +348,8 @@ Cosas que costaron tiempo. No repetirlas:
   Costó un diagnóstico entero de un borde de error que en realidad funcionaba.
 - **Congelar una animación no es degradarla.** Con `prefers-reduced-motion`, el
   riel del bento quedaba quieto en la posición 0 mostrando 3 de 12 expositores:
-  los otros 9 eran inalcanzables. La degradación correcta es DESPLEGAR —soltar
-  el alto y el recorte de la ventana y esconder la copia del bucle—, no
+  los otros 9 eran inalcanzables. La degradación correcta es DESPLEGAR -soltar
+  el alto y el recorte de la ventana y esconder la copia del bucle-, no
   detener. Quitar el movimiento nunca debe quitar el contenido.
 
 ## Contenido

@@ -7,7 +7,7 @@ import { SPONSORS } from "../constants/sponsors";
 import { useFichaEnVista } from "../hooks/use-ficha-en-vista";
 
 /**
- * SPONSORS — grilla de 4×4 con un marcador de esquinas que viaja.
+ * SPONSORS - grilla de 4×4 con un marcador de esquinas que viaja.
  *
  * FRANJA DE CIERRE, SIN COPETE NUMERADO. Es la única sección del sitio sin
  * número, y no es un olvido: el número existe si y solo si la sección está en
@@ -23,8 +23,8 @@ import { useFichaEnVista } from "../hooks/use-ficha-en-vista";
  * Y se traslada SIN MEDIR NADA. Como las dieciséis celdas son idénticas, el
  * marcador no necesita cambiar de tamaño nunca: solo cambia `translate`, que
  * es justamente la propiedad que el compositor resuelve sin recalcular layout.
- * El paso lo calcula el CSS a partir de dos números —el índice activo y la
- * cantidad de columnas—, así que no hay `getBoundingClientRect`, no hay
+ * El paso lo calcula el CSS a partir de dos números -el índice activo y la
+ * cantidad de columnas-, así que no hay `getBoundingClientRect`, no hay
  * `ResizeObserver` y el marcador queda bien alineado en cualquier viewport por
  * construcción. Ver el bloque `.sponsors` en globals.css.
  *
@@ -47,8 +47,8 @@ import { useFichaEnVista } from "../hooks/use-ficha-en-vista";
  * cualquier lógica. Filtrando por tipo de puntero, el táctil ni entra en ese
  * camino en vez de tener que salir de él.
  *
- * NADA ESTÁ ESCONDIDO DETRÁS DEL HOVER. Las fichas no son interactivas —no hay
- * URLs de auspiciantes— y el marcador es puro énfasis: va `aria-hidden` y no
+ * NADA ESTÁ ESCONDIDO DETRÁS DEL HOVER. Las fichas no son interactivas -no hay
+ * URLs de auspiciantes- y el marcador es puro énfasis: va `aria-hidden` y no
  * transporta información. Por eso tampoco entran en el recorrido del teclado:
  * un elemento enfocable que no hace nada es peor que uno que no lo es.
  */
@@ -81,8 +81,8 @@ export function SponsorsSection() {
         >
           {/* El marcador va DENTRO de la lista y es un <li> porque un <ul> solo
               admite <li>. No rompe la lista para nadie: está fuera de flujo
-              —position: absolute, así que ni siquiera es un ítem de la
-              grilla— y `aria-hidden` lo saca del árbol de accesibilidad. */}
+              -position: absolute, así que ni siquiera es un ítem de la
+              grilla- y `aria-hidden` lo saca del árbol de accesibilidad. */}
           <li className="sponsors__marcador" aria-hidden="true">
             <span />
             <span />
@@ -101,7 +101,7 @@ export function SponsorsSection() {
                 if (e.pointerType === "mouse") setConPuntero(i);
               }}
             >
-              {/* PROVISORIO — acá va el logotipo del auspiciante. Hasta que
+              {/* PROVISORIO - acá va el logotipo del auspiciante. Hasta que
                   exista, la "J" ocupa su lugar EN MONOCROMÍA: dieciséis
                   isologotipos de ExpoJuy a todo color dirían que ExpoJuy se
                   auspicia a sí misma. El nombre viaja como texto alternativo,

@@ -1,0 +1,394 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   CHROME DEL SITIO: encabezado, menú principal y barra móvil.
+
+   POR QUÉ ESTE CSS NO SON UTILIDADES DE TAILWIND
+
+   Todo lo que hay acá tiene que poder APAGARSE desde otra regla: la posición
+   del encabezado se apaga sin JavaScript, la navegación se enciende sin
+   JavaScript, el disparador del menú se apaga a partir de 64rem. Con las
+   utilidades de Tailwind eso no se puede: viven en @layer utilities, que va
+   DESPUÉS de @layer components, así que le ganan a cualquier regla nuestra por
+   más específica que sea. La capa manda, no la especificidad.
+
+   Regla práctica: acá va lo que se sobreescribe (position, display, height);
+   en el componente van las utilidades que nadie discute (color, tipografía,
+   relleno interno).
+
+   Los colores son SIEMPRE tokens de globals.css. Ninguna paleta de origen se
+   arrastró: el turquesa de Maru es --color-accent, su tinta es
+   --color-surface, su borde inverso es --color-border.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@layer components {
+  /* ─────────────────────────────────────────────────────────────────────────
+     1. ENCABEZADO
+
+     Tres estados independientes sobre el mismo nodo, como en el original:
+
+       [data-listo]     entrada del header (venía del preloader)
+       [data-scrolled]  velo de fondo a partir de 40px de scroll
+       [data-seccion]   tema de la sección que tiene debajo
+
+     No hay un encabezado móvil aparte: es uno solo, responsive, con dos
+     cortes -40rem para el CTA y 64rem para la navegación- más un diálogo a
+     pantalla completa. Un solo árbol que no puede desincronizarse consigo
+     mismo.
+     ───────────────────────────────────────────────────────────────────────── */
+  .encabezado {
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 80;
+    display: flex;
+    align-items: center;
+    height: var(--alto-nav);
+    color: var(--color-text);
+
+    /* El velo toma el color de la sección de abajo. Hoy el sitio tiene una
+       sola superficie de fondo -no hay tema claro, ver CLAUDE.md- así que
+       todas las secciones resuelven al mismo valor; la indirección queda
+       igual, para que agregar una sección con otra superficie sea una línea
+       acá y no un rediseño del header. */
+    --fondo-seccion: var(--color-surface-sunken);
+
+    transition:
+      opacity var(--duration-enter) var(--ease-out-expo),
+      translate var(--duration-enter) var(--ease-out-expo),
+      color var(--duration-control) var(--ease-standard);
+  }
+
+  /* Estado 1: entrada. El HTML se sirve con el header VISIBLE; el estado
+     oculto vive detrás de `.js`, así que sin JavaScript nunca se aplica.
+     Mejora progresiva: lo oculto es la mejora, no el punto de partida. */
+  .js .encabezado:not([data-listo]) {
+    opacity: 0;
+    translate: 0 -0.5rem;
+    pointer-events: none;
+  }
+
+  /* Estado 2: velo. `color-mix` con 92% es casi opaco a propósito: el peor
+     caso es un titular grande pasando por detrás del texto del header, y con
+     menos velo pierde contraste. El pseudo-elemento va en z-index -1 para
+     quedar detrás del contenido del header pero dentro de su propio contexto
+     de apilado (nunca detrás del <body>: ese es el bug del footer). */
+  .encabezado::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: color-mix(in srgb, var(--fondo-seccion) 92%, transparent);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--color-border);
+    opacity: 0;
+    transition: opacity var(--duration-control) var(--ease-standard);
+  }
+
+  .encabezado[data-scrolled]::before {
+    opacity: 1;
+  }
+
+  /* Sin JavaScript el encabezado deja de ser fijo y crece a dos filas: la
+     navegación completa queda a la vista y el diálogo, que necesita
+     showModal(), deja de existir en vez de quedar como un botón que no abre
+     nada. Un header fijo de dos filas taparía el contenido. */
+  html:not(.js) .encabezado {
+    position: static;
+    height: auto;
+    padding-block: 0.75rem;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  html:not(.js) .encabezado__interior {
+    flex-wrap: wrap;
+  }
+
+  html:not(.js) .encabezado__nav {
+    display: block;
+    order: 3;
+    flex-basis: 100%;
+  }
+
+  /* Navegación de escritorio: las nueve secciones más el CTA entran justo a
+     1024px. De ahí el corte en 64rem. */
+  .encabezado__nav {
+    display: none;
+  }
+
+  /* Subrayado por background-size: anima una propiedad que no toca layout y
+     hereda el color por currentColor. El activo va subrayado del todo, así
+     que el estado no depende solo del color (WCAG 1.4.1). */
+  .encabezado__link {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-repeat: no-repeat;
+    background-size: 0% 1.5px;
+    background-position: 0 100%;
+    transition:
+      background-size var(--duration-control) var(--ease-standard),
+      color var(--duration-micro) var(--ease-standard);
+  }
+
+  .encabezado__link:hover,
+  .encabezado__link[aria-current] {
+    background-size: 100% 1.5px;
+  }
+
+  /* CTA: aparece a partir de 40rem. Debajo de eso el acceso a Entradas lo da
+     la barra móvil, que está en la zona del pulgar. */
+  .encabezado__cta {
+    display: none;
+  }
+
+  .encabezado__disparador {
+    display: inline-flex;
+  }
+
+  /* Sin JavaScript el disparador no puede abrir nada: no se muestra. */
+  html:not(.js) .encabezado__disparador {
+    display: none;
+  }
+
+  @media (min-width: 40rem) {
+    .encabezado__cta {
+      display: inline-flex;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .encabezado__nav {
+      display: block;
+    }
+
+    .encabezado__disparador {
+      display: none;
+    }
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     2. HAMBURGUESA
+
+     Tres barras en CSS puro, sin SVG y sin librería. La animación la gobierna
+     `aria-expanded`: el estado accesible y el estado visual son EL MISMO dato,
+     así que no hay una clase paralela que pueda desincronizarse.
+     ───────────────────────────────────────────────────────────────────────── */
+  .hamburguesa {
+    display: grid;
+    gap: 4px;
+    width: 18px;
+  }
+
+  .hamburguesa span {
+    display: block;
+    height: 2px;
+    background: currentColor;
+    transition:
+      transform var(--duration-micro) var(--ease-standard),
+      opacity var(--duration-micro) var(--ease-standard);
+  }
+
+  [aria-expanded="true"] .hamburguesa span:nth-child(1) {
+    transform: translateY(6px) rotate(45deg);
+  }
+
+  [aria-expanded="true"] .hamburguesa span:nth-child(2) {
+    opacity: 0;
+  }
+
+  [aria-expanded="true"] .hamburguesa span:nth-child(3) {
+    transform: translateY(-6px) rotate(-45deg);
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     3. MENÚ PRINCIPAL (<dialog> nativo)
+
+     El <dialog> abierto con showModal() aporta tres cosas que en el original
+     estaban escritas a mano: foco atrapado, cierre con Escape y devolución
+     del foco al cerrar. Además vive en el TOP LAYER, o sea que ningún
+     z-index del sitio puede taparlo, y cerrado es display:none, que es
+     exactamente lo que daba el `inert` del overlay siempre montado: fuera del
+     orden de tabulación y fuera del árbol de accesibilidad.
+     ───────────────────────────────────────────────────────────────────────── */
+  .menu-principal {
+    /* El <dialog> trae márgenes, borde y topes de tamaño propios del
+       navegador que hay que anular explícitamente. */
+    inset: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    background: var(--color-surface);
+    color: var(--color-text);
+    /* Que el scroll del panel no arrastre la página de atrás. */
+    overscroll-behavior: contain;
+  }
+
+  .menu-principal[open] {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .menu-principal::backdrop {
+    background: color-mix(in srgb, var(--color-surface-sunken) 80%, transparent);
+  }
+
+  .menu-principal__lista {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .menu-principal__lista li {
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .menu-principal__lista a {
+    display: flex;
+    align-items: baseline;
+    gap: 0.9rem;
+    padding: 0.5rem clamp(1.25rem, 4vw, 3rem);
+    /* LA UNIDAD ES vh A PROPÓSITO, no vw ni un rem fijo: las nueve secciones
+       tienen que entrar en un viewport sin scroll. Si se agrega una sección
+       hay que bajar el 5.2vh o la lista empieza a scrollear. */
+    font-size: clamp(1.75rem, 5.2vh, 3.75rem);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.015em;
+    text-transform: uppercase;
+    color: var(--color-text);
+    transition:
+      color var(--duration-control) var(--ease-standard),
+      translate var(--duration-control) var(--ease-standard);
+  }
+
+  .menu-principal__lista a:hover {
+    color: var(--color-link);
+    translate: 0.35rem 0;
+  }
+
+  .menu-principal__lista a[aria-current] {
+    color: var(--color-link);
+  }
+
+  .menu-principal__n {
+    flex: none;
+    font-size: var(--text-xs);
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    color: var(--color-text-subtle);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     4. BARRA MÓVIL
+
+     Tres accesos y ninguno más, en la zona del pulgar: es la respuesta a
+     "alguien parado en el predio con una mano libre". Se apaga a 64rem, donde
+     la navegación completa ya está en el encabezado.
+     ───────────────────────────────────────────────────────────────────────── */
+  .barra-movil {
+    position: fixed;
+    inset-inline: 0;
+    inset-block-end: 0;
+    /* Debajo del encabezado (80) y del botón de volver arriba (85), encima
+       del contenido (1). El diálogo no compite: vive en el top layer. */
+    z-index: 70;
+    background: var(--color-surface-overlay);
+    border-top: 1px solid var(--color-border);
+    /* El notch de los teléfonos con gestos. */
+    padding-block-end: env(safe-area-inset-bottom);
+  }
+
+  .barra-movil ul {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .barra-movil li + li {
+    border-inline-start: 1px solid var(--color-border);
+  }
+
+  .barra-movil a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    /* 3.5rem supera holgado los 44px de objetivo táctil de WCAG 2.5.5. */
+    min-height: 3.5rem;
+    padding-block: 0.5rem;
+    color: var(--color-text-muted);
+    transition: color var(--duration-micro) var(--ease-standard);
+  }
+
+  .barra-movil a:hover {
+    color: var(--color-text);
+  }
+
+  .barra-movil :focus-visible {
+    outline-offset: -4px;
+  }
+
+  @media (min-width: 64rem) {
+    .barra-movil {
+      display: none;
+    }
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     5. BLOQUEO DE SCROLL CON COMPENSACIÓN DE BARRA
+
+     BUG CORREGIDO. El bloqueo del original hacía `overflow: hidden` a secas.
+     En Windows la barra de scroll ocupa ancho real (~15px): al ocultarla, el
+     viewport se ensancha y TODA la página salta lateralmente al abrir el
+     menú. La compensación devuelve ese ancho como relleno.
+
+     El relleno de <html> no mueve a los elementos `fixed`, porque su bloque
+     contenedor es el viewport y no el html, así que el encabezado y la barra
+     móvil se compensan aparte. Los tres juntos: cero desplazamiento visible.
+     ───────────────────────────────────────────────────────────────────────── */
+  html.scroll-bloqueado {
+    overflow: hidden;
+    padding-right: var(--ancho-barra-scroll, 0px);
+  }
+
+  html.scroll-bloqueado .encabezado,
+  html.scroll-bloqueado .barra-movil {
+    padding-right: var(--ancho-barra-scroll, 0px);
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     6. DESTINO DE LAS ANCLAS
+
+     BUG CORREGIDO, y es una sola línea. Con movimiento reducido el scroll a
+     un ancla perdía el offset del encabezado fijo y el título quedaba tapado
+     por la barra. `scroll-margin-top` lo resuelve para los tres caminos: el
+     salto nativo sin JavaScript, `scrollIntoView` y el `scrollTo` de Lenis,
+     que lee este mismo valor computado en vez de repetir el número.
+
+     4.5rem = 72px en móvil (alto-nav 4rem + aire), 88px de 40rem para
+     arriba. El número no está escrito dos veces: sale del token.
+     ───────────────────────────────────────────────────────────────────────── */
+  main > section[id] {
+    scroll-margin-top: calc(var(--alto-nav) + 0.5rem);
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     7. PIE
+
+     La barra móvil es `fixed` y tapa los últimos 3.5rem del viewport. El pie
+     revelado queda anclado abajo, así que sin este colchón su línea legal
+     terminaría debajo de la barra.
+
+     ATENCION: este relleno ENTRA EN EL PRESUPUESTO DE ALTURA del pie. El
+     efecto de revelado se apaga por debajo de 50rem de viewport (ver
+     globals.css) porque un pie más alto que la pantalla no se puede alcanzar.
+     Si el pie crece, hay que volver a medirlo y mover esos dos umbrales.
+     ───────────────────────────────────────────────────────────────────────── */
+  @media (max-width: 63.999rem) {
+    .pie-sitio {
+      padding-block-end: calc(3.5rem + 1rem + env(safe-area-inset-bottom));
+    }
+  }
+}

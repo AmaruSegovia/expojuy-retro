@@ -1,0 +1,43 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   SOBRE EXPOJUY - ver src/features/about/components/about-section.tsx
+
+   Portado del prototipo de Maru. Allá la lista de valores es una columna fija
+   de filetes; acá se le agrega el único quiebre que las utilidades no pueden
+   expresar, y todo el color pasa por los tokens del sistema: ningún valor
+   literal.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+  /* LA LISTA DE VALORES SE PARTE SEGÚN SU PROPIA COLUMNA, NO SEGÚN EL VIEWPORT.
+
+     Vive en la columna angosta de una retícula 1.4fr / 1fr que sólo existe a
+     partir de `lg`, así que su ancho no se deduce del ancho de la ventana: a
+     1024px mide unos 380px y apilada en móvil mide todo el contenido. Una
+     media query se equivocaría en los dos extremos -partiría en dos columnas
+     justo cuando la columna es más angosta-, y por eso el corte es una
+     container query sobre el propio bloque.
+
+     ATENCION: ni el <ul> ni sus <li> pueden llevar una utilidad de `display`
+     ni de `border`. Estas reglas viven en @layer components y las utilidades
+     de Tailwind en @layer utilities, que va después: le ganarían por capa, no
+     por especificidad, y el fallo sería silencioso. */
+  .sobre-valores {
+    container-type: inline-size;
+  }
+
+  .sobre-valores > ul {
+    display: grid;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .sobre-valores > ul > li {
+    padding-block: 1rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  @container (min-width: 34rem) {
+    .sobre-valores > ul {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 2rem;
+    }
+  }
+}

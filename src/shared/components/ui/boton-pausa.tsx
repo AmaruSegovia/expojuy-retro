@@ -7,7 +7,7 @@ import { cn } from "@/shared/lib/cn";
  *
  * VIVE EN shared/ PORQUE LO NECESITAN DOS FEATURES: el bento de Expositores y
  * el riel de medios de pago de Entradas. La frontera de arquitectura prohíbe
- * que un feature importe de otro, así que lo compartido sube acá — el mismo
+ * que un feature importe de otro, así que lo compartido sube acá - el mismo
  * camino que ya recorrieron `PlaceholderVisual` y `useCarruselCircular`.
  *
  * Y ACÁ IMPORTA MÁS QUE EN OTROS CASOS. Esto no es un botón bonito: es el
@@ -61,7 +61,7 @@ export function BotonPausa({
  *
  * Dibujados a mano y no traídos de una librería: son dos formas triviales y
  * una dependencia de iconos entera para esto no se justifica. Las barras van
- * con esquinas VIVAS —radio 0— porque el sistema de diseño solo admite 0 o
+ * con esquinas VIVAS -radio 0- porque el sistema de diseño solo admite 0 o
  * píldora, y el isologotipo se construye con esquinas vivas.
  *
  * `aria-hidden`: el nombre accesible lo da el `aria-label` del botón. Si el

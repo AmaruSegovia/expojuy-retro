@@ -35,7 +35,7 @@ const acotar01 = (n: number) => (n < 0 ? 0 : n > 1 ? 1 : n);
  *    ocupado interpolando el scroll suave; midiendo aparte, el frame de
  *    scroll queda en aritmética pura.
  *
- * MEJORA PROGRESIVA — el valor de reposo es 1 (línea completa) y la clase
+ * MEJORA PROGRESIVA - el valor de reposo es 1 (línea completa) y la clase
  * `.js` lo baja a 0. Si el JavaScript no corre, la línea se ve entera en vez
  * de quedar invisible. Ver `.agenda-tiempo` en globals.css.
  */
@@ -98,7 +98,7 @@ export function useAvanceLinea<T extends HTMLElement>() {
  * superior a esa altura. `isIntersecting` responde "¿está dentro de la
  * franja?", y vuelve a `false` cuando el elemento sale por arriba. Con eso,
  * los nodos que ya quedaron atrás se apagaban al alejarse: la línea dibujada
- * los cubría y ellos estaban grises. Se detectó midiendo —un nodo en
+ * los cubría y ellos estaban grises. Se detectó midiendo -un nodo en
  * `top: -463px`, medio kilómetro por encima de la línea, reportaba `false`.
  *
  * Lo que se pregunta acá es "¿ya lo pasó?", y eso sale de la geometría:

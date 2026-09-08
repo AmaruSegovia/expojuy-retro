@@ -16,7 +16,7 @@ const MARCA: Muestra[] = [
     nota: 'Bloque "E" / contraforma J',
     ratio: "2.74:1",
   },
-  { token: "brand-violet", hex: "#774FF0", nota: "Asta de la J — primario", ratio: "3.92:1" },
+  { token: "brand-violet", hex: "#774FF0", nota: "Asta de la J - primario", ratio: "3.92:1" },
   { token: "brand-lavender", hex: "#BB8CFF", nota: "Base curva de la J", ratio: "7.83:1" },
   { token: "brand-cyan", hex: "#25C0D4", nota: "Acento superior", ratio: "9.02:1" },
   { token: "brand-graphite", hex: "#4B4B4D", nota: "Wordmark EXPOJUY", ratio: "2.27:1" },
@@ -189,7 +189,7 @@ export default function SistemaDeDisenoPage() {
           </h2>
           <p className="mt-2 text-sm text-text-muted">
             El hover del botón primario <strong className="text-text">se oscurece</strong>.
-            Aclararlo —lo intuitivo en un tema oscuro— bajaba el texto blanco de 5.05:1 a 3.98:1 y
+            Aclararlo -lo intuitivo en un tema oscuro- bajaba el texto blanco de 5.05:1 a 3.98:1 y
             rompía AA. Probá el foco con <kbd className="border border-border-strong px-1">Tab</kbd>
             .
           </p>

@@ -17,8 +17,8 @@
  *    hay y en qué orden, no la fuente de la geometría. Queda anotado igual acá
  *    y corresponde mencionarlo en la memoria descriptiva.
  *
- *    ⚠️ Si alguna vez esto se reemplaza por un trazado fiel —exportando
- *    geometría real de OSM— la atribución vuelve a ser obligatoria y hay que
+ *    ATENCION: Si alguna vez esto se reemplaza por un trazado fiel -exportando
+ *    geometría real de OSM- la atribución vuelve a ser obligatoria y hay que
  *    reponerla en la interfaz.
  * 2. Legibilidad. A 400px de ancho un trazado fiel se lee peor que uno
  *    simplificado. Las proporciones y la DISPOSICIÓN son las reales; el
@@ -64,13 +64,13 @@ const ORIGEN: [number, number] = [170, 437];
  * EL PLANO VA DERECHO, NO INCLINADO.
  *
  * En la traza real el predio corre en diagonal, pero un plano de orientación
- * —el que se mira para saber a dónde ir— no se dibuja al norte: se endereza
+ * -el que se mira para saber a dónde ir- no se dibuja al norte: se endereza
  * sobre su propio eje de circulación. Inclinado, la caja quedaba medio vacía,
  * los rótulos costaban de leer y el dibujo se veía chico. Derecho, la franja
  * usa todo el ancho disponible y el recorrido se lee de un vistazo.
  *
- * Con el eje vertical, `sobreEje(avance, desvio)` se vuelve trivial —el avance
- * es el alto y el desvío es el ancho— y los edificios quedan alineados con la
+ * Con el eje vertical, `sobreEje(avance, desvio)` se vuelve trivial -el avance
+ * es el alto y el desvío es el ancho- y los edificios quedan alineados con la
  * caja, sin bordes dentados por la rotación.
  */
 export const ANGULO_EJE = -90;
@@ -120,8 +120,8 @@ export const ROTONDA = { centro: sobreEje(-205, 0), r: 26 };
  * RED DE CALLES.
  *
  * Se dibujan como bandas anchas APENAS VISIBLES, no como líneas de color. Una
- * línea marcada compite con el recorrido —que es lo único que el usuario tiene
- * que seguir— y ensucia el dibujo. Una banda al 7% no se mira, pero se ve: da
+ * línea marcada compite con el recorrido -que es lo único que el usuario tiene
+ * que seguir- y ensucia el dibujo. Una banda al 7% no se mira, pero se ve: da
  * la noción de dónde está uno sin pedir atención.
  *
  * Son trazos y no polígonos porque una calle es un recorrido con un ancho, y
@@ -178,8 +178,30 @@ const STANDS: Edificio[] = Array.from({ length: 4 }, (_, fila) =>
     ancho: 17,
     alto: 16,
     tipo: "stand",
+    // El corte entre sectores es por COLUMNA y no por fila: los dos lugares
+    // señalizados están en `sobreEje(110, ·)` y `sobreEje(200, ·)`, o sea a la
+    // altura de las tres primeras columnas y de las tres últimas.
+    punto: col <= 2 ? "stands-a" : "stands-b",
   })),
 ).flat();
+
+/**
+ * PATIO GASTRONÓMICO
+ *
+ * Cuatro módulos chicos donde el punto `gastronomia` ya decía que hay un patio.
+ * Se agregan porque en la maqueta un lugar señalizado sin nada construido
+ * debajo queda como un marcador flotando sobre el pasto. Van de a pares a los
+ * costados del punto (`sobreEje(150, 116)`): el hueco del medio es la plaza, y
+ * de paso deja libre la transversal de la feria, que ocupa 142 a 158 de avance.
+ */
+const MODULOS_GASTRONOMIA: Edificio[] = [112, 132, 168, 188].map((avance, i) => ({
+  id: `modulo-${i}`,
+  centro: sobreEje(avance, 114),
+  ancho: 16,
+  alto: 22,
+  tipo: "modulo",
+  punto: "gastronomia",
+}));
 
 /**
  * Las posiciones y medidas están elegidas para que NINGÚN edificio se solape
@@ -200,7 +222,7 @@ export const ARENA = { centro: sobreEje(20, 68), rx: 52, ry: 32 };
 export type Punto = {
   id: string;
   nombre: string;
-  /** PROVISORIO — qué pasa en ese lugar. Dos renglones como máximo. */
+  /** PROVISORIO - qué pasa en ese lugar. Dos renglones como máximo. */
   detalle: string;
   categoria: "acceso" | "expositores" | "gastronomia" | "servicios" | "escenario";
   posicion: [number, number];
@@ -211,13 +233,13 @@ export type Punto = {
 /**
  * Los lugares señalizados.
  *
- * ⚠️ Los nombres y las descripciones son PROVISORIOS.
+ * ATENCION: Los nombres y las descripciones son PROVISORIOS.
  *
  * Y están escritos CORTOS a propósito, con presupuesto: hasta ~22 caracteres
  * el nombre y ~50 la descripción. La tarjeta muestra el título en una línea y
  * la descripción en dos, y el recorte del CSS es una RED DE SEGURIDAD, no el
  * mecanismo: si hiciera falta recortar, el texto ya estaría mal escrito. Por
- * eso además recorta sin puntos suspensivos —ver `recorte-*` en globals.css—,
+ * eso además recorta sin puntos suspensivos -ver `recorte-*` en globals.css-,
  * porque un "…" es un cartel de que falta texto y acá no falta nada.
  *
  * La DISPOSICIÓN no es provisoria: sale de la traza de OSM. La antigua Escuela

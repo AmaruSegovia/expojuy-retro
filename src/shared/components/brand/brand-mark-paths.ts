@@ -1,5 +1,5 @@
 /**
- * Geometría del isologotipo de ExpoJuy 2026 — fuente única.
+ * Geometría del isologotipo de ExpoJuy 2026 - fuente única.
  *
  * PROCEDENCIA
  * Los `d` se extrajeron del stream de contenido de
@@ -30,12 +30,12 @@ export const BRAND_FLIP_Y = "translate(-338.5848, 412.3633) scale(1, -1)";
  * NO es el centro de la caja, y esa es la clave: el centro geométrico
  * (50%, 50%) cae en el HUECO que queda entre la barra púrpura y el asta. Si
  * la máscara creciera desde ahí, lo que se agrandaría sobre el centro de la
- * pantalla sería el vacío — o sea, una mancha morada expandiéndose, justo lo
+ * pantalla sería el vacío - o sea, una mancha morada expandiéndose, justo lo
  * contrario del efecto buscado.
  *
  * Este punto cae dentro del gancho lavanda, en la zona maciza de la curva
  * (verificado contra el PNG oficial: en esa fila el trazo es continuo). Al
- * crecer desde un punto interior, su entorno —todo relleno— termina cubriendo
+ * crecer desde un punto interior, su entorno -todo relleno- termina cubriendo
  * el viewport y el morado desaparece por completo.
  */
 export const BRAND_ZOOM_ORIGIN = { x: "49.7%", y: "91.3%" } as const;

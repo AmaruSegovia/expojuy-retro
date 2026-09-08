@@ -1,0 +1,76 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   CONTACTO - ver src/features/contact/components/
+
+   Los controles del formulario son UNA pieza y no una suma de utilidades. El
+   motivo es la última regla del bloque: el borde grueso del campo inválido
+   tiene que poder pisar al borde normal, y si el borde normal viniera de una
+   utilidad de Tailwind ganaría por capa -@layer utilities va después de
+   @layer components- sin un solo error en consola.
+
+   Por eso `.contacto-campo` trae fondo, borde, relleno y alto mínimo, y el
+   marcado no le agrega ninguna utilidad de `border`, `bg` ni `display`.
+
+   Todo el color pasa por los tokens de globals.css: ni un valor literal.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+  .contacto-campo {
+    /* 3rem de alto mínimo: es el objetivo táctil, no una decisión estética. */
+    min-height: 3rem;
+    width: 100%;
+    padding: 0.75rem;
+    /* El campo va sobre el panel, no al revés: el panel es `surface-raised` y
+       el hueco donde se escribe se hunde a `surface`. */
+    background-color: var(--color-surface);
+    /* 2px y `border-strong` (3.01:1): un borde de campo es el contorno de un
+       control, así que le corresponde el 3:1 de WCAG 1.4.11, no el token
+       decorativo de 1.29:1 con el que se separan bloques. */
+    border: 2px solid var(--color-border-strong);
+    /* Única concesión de radio del sistema, y existe justamente para esto: 2px
+       evitan que la esquina corte el cursor de texto. */
+    border-radius: var(--radius-hairline);
+    color: var(--color-text);
+    font: inherit;
+    font-size: var(--text-sm);
+    transition: border-color var(--duration-micro) var(--ease-standard);
+  }
+
+  .contacto-campo::placeholder {
+    color: var(--color-text-subtle);
+  }
+
+  .contacto-campo--area {
+    /* Se agranda hacia abajo y nunca hacia los costados: horizontal rompería
+       la retícula del panel. */
+    resize: vertical;
+    min-height: 7rem;
+  }
+
+  /* El anillo de foco lo pone la capa base para todo el sitio. Acá sólo se
+     suma el borde en el color de acento, que es lo que hace evidente CUÁL de
+     los cinco campos está activo cuando el anillo queda fuera de la vista. */
+  .contacto-campo:focus-visible {
+    border-color: var(--color-accent);
+  }
+
+  /* EL CAMPO INVÁLIDO NO SE MARCA SÓLO CON COLOR: suma un borde de 3px. Y se
+     marca sólo después de que la persona lo tocó, nunca al cargar la página:
+     eso es exactamente lo que separa `:user-invalid` de `:invalid`.
+
+     `box-sizing: border-box` viene de la base de Tailwind, así que engordar el
+     borde no mueve nada de lugar: come 1px de relleno interno.
+
+     LAS DOS PSEUDOCLASES HACEN FALTA. `:user-invalid` cubre el camino sin
+     JavaScript y el caso normal; `[aria-invalid]` lo pone el hook y cubre el
+     que la pseudoclase no ve: con la validación nativa apagada, quien aprieta
+     "Enviar" sin haber tocado un campo obligatorio no cuenta como que
+     interactuó con él, así que `:user-invalid` no aplica y el campo quedaría
+     con el mensaje de error debajo pero sin marca propia.
+
+     El select queda afuera a propósito: siempre tiene un valor válido. */
+  .contacto-campo[aria-invalid="true"],
+  input.contacto-campo:user-invalid,
+  textarea.contacto-campo:user-invalid {
+    border-color: var(--color-danger);
+    border-width: 3px;
+  }
+}

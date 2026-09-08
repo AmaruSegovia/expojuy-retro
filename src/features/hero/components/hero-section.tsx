@@ -11,10 +11,10 @@ import { SITE } from "@/shared/constants/site";
  * plan: el tope de 1024px aplica al contenido, no al hero.
  *
  * ORDEN DE CAPAS (de atrás hacia adelante)
- *   1. Poster — imagen optimizada por Next, marcada `priority`. Es el LCP.
- *   2. Video  — se carga después de la hidratación y aparece con un fundido.
- *   3. Velo   — degradados que garantizan el contraste del texto.
- *   4. Texto  — dentro del contenedor de 1024px.
+ *   1. Poster - imagen optimizada por Next, marcada `priority`. Es el LCP.
+ *   2. Video  - se carga después de la hidratación y aparece con un fundido.
+ *   3. Velo   - degradados que garantizan el contraste del texto.
+ *   4. Texto  - dentro del contenedor de 1024px.
  *
  * El velo no es decorativo: sin él, el texto cae sobre una ciudad nocturna
  * llena de luces y el contraste deja de estar garantizado en las zonas claras.
@@ -26,7 +26,7 @@ import { SITE } from "@/shared/constants/site";
  * daba 3.60:1: alcanza en escritorio (24px cuenta como texto grande, umbral
  * 3:1) pero NO en móvil, donde la escala fluida la baja a 19.2px y el umbral
  * sube a 4.5:1. Por eso el velo subió a 64% y la sede dejó de usar el color
- * apagado: sobre una foto, el gris atenuado es el error — la jerarquía la dan
+ * apagado: sobre una foto, el gris atenuado es el error - la jerarquía la dan
  * el tamaño y el peso, no bajar el contraste.
  */
 export function HeroSection() {

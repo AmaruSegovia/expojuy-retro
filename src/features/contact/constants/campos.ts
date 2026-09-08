@@ -1,7 +1,12 @@
 /**
- * Definición de los tres campos del formulario de contacto.
+ * Definición de los cinco campos del formulario de contacto.
  *
- * Cada campo declara sus RESTRICCIONES NATIVAS (`required`, `type`, `pattern`,
+ * PORTADO DEL PROTOTIPO DE MARU (`src/components/Contacto.astro`): mismos
+ * campos, mismo orden y mismas cuatro opciones de motivo. Lo que se agrega es
+ * el texto de cada error, que allá no existía porque el formulario delegaba
+ * todo en las burbujas del navegador.
+ *
+ * Cada campo declara sus RESTRICCIONES NATIVAS (`required`, `type`,
  * `minLength`) y el mensaje que le corresponde a cada forma de incumplirlas.
  * Las dos cosas viven juntas a propósito: la restricción y su explicación son
  * el mismo dato, y separarlas es la manera clásica de que un `minLength` se
@@ -14,19 +19,18 @@
  * traducido, no se puede estilar y desaparece solo.
  */
 
-export type CampoId = "email" | "telefono" | "mensaje";
+export type CampoId = "nombre" | "empresa" | "email" | "motivo" | "mensaje";
 
 /**
  * Las claves de `ValidityState` que este formulario puede llegar a disparar,
- * EN ORDEN DE PRIORIDAD. Un campo puede violar varias a la vez —un mensaje de
- * dos letras está corto y además no cumple el mínimo— y solo se muestra una:
+ * EN ORDEN DE PRIORIDAD. Un campo puede violar varias a la vez -un mensaje de
+ * dos letras está corto y además no cumple el mínimo- y sólo se muestra una:
  * la primera que aplique. El orden va de la falla más gruesa a la más fina,
  * así el mensaje habla del problema más grande y no de un detalle.
  */
 export const CLAVES_VALIDEZ = [
   "valueMissing",
   "typeMismatch",
-  "patternMismatch",
   "tooShort",
 ] as const satisfies readonly (keyof ValidityState)[];
 
@@ -38,19 +42,19 @@ type Campo = {
   ayuda?: string;
   /**
    * Largo mínimo, ya recortado de espacios. Duplica al atributo `minlength`
-   * a propósito — ver MINIMO_MENSAJE.
+   * a propósito - ver MINIMO_MENSAJE.
    */
   minimo?: number;
   errores: Partial<Record<ClaveValidez, string>>;
 };
 
 /**
- * Mínimo de caracteres del mensaje. Esta constante alimenta TRES lugares —el
- * atributo `minlength`, la comprobación propia y el texto del error—, así que
+ * Mínimo de caracteres del mensaje. Esta constante alimenta TRES lugares -el
+ * atributo `minlength`, la comprobación propia y el texto del error-, así que
  * no pueden discrepar entre sí.
  *
- * ⚠️ POR QUÉ NO ALCANZA CON `minlength`. `tooShort` es la única entrada de
- * `ValidityState` que es CONDICIONAL: la especificación solo la activa si el
+ * ATENCION: POR QUÉ NO ALCANZA CON `minlength`. `tooShort` es la única entrada de
+ * `ValidityState` que es CONDICIONAL: la especificación sólo la activa si el
  * valor fue editado por el usuario (la "bandera de valor sucio"). Existe para
  * que un valor corto precargado por el servidor no aparezca en rojo antes de
  * que nadie lo toque. Acá el campo arranca vacío, así que la condición sobra,
@@ -58,53 +62,42 @@ type Campo = {
  * con 4 caracteres y un mínimo de 20, y eso vuelve la regla imposible de
  * verificar desde una automatización. Medido en el navegador.
  *
- * Así que el atributo se queda —es el que hace cumplir la regla en el camino
- * SIN JavaScript— y con JavaScript la comprobación la hacemos nosotros. De
+ * Así que el atributo se queda -es el que hace cumplir la regla en el camino
+ * SIN JavaScript- y con JavaScript la comprobación la hacemos nosotros. De
  * paso queda más estricta: `minlength` cuenta caracteres crudos, así que
  * veinte espacios lo satisfacen; nuestra comprobación recorta primero.
  */
 export const MINIMO_MENSAJE = 20;
 
-/**
- * Un teléfono argentino se escribe de muchas formas y ninguna es la correcta:
- * con y sin +54, con el 0 y el 15, con guiones, espacios o paréntesis. El
- * patrón NO intenta validar que el número exista —eso no se puede desde el
- * cliente— sino descartar lo que seguro no es un teléfono: pide al menos seis
- * caracteres y no admite letras.
- *
- * ⚠️ DOS TRAMPAS, Y LAS DOS FALLAN EN SILENCIO:
- *
- * 1. VA `String.raw`, NO COMILLAS. En un string común `"\d"` no es un escape
- *    conocido de JavaScript, así que colapsa a `"d"`: el patrón llegaba al DOM
- *    como `[d+()-.s]` —la letra d, no un dígito— sin un solo error en consola.
- *
- * 2. TODO SIGNO VA ESCAPADO. Chrome compila el `pattern` con la bandera `v`,
- *    donde `( ) [ ] { } / - | \` son sintaxis reservada DENTRO de la clase de
- *    caracteres y deben escaparse. Y cuando la expresión no compila, la
- *    especificación dice que el atributo se IGNORA POR COMPLETO: el campo pasa
- *    a aceptar cualquier cosa. No hay excepción, no hay advertencia; el
- *    síntoma es "la validación no anda", que es lo más lejos posible de la
- *    causa.
- *
- * Verificado en el navegador: `new RegExp("^(?:" + PATRON + ")$", "v")` tiene
- * que compilar y rechazar "llamame".
- */
-export const PATRON_TELEFONO = String.raw`[\d\s+\(\)\.\-]{6,}`;
+/** Los campos que tienen algo que validar, EN ORDEN VISUAL. "El primer campo
+ *  con error" tiene que ser el primero que se ve, no el primero que se
+ *  declaró. `empresa` es opcional y `motivo` es un select con valor siempre
+ *  válido: no entran. */
+export const ORDEN_VALIDACION: readonly CampoId[] = ["nombre", "email", "mensaje"];
 
 export const CAMPOS: Record<CampoId, Campo> = {
+  nombre: {
+    etiqueta: "Nombre y apellido",
+    errores: {
+      valueMissing: "Escribí tu nombre: es con lo que vamos a dirigirnos a vos.",
+    },
+  },
+  empresa: {
+    etiqueta: "Empresa u organismo",
+    ayuda: "Opcional.",
+    errores: {},
+  },
   email: {
     etiqueta: "Correo electrónico",
+    ayuda: "Te respondemos a esta dirección.",
     errores: {
       valueMissing: "Escribí tu correo: es la vía por la que vamos a responderte.",
       typeMismatch: "Ese correo está incompleto. Tiene que ser del tipo nombre@dominio.com.",
     },
   },
-  telefono: {
-    etiqueta: "Teléfono",
-    errores: {
-      valueMissing: "Falta el teléfono. Va con característica, sin el 0 ni el 15.",
-      patternMismatch: "Solo números, espacios, guiones, puntos, paréntesis y el signo +.",
-    },
+  motivo: {
+    etiqueta: "Motivo",
+    errores: {},
   },
   mensaje: {
     etiqueta: "Mensaje",
@@ -116,6 +109,14 @@ export const CAMPOS: Record<CampoId, Campo> = {
     },
   },
 };
+
+/** Las cuatro opciones de motivo del prototipo de origen, sin cambios. */
+export const MOTIVOS = [
+  "Quiero exponer",
+  "Quiero patrocinar",
+  "Prensa",
+  "Consulta general",
+] as const;
 
 /** Asunto del correo que se abre al enviar. */
 export const ASUNTO_CORREO = "Consulta desde el sitio de ExpoJuy 2026";

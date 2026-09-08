@@ -9,9 +9,9 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
   title: {
-    default: `${SITE.name} — ${SITE.claim}`,
+    default: `${SITE.name} - ${SITE.claim}`,
     // Las páginas internas solo declaran su nombre; el sufijo lo pone el layout.
-    template: `%s — ${SITE.name}`,
+    template: `%s - ${SITE.name}`,
   },
   description: SITE.description,
   applicationName: SITE.name,
@@ -30,12 +30,12 @@ export const metadata: Metadata = {
     locale: SITE.locale,
     url: SITE.url,
     siteName: SITE.name,
-    title: `${SITE.name} — ${SITE.claim}`,
+    title: `${SITE.name} - ${SITE.claim}`,
     description: SITE.description,
   },
   twitter: {
     card: "summary_large_image",
-    title: `${SITE.name} — ${SITE.claim}`,
+    title: `${SITE.name} - ${SITE.claim}`,
     description: SITE.description,
   },
   // El ícono se genera desde la misma geometría del isologotipo (ver
@@ -51,7 +51,7 @@ export const viewport: Viewport = {
   themeColor: "#0b0911",
   width: "device-width",
   initialScale: 1,
-  // Sin maximumScale ni userScalable:false — bloquear el zoom viola WCAG 1.4.4.
+  // Sin maximumScale ni userScalable:false - bloquear el zoom viola WCAG 1.4.4.
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

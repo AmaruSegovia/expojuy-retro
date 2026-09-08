@@ -1,7 +1,7 @@
 import localFont from "next/font/local";
 
 /**
- * Ambit — tipografía oficial provista por la organización.
+ * Ambit - tipografía oficial provista por la organización.
  *
  * Cuatro pesos estáticos en woff2 (~24 KB cada uno, ~98 KB en total). Se
  * declaran como UNA familia con cuatro `src` en vez de cuatro familias
