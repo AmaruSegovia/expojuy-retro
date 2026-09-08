@@ -1,0 +1,11 @@
+.next
+node_modules
+out
+build
+pnpm-lock.yaml
+public
+*.md
+
+# Documentos de entrega generados: HTML imprimible con fuentes y capturas
+# embebidas en base64. No son fuente que formatear.
+docs/propuesta

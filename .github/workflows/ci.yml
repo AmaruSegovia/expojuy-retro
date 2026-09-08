@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancela corridas viejas de la misma rama: solo importa el último commit.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Typecheck · Lint · Format · Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Sin `version:` a propósito. El campo `packageManager` de package.json
+      # ("pnpm@10.33.0") ya fija la versión, y declararla también acá hace que
+      # la action aborte por versiones múltiples. Una sola fuente de verdad:
+      # así la versión de pnpm en CI nunca se desincroniza de la local.
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Instalar dependencias
+        id: install
+        run: pnpm install --frozen-lockfile
+
+      # Las cuatro verificaciones corren aunque una falle, para ver todos los
+      # errores en una sola corrida en vez de descubrirlos de a uno. Pero
+      # todas dependen de que la instalación haya funcionado: sin node_modules
+      # fallarían por una razón que no tiene nada que ver con el código.
+      - name: Typecheck
+        if: "!cancelled() && steps.install.outcome == 'success'"
+        run: pnpm run typecheck
+
+      - name: Lint (incluye fronteras de arquitectura)
+        if: "!cancelled() && steps.install.outcome == 'success'"
+        run: pnpm run lint
+
+      - name: Formato
+        if: "!cancelled() && steps.install.outcome == 'success'"
+        run: pnpm run format:check
+
+      - name: Build de producción
+        if: "!cancelled() && steps.install.outcome == 'success'"
+        run: pnpm run build

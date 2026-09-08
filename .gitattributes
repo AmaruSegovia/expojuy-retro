@@ -1,0 +1,14 @@
+# Normaliza finales de línea en el repositorio.
+# Sin esto, al juntar los tres prototipos del equipo cada archivo tocado en
+# Windows aparecería como "todas las líneas cambiadas" en el diff.
+* text=auto eol=lf
+
+# Binarios: nunca tocar.
+*.woff2 binary
+*.png   binary
+*.jpg   binary
+*.pdf   binary
+*.eps   binary
+*.cdr   binary
+*.mp4   binary
+*.webm  binary

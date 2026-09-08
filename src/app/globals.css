@@ -1,0 +1,1550 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SISTEMA DE DISEÑO — ExpoJuy 2026
+
+   Ningún valor de este archivo fue elegido a ojo. Cada token es (a) un color
+   medido del logotipo oficial, (b) derivado de esos colores por una regla
+   escrita, o (c) resuelto contra un objetivo de contraste WCAG.
+   La trazabilidad completa está en docs/system-design.md
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@theme {
+  /* ───────────────────────────────────────────────────────────────────────
+     1. COLORES DE MARCA — medidos por muestreo de píxeles sobre
+        RecursosExpoJuy/RGB/expojuy26.png (canal alfa > 200).
+        Estos cinco valores son la única fuente de verdad cromática.
+     ─────────────────────────────────────────────────────────────────────── */
+  --color-brand-violet-deep: #820cd0; /* bloque "E" y contraforma de la J */
+  --color-brand-violet: #774ff0; /* asta vertical de la J — color primario */
+  --color-brand-lavender: #bb8cff; /* base curva de la J */
+  --color-brand-cyan: #25c0d4; /* acento superior */
+  --color-brand-graphite: #4b4b4d; /* wordmark EXPOJUY */
+
+  /* ───────────────────────────────────────────────────────────────────────
+     2. NEUTROS — generados en OKLCH al hue 297.8° (media de los tres
+        violetas oficiales) con croma mínimo. No son grises neutros: están
+        teñidos hacia el violeta, extendiendo el criterio que la propia
+        marca ya aplica en su gris institucional (#4B4B4D → H=286.3°).
+     ─────────────────────────────────────────────────────────────────────── */
+  --color-surface-sunken: #040307; /* fondo de página, letterbox de video */
+  --color-surface: #0b0911; /* superficie base — referencia de contraste */
+  --color-surface-raised: #16131d; /* card, panel */
+  --color-surface-overlay: #231f2b; /* popover, dropdown, footer superpuesto */
+
+  /* ───────────────────────────────────────────────────────────────────────
+     3. TEXTO Y BORDES — la lightness de cada escalón NO se eligió: se
+        resolvió por búsqueda binaria en OKLCH, conservando hue y croma,
+        hasta alcanzar su ratio WCAG objetivo.
+
+        CONTRA QUÉ SE RESUELVE (corregido tras medir con Lighthouse)
+
+        Antes cada escalón se resolvía contra --color-surface (#0b0911), la
+        superficie base. Eso dejaba un agujero: el sistema tiene CUATRO
+        superficies y dos son más claras que la base. Un token que apenas
+        llega al umbral sobre la base FALLA sobre card y sobre footer.
+
+        Medido en producción: --color-text-subtle daba 4.69:1 sobre la base
+        —un 4% de margen— y caía a 4.34:1 sobre --color-surface-raised y a
+        3.82:1 sobre --color-surface-overlay. Lighthouse lo marcó en cuatro
+        nodos del footer. --color-border-strong tenía el mismo defecto
+        (2.88:1 y 2.54:1) y NO lo marcó: axe no audita contraste no textual.
+
+        La regla ahora es: cada escalón se resuelve contra la superficie MÁS
+        CLARA donde puede aparecer, que es --color-surface-overlay (#231f2b).
+        Satisfacer la más clara satisface todas las demás por construcción.
+        El ratio anotado al lado es el del PEOR caso, no el de la base.
+     ─────────────────────────────────────────────────────────────────────── */
+  --color-text: #e8e6eb; /* 13.01:1 — AAA holgado */
+  --color-text-muted: #a19ea7; /*  6.12:1 — AA holgado */
+  --color-text-subtle: #888691; /*  4.50:1 — AA exacto, L+0.040 en OKLCH */
+  --color-border-strong: #6c6975; /*  3.01:1 — AA no textual, L+0.040 */
+  --color-border: #36323e; /*  1.29:1 — solo separación decorativa */
+
+  /* ───────────────────────────────────────────────────────────────────────
+     4. ROLES SEMÁNTICOS — la indirección que permite recolorear el sitio
+        sin tocar un solo componente.
+
+        REGLA DE ACCESIBILIDAD (derivada de la medición, ver §3 del doc):
+        sobre fondo oscuro, el violeta es color de RELLENO; los únicos
+        acentos válidos para TEXTO son lavanda (7.83:1) y cian (9.02:1).
+        --color-brand-violet-deep queda prohibido para texto (2.74:1).
+     ─────────────────────────────────────────────────────────────────────── */
+  --color-primary: var(--color-brand-violet);
+  --color-primary-hover: #6e43e4; /* OKLCH L−0.035 — se OSCURECE, ver §4 */
+  --color-primary-active: #6334d6; /* OKLCH L−0.075 */
+  --color-on-primary: #ffffff; /* 5.05:1 sobre --color-primary */
+  --color-accent: var(--color-brand-cyan);
+  --color-on-accent: var(--color-surface); /* 9.02:1 — blanco sobre cian FALLA (2.19:1) */
+  --color-link: var(--color-brand-lavender); /* 7.83:1 sobre surface */
+  --color-focus-ring: var(--color-brand-lavender);
+
+  /* Error de formulario. Como el resto del sistema, NO se eligió: se derivó.
+
+     HUE — ni el sistema ni la marca tienen un rojo, así que no hay de dónde
+     medirlo. La regla escrita es el COMPLEMENTARIO DEL CIAN: el cian oficial
+     está en H=208.67° y su opuesto en la rueda OKLCH cae en 28.67°. Es el
+     único rojo justificable a partir de un color de marca en vez de elegido a
+     ojo, y por construcción queda lo más lejos posible del acento con el que
+     un error jamás debe confundirse.
+
+     CROMA — el máximo que el gamut sRGB admite para esa L y ese hue: 0.234.
+     No hizo falta acotarlo: cae dentro del rango de croma que la marca ya
+     usa (cian 0.122 … violeta profundo 0.251), así que no desentona.
+
+     LIGHTNESS — resuelta por búsqueda binaria hasta 4.5:1 contra
+     --color-surface-overlay, el mismo criterio de peor caso de §3.
+     Medido: sunken 5.75:1 · surface 5.54:1 · raised 5.13:1 · overlay 4.51:1.
+
+     UN SOLO TOKEN PARA TEXTO Y BORDE: satisfacer 4.5:1 de texto satisface el
+     3:1 de contraste no textual (WCAG 1.4.11) por construcción, así que el
+     mensaje de error y el borde del campo comparten valor.
+
+     El color NUNCA es el único indicador de error (WCAG 1.4.1): siempre va
+     acompañado de texto, un ícono y aria-invalid. */
+  --color-danger: #ff392e; /* 4.51:1 — OKLCH L 0.6522 C 0.234 H 28.67° */
+
+  /* Fondo de la pantalla de carga.
+     NO se puede usar --color-brand-violet-deep acá: es exactamente el color de
+     una de las barras del isologotipo, así que esa barra desaparecía contra el
+     fondo y la "J" perdía un cuarto de su construcción.
+     Este valor conserva el hue (303.9°) y el croma del morado de marca pero
+     baja la lightness a 18%, que es el punto más alto donde los CUATRO colores
+     del logo siguen siendo distinguibles:
+       cian 8.21:1 · lavanda 7.13:1 · violeta 3.57:1 · púrpura 2.50:1 */
+  --color-loader-backdrop: #230048;
+
+  /* ───────────────────────────────────────────────────────────────────────
+     5. TIPOGRAFÍA — escala modular fluida generada por script.
+
+        Pasos ≥ 0: razón 1.200 (360px) → 1.333 (1440px). La jerarquía se
+        dramatiza al crecer el viewport.
+        Pasos < 0: razón única 1.125 con piso duro de 12px, porque la razón
+        ascendente aplicada hacia abajo invertía la escala y caía a 10px.
+     ─────────────────────────────────────────────────────────────────────── */
+  /* `--font-brand-sans` la define next/font/local vía clase sobre <html>
+     (ver src/shared/fonts/index.ts). El fallback dentro de var() es la red de
+     seguridad si esa clase no llegara a aplicarse. */
+  --font-sans: var(--font-brand-sans, ui-sans-serif, system-ui, sans-serif);
+  --font-display: var(--font-sans);
+
+  --text-xs: clamp(0.79rem, 0.757rem + 0.146vw, 0.889rem); /* 12.6 → 14.2px */
+  --text-xs--line-height: 1.5;
+  --text-sm: clamp(0.889rem, 0.852rem + 0.165vw, 1rem); /* 14.2 → 16.0px */
+  --text-sm--line-height: 1.5;
+  --text-base: clamp(1rem, 0.958rem + 0.185vw, 1.125rem); /* 16.0 → 18.0px */
+  --text-base--line-height: 1.65;
+  --text-lg: clamp(1.2rem, 1.1rem + 0.444vw, 1.5rem); /* 19.2 → 24.0px */
+  --text-lg--line-height: 1.55;
+  --text-xl: clamp(1.44rem, 1.253rem + 0.829vw, 2rem); /* 23.0 → 32.0px */
+  --text-xl--line-height: 1.35;
+  --text-2xl: clamp(1.728rem, 1.415rem + 1.39vw, 2.666rem); /* 27.6 → 42.7px */
+  --text-2xl--line-height: 1.2;
+  --text-3xl: clamp(2.074rem, 1.58rem + 2.195vw, 3.555rem); /* 33.2 → 56.9px */
+  --text-3xl--line-height: 1.1;
+  --text-4xl: clamp(2.488rem, 1.738rem + 3.336vw, 4.74rem); /* 39.8 → 75.8px */
+  --text-4xl--line-height: 1.05;
+  --text-5xl: clamp(2.986rem, 1.875rem + 4.939vw, 6.32rem); /* 47.8 → 101.1px */
+  --text-5xl--line-height: 0.95;
+
+  /* ───────────────────────────────────────────────────────────────────────
+     6. RADIOS — leídos de la geometría del isologotipo. La "J" se construye
+        con rectángulos de esquina viva y UNA semicircunferencia completa.
+        La marca no usa radios intermedios, así que el sistema tampoco:
+        o esquina viva, o píldora. La ausencia del rango medio es deliberada.
+     ─────────────────────────────────────────────────────────────────────── */
+  --radius-none: 0px;
+  --radius-hairline: 2px; /* única concesión: inputs, para no cortar el caret */
+  --radius-full: 9999px;
+
+  /* ───────────────────────────────────────────────────────────────────────
+     7. MOVIMIENTO — cuatro duraciones, una por tipo de intención.
+        Nada se anima "porque queda lindo": cada duración tiene un uso.
+     ─────────────────────────────────────────────────────────────────────── */
+  --duration-micro: 150ms; /* hover, focus — respuesta táctil inmediata */
+  --duration-control: 250ms; /* acordeón, tab, filtro — cambio de estado */
+  --duration-enter: 600ms; /* entrada de elemento en viewport */
+  --duration-scene: 900ms; /* transición de escena, page loader */
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1); /* entradas: frena tarde */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1); /* estados de control */
+  --ease-in-out-quint: cubic-bezier(0.83, 0, 0.17, 1); /* escenas: arranca y frena */
+
+  /* ───────────────────────────────────────────────────────────────────────
+     8. LAYOUT — el plan fija dos anchos: hero/nav/footer a sangre completa,
+        el resto del contenido tope 1024px.
+     ─────────────────────────────────────────────────────────────────────── */
+  --container-content: 64rem; /* 1024px */
+  --container-wide: 90rem; /* 1440px */
+
+  /* Alto de la barra de navegación. Vive acá y no suelto en el header porque
+     lo necesitan dos lugares que deben coincidir: la propia nav y el alto
+     mínimo de cada sección. Si se desincronizan, las secciones quedan
+     cortadas o sobra un hueco. */
+  --alto-nav: 4rem;
+}
+
+@media (min-width: 40rem) {
+  :root {
+    --alto-nav: 5rem;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   UTILIDADES DE DURACIÓN
+
+   Tailwind 4 genera utilidades de easing desde el namespace --ease-* (por eso
+   "ease-standard" funciona solo), pero NO tiene un namespace equivalente para
+   duraciones: "duration-*" únicamente acepta valores numéricos.
+
+   Sin estas declaraciones, escribir "duration-control" no genera ninguna regla
+   y el elemento cae EN SILENCIO a los 150ms por defecto de Tailwind. Se
+   detectó midiendo el DOM, no leyendo el código: el header declaraba
+   "duration-control" (250ms) y aplicaba 150ms, y el riel del slider quedaba
+   en 0s porque ni siquiera tenía una duración por defecto de la que caer.
+
+   Se declaran como @utility y no se reemplazan los usos por valores
+   arbitrarios para que las cuatro duraciones del sistema sigan siendo nombres
+   con intención y no números sueltos repartidos por los componentes.
+   ═══════════════════════════════════════════════════════════════════════════ */
+/* Alto mínimo de una sección: el viewport MENOS la barra de navegación.
+   La nav es `fixed`, así que no ocupa espacio en el flujo y un `min-h-dvh`
+   dejaría cada sección tapada por ella en su borde superior. `dvh` y no `vh`
+   para que en móvil siga la barra del navegador al aparecer y desaparecer. */
+@utility min-h-seccion {
+  min-height: calc(100dvh - var(--alto-nav));
+}
+
+@utility duration-micro {
+  transition-duration: var(--duration-micro);
+}
+@utility duration-control {
+  transition-duration: var(--duration-control);
+}
+@utility duration-enter {
+  transition-duration: var(--duration-enter);
+}
+@utility duration-scene {
+  transition-duration: var(--duration-scene);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CAPA BASE
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer base {
+  html {
+    /* Lenis maneja el scroll suave por JS; el nativo entraría en conflicto.
+       scroll-padding evita que la nav sticky tape el destino de un ancla. */
+    scroll-behavior: auto;
+    scroll-padding-top: 6rem;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-surface-sunken);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Anillo de foco en dos capas. Un anillo de un solo color NO funciona:
+     la lavanda da 7.83:1 contra el fondo pero apenas 2.00:1 contra un botón
+     violeta. El offset en color de superficie aísla el anillo del control,
+     garantizando ≥3:1 en ambos bordes sobre cualquier fondo. */
+  :focus-visible {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-hairline);
+  }
+
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  ::selection {
+    background-color: var(--color-brand-violet);
+    color: #ffffff;
+  }
+
+  /* Respeta la preferencia del sistema. Requisito WCAG 2.3.3 y, en la
+     práctica, lo que separa un sitio animado de uno mareante. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FOOTER REVELADO — ver src/shared/components/layout/site-footer.tsx
+
+   El footer queda pegado al borde INFERIOR del viewport, escondido detrás del
+   fondo opaco de <main>. Al terminar el documento, el borde de main sube y lo
+   destapa.
+
+   ⚠️ EL FOOTER NO LLEVA Z-INDEX NEGATIVO, Y ES A PROPÓSITO. Esa fue la primera
+   versión y tenía un defecto que no se ve: el footer se pintaba bien, pero SUS
+   ENLACES NO SE PODÍAN CLICKEAR. Con `z-index: -10` el footer se pinta en el
+   paso 3 del algoritmo de apilado, y la caja del <body> —un bloque en flujo—
+   se pinta en el paso 4, o sea DESPUÉS. El body no tapa nada visualmente
+   porque su fondo se propaga al canvas, pero su caja sigue existiendo para el
+   hit-test y le gana. Medido: `elementFromPoint` sobre el centro de un enlace
+   del footer devolvía BODY. En móvil no pasaba, porque ahí la posición está
+   apagada y el footer vuelve al flujo normal.
+
+   La solución invierte quién se mueve: el footer se queda en `z-index: auto`
+   —positivo por ser `sticky`, así que se pinta en el paso 8, por encima del
+   body— y es <main> el que SUBE, con `relative z-[1]`, para pasarle por encima
+   durante el recorrido. Mismo efecto visual, y los enlaces reciben el click.
+
+   POR QUÉ ESTÁ ACÁ Y NO COMO UTILIDADES EN EL COMPONENTE
+
+   Porque la posición tiene que poder APAGARSE, y con `sticky bottom-0` puestas
+   como clases de Tailwind no se puede: viven en @layer utilities, que va
+   DESPUÉS de @layer components, así que le ganan a cualquier regla nuestra por
+   más específica que sea. La capa manda, no la especificidad. Con la posición
+   acá, la media query es la única que decide.
+
+   POR QUÉ HAY QUE PODER APAGARLO
+
+   `bottom: 0` ancla el footer por abajo. Si el footer es MÁS ALTO que el
+   viewport, su tope queda arriba del borde superior y no hay forma de llegar:
+   no se despega nunca, porque su lugar natural ya es el final del documento.
+   Medido antes de compactarlo: 1061px de footer contra 870 de viewport dejaban
+   sus primeros 191px inalcanzables para siempre.
+
+   DE DÓNDE SALEN LOS DOS UMBRALES
+
+   Del alto real del footer medido en el navegador, que NO crece de forma
+   monótona con el ancho:
+
+     373px → 761 · 402px → 762 · 768px → 761 · 1024px → 604 · 1440px → 597
+
+   Por debajo de `lg` el contenido va apilado y el footer ronda los 760px; de
+   `lg` para arriba la fila se arma en horizontal y baja a ~600. De ahí los dos
+   umbrales, cada uno con margen sobre su peor caso. Si no llega, el footer
+   queda estático: se pierde el efecto, no el contenido.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+  .footer-revelado {
+    position: static;
+  }
+
+  /* Apilado (< lg): peor caso medido 762px. */
+  @media (min-height: 50rem) {
+    .footer-revelado {
+      position: sticky;
+      bottom: 0;
+    }
+  }
+
+  /* En fila (≥ lg): peor caso medido 604px. */
+  @media (min-width: 64rem) and (min-height: 42rem) {
+    .footer-revelado {
+      position: sticky;
+      bottom: 0;
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   APARICIÓN POR SCROLL — ver src/shared/components/motion/reveal.tsx
+
+   Todo el bloque está detrás de `.js`. Esa clase la agrega un script inline
+   en el <head> antes del primer pintado. Si el JavaScript no corre, la clase
+   nunca aparece, estas reglas nunca aplican, y el contenido queda visible.
+   El estado oculto es una mejora, no el punto de partida.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+  .js [data-reveal="hidden"] {
+    opacity: 0;
+    /* opacity y translate son las dos únicas propiedades que el compositor
+       anima sin recalcular layout ni repintar. Nada de animar height/top. */
+    transition:
+      opacity var(--duration-enter) var(--ease-out-expo) var(--reveal-delay, 0ms),
+      translate var(--duration-enter) var(--ease-out-expo) var(--reveal-delay, 0ms);
+  }
+
+  .js [data-reveal="hidden"][data-reveal-from="bottom"] {
+    translate: 0 2rem;
+  }
+  .js [data-reveal="hidden"][data-reveal-from="left"] {
+    translate: -2rem 0;
+  }
+  .js [data-reveal="hidden"][data-reveal-from="right"] {
+    translate: 2rem 0;
+  }
+
+  .js [data-reveal="shown"] {
+    opacity: 1;
+    translate: 0 0;
+    transition:
+      opacity var(--duration-enter) var(--ease-out-expo) var(--reveal-delay, 0ms),
+      translate var(--duration-enter) var(--ease-out-expo) var(--reveal-delay, 0ms);
+  }
+
+  /* Con movimiento reducido el contenido aparece, pero sin desplazarse.
+     Eliminar la animación no debe eliminar el contenido. */
+  @media (prefers-reduced-motion: reduce) {
+    .js [data-reveal] {
+      opacity: 1 !important;
+      translate: none !important;
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ROTADOR DEL HERO — ver src/features/hero/components/hero-rotador.tsx
+
+   Cada par es una LÍNEA completa; todas se apilan en la misma celda de una
+   grilla centrada, así cada par queda centrado por sí mismo sin importar
+   cuánto mida. Dentro de la línea, la mitad izquierda gira hacia arriba y la
+   derecha hacia abajo.
+
+   La versión anterior daba a cada mitad su propia ranura de ancho fijo con la
+   coma anclada entre ambas. Se veía descentrado: las ranuras tenían anchos
+   distintos, así que la coma no caía en el centro de la línea y el texto
+   quedaba centrado respecto de la coma, no del contenedor.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+  .rotador {
+    /* Todas las líneas en la MISMA celda: se superponen para poder cruzar la
+       saliente con la entrante, el bloque mide lo que el par más largo, y
+       `justify-items: center` centra cada línea por su cuenta. */
+    display: grid;
+    grid-template-areas: "linea";
+    justify-items: center;
+    align-items: start;
+  }
+
+  .rotador__linea {
+    grid-area: linea;
+    /* Sin perspectiva, rotateX aplana el texto en lugar de girarlo. El valor
+       es chico a propósito: cuanto menor, más pronunciada la fuga. */
+    perspective: 260px;
+    text-align: center;
+  }
+
+  .rotador__mitad {
+    /* Los elementos en línea ignoran las transformaciones. */
+    display: inline-block;
+    /* El texto girado no debe verse desde atrás al pasar los 90°. */
+    backface-visibility: hidden;
+  }
+
+  .rotador__coma {
+    display: inline-block;
+  }
+
+  .rotador__linea[data-estado="oculto"] {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  /* La coma acompaña a la mitad izquierda: es parte de esa unidad. */
+  .rotador__linea[data-estado="entra"] .rotador__mitad--arriba,
+  .rotador__linea[data-estado="entra"] .rotador__coma {
+    animation: rotador-entra-desde-abajo var(--duration-enter) var(--ease-out-expo) both;
+  }
+  .rotador__linea[data-estado="sale"] .rotador__mitad--arriba,
+  .rotador__linea[data-estado="sale"] .rotador__coma {
+    animation: rotador-sale-hacia-arriba var(--duration-enter) var(--ease-out-expo) both;
+  }
+  .rotador__linea[data-estado="entra"] .rotador__mitad--abajo {
+    animation: rotador-entra-desde-arriba var(--duration-enter) var(--ease-out-expo) both;
+  }
+  .rotador__linea[data-estado="sale"] .rotador__mitad--abajo {
+    animation: rotador-sale-hacia-abajo var(--duration-enter) var(--ease-out-expo) both;
+  }
+
+  @keyframes rotador-entra-desde-abajo {
+    from {
+      opacity: 0;
+      transform: translateY(70%) rotateX(-90deg);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) rotateX(0);
+    }
+  }
+  @keyframes rotador-sale-hacia-arriba {
+    to {
+      opacity: 0;
+      transform: translateY(-70%) rotateX(90deg);
+    }
+  }
+  @keyframes rotador-entra-desde-arriba {
+    from {
+      opacity: 0;
+      transform: translateY(-70%) rotateX(90deg);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) rotateX(0);
+    }
+  }
+  @keyframes rotador-sale-hacia-abajo {
+    to {
+      opacity: 0;
+      transform: translateY(70%) rotateX(-90deg);
+    }
+  }
+
+  /* Con movimiento reducido el componente ni siquiera rota, pero si alguna
+     línea quedara marcada, no debe animarse. */
+  @media (prefers-reduced-motion: reduce) {
+    .rotador__mitad,
+    .rotador__coma {
+      animation: none !important;
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PANTALLA DE CARGA — ver src/shared/components/brand/page-loader.tsx
+
+   ENTRADA — las cuatro piezas del isologotipo entran una por una:
+     2 · gancho lavanda  — se revela en abanico radial desde la izquierda
+     4 · barra púrpura   — pop desde el centro de la propia pieza
+     3 · asta violeta    — ídem, apenas después
+     1 · barra cian      — cae desde arriba y rebota sobre la pieza 4
+
+   SALIDA — efecto intro de Los Simpsons. La "J" no se desvanece: ES un
+   agujero en el morado. Al crecer, el hero se ve a través de ella y el morado
+   queda empujado fuera del viewport.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+  .page-loader {
+    /* Tamaño de la marca como NÚMERO además de longitud: scale() necesita un
+       valor sin unidad, y de acá sale el factor que lleva el logo de unidades
+       de PDF a píxeles. */
+    --l-marca-num: 96;
+    --l-marca: calc(var(--l-marca-num) * 1px);
+    --l-k: calc(var(--l-marca-num) / 164.6901);
+
+    /* Tiempos. El TSX solo necesita el total y la duración de salida.
+         entrada = barrido 620 + caída 780 = 1400ms
+         pausa   = 300ms
+         salida  = 1400ms   ->  total 3100ms */
+    --l-barrido: 620ms;
+    --l-pieza: 520ms;
+    --l-caida: 780ms;
+    --l-salida-dur: 1400ms;
+
+    /* Cuánto crece la J hasta que su entorno macizo cubre el viewport.
+
+       Calculado, no tanteado: el punto de entrada está a 20 unidades de logo
+       del borde inferior del gancho, así que para que su vecindad rellena
+       cubra media pantalla hace falta 20 × 0.777 × S > 363  →  S > 23. Se usa
+       34 con margen para pantallas más altas. */
+    --l-zoom-final: 34;
+
+    /* El layout se define ACÁ y no con utilidades de Tailwind, a propósito.
+       Las capas en cascada le ganan a la especificidad: si el `display: grid`
+       viniera de la clase `grid` (capa `utilities`, posterior), ningún
+       `display: none` escrito en `components` podría anularlo. El síntoma
+       sería grave: en la segunda visita el overlay taparía el sitio para
+       siempre. */
+    display: grid;
+    place-items: center;
+  }
+
+  @media (min-width: 40rem) {
+    .page-loader {
+      --l-marca-num: 128;
+    }
+  }
+
+  /* La visibilidad la gobierna el atributo que pone el script de arranque del
+     layout, no React. Como se marca antes del primer pintado, cuando el loader
+     corresponde el morado está desde el frame cero — no después de que ya se
+     haya visto el hero. */
+  html:not([data-loader]) .page-loader {
+    display: none;
+  }
+
+  /* ── FONDO ENMASCARADO ──────────────────────────────────────────────────
+     Rectángulo morado con la "J" restada por composición `exclude`: donde la
+     máscara es opaca, el morado se recorta y se ve el hero. La máscara se
+     dimensiona igual que la marca visible y se centra igual, así el agujero
+     queda exactamente debajo del logotipo pintado. */
+  .page-loader__backdrop {
+    position: absolute;
+    inset: 0;
+    background-color: var(--color-loader-backdrop);
+    /* Avisa al compositor que esta capa se va a transformar, para que la
+       promueva y no la repinte en cada frame. */
+    will-change: transform, opacity;
+
+    /* El zoom crece alrededor del PUNTO DE ENTRADA, no del centro del
+       viewport. El centro de la caja del logo cae en el hueco entre la barra
+       púrpura y el asta: creciendo desde ahí se agrandaría el vacío y quedaría
+       una mancha morada en el medio de la pantalla.
+       El desplazamiento sale de la geometría: el punto de entrada está a
+       (−0.495, +94.93) unidades de logo del centro de la caja, y --l-k lleva
+       esas unidades a píxeles. Es el mismo punto físico que el 49.7%/91.3%
+       que usa la marca visible, así que ambos escalan superpuestos. */
+    transform-origin: calc(50% - 0.495px * var(--l-k)) calc(50% + 94.93px * var(--l-k));
+  }
+
+  /* La máscara SOLO existe durante la salida.
+     Durante la entrada el morado tiene que tapar el hero por completo: es el
+     telón. Si el agujero estuviera abierto desde el principio, cada pieza que
+     todavía no apareció dejaría ver el hero recortado con su propia silueta.
+     Recortarlo recién al salir es correcto porque en ese instante la marca
+     pintada sigue opaca y cubre el hueco exactamente. */
+  .page-loader[data-saliendo] .page-loader__backdrop {
+    mask-image: var(--l-mascara), linear-gradient(#000, #000);
+    mask-repeat: no-repeat, no-repeat;
+    mask-position: center, center;
+    mask-size:
+      var(--l-marca) calc(var(--l-marca) * 1.39557),
+      cover;
+    mask-composite: exclude;
+    -webkit-mask-image: var(--l-mascara), linear-gradient(#000, #000);
+    -webkit-mask-repeat: no-repeat, no-repeat;
+    -webkit-mask-position: center, center;
+    -webkit-mask-size:
+      var(--l-marca) calc(var(--l-marca) * 1.39557),
+      cover;
+    -webkit-mask-composite: xor;
+  }
+
+  .page-loader__mark {
+    transform-box: fill-box;
+    transform-origin: 49.7% 91.3%;
+    position: relative; /* por encima del backdrop, que es absolute */
+    width: var(--l-marca);
+    /* El SVG recorta a su viewBox por defecto. La pieza 1 cae DESDE AFUERA de
+       esa caja, así que sin esto entraría ya cortada. */
+    overflow: visible;
+  }
+
+  /* ── ENTRADA ────────────────────────────────────────────────────────────
+     `transform-box: fill-box` en cada pieza hace que scale y sus porcentajes
+     se calculen contra la caja del propio path y no contra el viewBox del
+     SVG. Sin eso el origen queda fuera del elemento y el "pop" desde el
+     centro se ve como un desplazamiento. */
+
+  /* 2 · gancho — revelado RADIAL desde el borde izquierdo. Un `inset()` daría
+     un frente recto vertical, que contra una curva se lee como una persiana;
+     el círculo acompaña la forma del gancho y parece que se dibuja la
+     sonrisa. 135% alcanza la esquina más lejana desde ese origen. */
+  .page-loader__mark .brand-mark__hook {
+    animation: loader-barrido var(--l-barrido) var(--ease-standard) both;
+  }
+
+  /* 4 · barra púrpura — tiene que estar en su lugar antes de que la pieza 1
+     le rebote encima, así que entra durante el barrido. */
+  .page-loader__mark .brand-mark__bar-low {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: loader-pop var(--l-pieza) var(--ease-out-expo) 260ms both;
+  }
+
+  /* 3 · asta violeta */
+  .page-loader__mark .brand-mark__stem {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: loader-pop var(--l-pieza) var(--ease-out-expo) 400ms both;
+  }
+
+  /* 1 · barra cian — arranca justo cuando termina el barrido del gancho. */
+  .page-loader__mark .brand-mark__bar-high {
+    transform-box: fill-box;
+    /* `linear` a propósito: el ritmo del rebote lo marca cada keyframe con su
+       propio timing-function. Una curva global los aplastaría a todos. */
+    animation: loader-caida var(--l-caida) linear var(--l-barrido) both;
+  }
+
+  @keyframes loader-barrido {
+    from {
+      clip-path: circle(0% at 0% 50%);
+    }
+    to {
+      clip-path: circle(135% at 0% 50%);
+    }
+  }
+
+  @keyframes loader-pop {
+    from {
+      opacity: 0;
+      scale: 0.1;
+    }
+    to {
+      opacity: 1;
+      scale: 1;
+    }
+  }
+
+  /* Caída con rebote. Cada tramo declara su propia curva: acelera al caer
+     (ease-in, como la gravedad) y frena al subir (ease-out), con dos rebotes
+     cada vez más chicos.
+
+     OJO CON EL SIGNO: el <g> del isologotipo lleva scale(1, -1) para resolver
+     que el PDF tiene el eje Y hacia arriba. Ese flip invierte el sentido de
+     los translate de sus hijos, así que acá un valor POSITIVO desplaza la
+     pieza hacia ARRIBA en pantalla. Con el signo intuitivo la barra caía
+     hacia abajo, atravesando el gancho. */
+  @keyframes loader-caida {
+    0% {
+      opacity: 0;
+      translate: 0 420%;
+      animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.35);
+    }
+    10% {
+      opacity: 1;
+    }
+    48% {
+      translate: 0 0;
+      animation-timing-function: cubic-bezier(0.15, 0.85, 0.4, 1);
+    }
+    66% {
+      translate: 0 34%;
+      animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.35);
+    }
+    82% {
+      translate: 0 0;
+      animation-timing-function: cubic-bezier(0.15, 0.85, 0.4, 1);
+    }
+    91% {
+      translate: 0 11%;
+      animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.35);
+    }
+    100% {
+      translate: 0 0;
+    }
+  }
+
+  /* ── SALIDA ─────────────────────────────────────────────────────────────
+     La marca de colores y el agujero de la máscara escalan con la MISMA curva
+     y el MISMO origen, así que se mantienen superpuestos. La marca se
+     desvanece temprano: a partir de ahí lo que se ve por el hueco ya no es
+     la J pintada sino el hero. */
+  .page-loader[data-saliendo] .page-loader__mark {
+    animation:
+      loader-zoom var(--l-salida-dur) var(--ease-in-out-quint) both,
+      loader-transparenta calc(var(--l-salida-dur) * 0.42) var(--ease-standard) both;
+  }
+
+  .page-loader[data-saliendo] .page-loader__backdrop {
+    animation:
+      loader-zoom var(--l-salida-dur) var(--ease-in-out-quint) both,
+      loader-transparenta calc(var(--l-salida-dur) * 0.3) calc(var(--l-salida-dur) * 0.7)
+        var(--ease-standard) both;
+  }
+
+  .page-loader[data-saliendo] {
+    pointer-events: none;
+  }
+
+  @keyframes loader-zoom {
+    from {
+      scale: 1;
+    }
+    to {
+      scale: var(--l-zoom-final);
+    }
+  }
+
+  @keyframes loader-transparenta {
+    to {
+      opacity: 0;
+    }
+  }
+
+  /* Cinturón y tirantes: el componente ya no se monta con movimiento
+     reducido, pero si alguna vez se montara, no debe animarse. */
+  @media (prefers-reduced-motion: reduce) {
+    .page-loader,
+    .page-loader__backdrop,
+    .page-loader__mark,
+    .page-loader__mark * {
+      animation: none !important;
+      transition: none !important;
+      clip-path: none !important;
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   AGENDA — LÍNEA DE TIEMPO
+   ver src/features/agenda/components/agenda-section.tsx
+
+   `--avance` va de 0 a 1 y lo escribe useAvanceLinea sobre la lista, no sobre
+   el SVG. La diferencia importa: una custom property declarada en el propio
+   elemento le GANA a la que hereda del padre, así que si el valor de reposo
+   viviera en el SVG, el que escribe el JavaScript en la lista nunca lo
+   alcanzaría. Declarándolo en el contenedor, el estilo inline gana y el trazo
+   lo hereda.
+
+   MEJORA PROGRESIVA — en reposo vale 1: la línea se sirve DIBUJADA. La clase
+   `.js`, que un script inline agrega antes del primer pintado, es la que la
+   borra para que el scroll pueda dibujarla. Si el JavaScript no corre, la
+   clase nunca aparece y la línea se ve entera. Nunca al revés.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+  .agenda-tiempo {
+    --avance: 1;
+  }
+
+  .js .agenda-tiempo {
+    --avance: 0;
+  }
+
+  /* pathLength="1" en el <path> normaliza la longitud del trazo a 1, así que
+     esto se lee literal: "dejá sin dibujar lo que falta". Sin esa
+     normalización habría que medir el path con getTotalLength() en cada
+     resize, porque el alto real depende del contenido. */
+  .agenda-tiempo__trazo {
+    stroke-dasharray: 1;
+    stroke-dashoffset: calc(1 - var(--avance));
+  }
+
+  /* Con movimiento reducido la línea no se dibuja: aparece completa. El hook
+     además escribe 1 inline, porque el estilo inline le gana a este media
+     query y hay que cubrirlo de los dos lados. */
+  @media (prefers-reduced-motion: reduce) {
+    .js .agenda-tiempo {
+      --avance: 1;
+    }
+  }
+}
+
+@layer utilities {
+  /* Contenedor de contenido: el tope de 1024px del plan, con canaleta
+     responsiva. Las secciones a sangre completa simplemente no lo usan. */
+  .container-content {
+    width: 100%;
+    max-width: var(--container-content);
+    margin-inline: auto;
+    padding-inline: clamp(1.25rem, 5vw, 2.5rem);
+  }
+
+  /* Oculta visualmente pero deja el texto disponible para lectores de
+     pantalla. Base de casi toda la estrategia de accesibilidad del sitio. */
+  .sr-only-focusable:not(:focus):not(:focus-within) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BENTO DE EXPOSITORES — ver src/features/exhibitors/components/
+
+   Tres columnas que se deslizan en bucle: la izquierda y la derecha suben, la
+   del medio baja. Cada tarjeta ocupa dos módulos de la ventana, así que se ve
+   una entera y la mitad de la siguiente.
+
+   POR QUÉ EL BUCLE NO SE VE
+
+   Cada columna lleva su lista DUPLICADA y el riel se desplaza exactamente la
+   mitad de su alto. Al reiniciarse el ciclo, la segunda copia quedó donde
+   estaba la primera y el salto es invisible.
+
+   Para que esa mitad sea exacta, las tarjetas NO se separan con `gap` sino con
+   `margin-bottom`. Con `gap`, un riel de 2N tarjetas tiene 2N−1 huecos y el
+   −50% se queda medio hueco corto: el bucle pega un tirón en cada vuelta. Con
+   el margen, cada tarjeta mide siempre tarjeta+hueco, el riel mide 2N de esos
+   y la mitad cae justo.
+
+   SOLO SE ANIMA `translate`. Ni width, ni height, ni top: el compositor lo
+   resuelve sin recalcular layout.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+  .bento {
+    --bento-hueco: 1rem;
+    /* Alto de la ventana de cada columna. */
+    --bento-alto: 33rem;
+    /* MÓDULO BASE: el alto de una de las tres franjas en que se divide la
+       ventana, hueco incluido. Es la unidad del bento y no cambió; lo que
+       cambió es que ahora una tarjeta ocupa DOS. Se declara acá y no dentro de
+       la celda para que la ventana y la tarjeta no puedan discrepar. */
+    --bento-modulo: calc((var(--bento-alto) - 3 * var(--bento-hueco)) / 3);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--bento-hueco);
+  }
+
+  /* MÓVIL: una sola columna. Tres columnas en un teléfono dejarían tarjetas de
+     110px de ancho, donde el título no entra en una línea ni recortado. */
+  @media (width >= 48rem) {
+    .bento {
+      --bento-hueco: 1.5rem;
+      --bento-alto: 45rem;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .bento__columna {
+    height: var(--bento-alto);
+    overflow: hidden;
+    /* Desvanecido arriba y abajo: sin esto las tarjetas aparecen y desaparecen
+       contra un corte recto y se ve el borde de la ventana, no un recorrido. */
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 7%, #000 93%, transparent 100%);
+  }
+
+  /* ARRASTRE (solo móvil). `touch-action: none` es obligatorio: sin él el
+     navegador se queda el gesto vertical para scrollear la página y los
+     `pointermove` no llegan nunca. La contrapartida es que un dedo que empieza
+     DENTRO del bento ya no scrollea; por eso la ventana mide bastante menos
+     que el viewport, para que siempre quede franja libre arriba y abajo. */
+  .bento__columna[data-arrastrable] {
+    touch-action: none;
+    cursor: grab;
+    /* SIN ESTO, ARRASTRAR SUBRAYA EL TEXTO. `touch-action` frena el scroll,
+       no la selección: son mecanismos distintos. Con mouse —y la emulación
+       móvil de DevTools usa mouse— el arrastre selecciona SIEMPRE; con un dedo
+       se ve menos, porque en táctil la selección pide pulsación larga, pero
+       una pulsación larga seguida de arrastre igual la dispara.
+
+       El costo es que dentro del bento no se puede copiar texto en móvil. Es
+       aceptable: sobre un riel que no se detiene, seleccionar es impracticable
+       igual. En escritorio el texto sigue siendo seleccionable, porque ahí no
+       hay arrastre. */
+    user-select: none;
+    -webkit-user-select: none; /* Safari todavía lo pide con prefijo. */
+    /* iOS: evita el menú de contexto al mantener el dedo apoyado. */
+    -webkit-touch-callout: none;
+  }
+
+  .bento__columna[data-arrastrable]:active {
+    cursor: grabbing;
+  }
+
+  .bento__riel {
+    display: flex;
+    flex-direction: column;
+    /* Sin `gap` A PROPÓSITO — ver el encabezado del bloque. */
+    /* --bento-dur la escribe el componente, normalizada por la cantidad de
+       tarjetas de la columna: en móvil el riel lleva doce en vez de cuatro y
+       con una duración fija iría al triple de velocidad. El respaldo solo
+       actúa si el estilo inline no llegara. */
+    animation: bento-sube var(--bento-dur, 48s) linear infinite;
+    /* El riel se mueve solo; avisar al compositor evita que promueva y
+       despromueva la capa en cada ciclo. */
+    will-change: translate;
+  }
+
+  .bento__riel[data-sentido="baja"] {
+    animation-name: bento-baja;
+  }
+
+  .bento__celda {
+    /* UNA TARJETA OCUPA DOS MÓDULOS: exactamente el alto que antes ocupaban dos
+       tarjetas apiladas, contando el hueco que quedaba entre ellas.
+
+       Escrito así y no como un número suelto, el paso del riel —tarjeta más
+       hueco— queda en el DOBLE EXACTO del anterior. Eso importa: el bucle se
+       cierra porque el riel se desplaza la mitad de su alto y esa mitad tiene
+       que caer en un múltiplo entero de pasos. Con el paso duplicado la
+       cuenta sigue dando entero, porque la cantidad de tarjetas no cambió.
+
+       Consecuencia buscada: por ventana entra 1,5 de paso en vez de 3. Se ve
+       una tarjeta entera y la mitad de la siguiente, con el desvanecido de la
+       máscara en los dos bordes. */
+    height: calc(2 * var(--bento-modulo) + var(--bento-hueco));
+    margin-bottom: var(--bento-hueco);
+    flex: none;
+  }
+
+  @keyframes bento-sube {
+    from {
+      translate: 0 0;
+    }
+    to {
+      translate: 0 -50%;
+    }
+  }
+
+  @keyframes bento-baja {
+    from {
+      translate: 0 -50%;
+    }
+    to {
+      translate: 0 0;
+    }
+  }
+
+  /* PAUSA — WCAG 2.2.2. El botón es el mecanismo obligatorio; el foco es
+     comodidad, para poder leer una tarjeta sin perseguirla con el teclado. */
+  .bento[data-pausado] .bento__riel,
+  .bento[data-arrastrando] .bento__riel,
+  .bento:focus-within .bento__riel {
+    animation-play-state: paused;
+  }
+
+  /* La pausa por puntero va SOLO donde hay un puntero que puede posarse.
+     
+     Sin esta guarda rompía el arrastre en táctil: al apoyar el dedo el
+     elemento entra en `:hover`, el CSS pausa, y al soltar sigue pausado
+     —el hover táctil es PEGAJOSO, no se va hasta tocar otra cosa—. El
+     riel quedaba clavado y parecía que la animación había muerto. */
+  @media (hover: hover) and (pointer: fine) {
+    .bento:hover .bento__riel {
+      animation-play-state: paused;
+    }
+  }
+
+  /* MOVIMIENTO REDUCIDO — la columna se DESPLIEGA, no se congela.
+     
+     Congelar el riel dejaba visibles solo las tres primeras tarjetas de cada
+     columna. En escritorio da igual, pero en móvil hay una sola columna con
+     los doce expositores: los otros nueve quedaban inalcanzables, sin
+     animación que los trajera ni arrastre que los buscara. Quitar el
+     movimiento nunca debe quitar el contenido.
+     
+     Así que la ventana suelta su alto y su recorte, y la copia que servía para
+     el bucle —que ya está `aria-hidden`— se esconde para no duplicar a la
+     vista lo que un lector de pantalla tampoco lee dos veces. */
+  @media (prefers-reduced-motion: reduce) {
+    .bento__riel {
+      animation: none;
+    }
+
+    .bento__columna {
+      height: auto;
+      overflow: visible;
+      mask-image: none;
+    }
+
+    .bento__celda[aria-hidden="true"] {
+      display: none;
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RECORRIDO DEL MAPA — ver src/features/venue-map/components/
+
+   El trazo se dibuja de A a B al elegir un lugar. `pathLength="1"` normaliza
+   el largo de la polilínea, así el dibujado es `stroke-dashoffset: 1 → 0` sin
+   que ningún JavaScript tenga que medir el path ni rehacerlo en cada resize.
+
+   NO se puede usar `vector-effect="non-scaling-stroke"` acá: pasa los dashes a
+   espacio de pantalla y rompe justamente esa normalización.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+  .mapa-ruta {
+    stroke-dasharray: 1;
+    animation: mapa-ruta-dibuja var(--duration-scene) var(--ease-out-expo) both;
+  }
+
+  @keyframes mapa-ruta-dibuja {
+    from {
+      stroke-dashoffset: 1;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  /* Con movimiento reducido el recorrido aparece DIBUJADO, no ausente:
+     quitar la animación nunca debe quitar el contenido. */
+  @media (prefers-reduced-motion: reduce) {
+    .mapa-ruta {
+      animation: none;
+      stroke-dashoffset: 0;
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RIEL DEL MAPA — ver src/features/venue-map/components/
+
+   El asomo de la tarjeta anterior y la siguiente no termina en un corte recto
+   sino que se DESVANECE. Un `overflow: hidden` solo, corta a cuchillo y ese
+   borde se lee como el límite de una caja; con la máscara, el asomo se apaga y
+   se lee como contexto que sigue más allá.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+  .mapa-riel {
+    overflow: hidden;
+    mask-image: linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RECORTE SIN PUNTOS SUSPENSIVOS
+
+   `line-clamp` de Tailwind recorta y agrega "…". Los puntos suspensivos son un
+   cartel de "acá falta texto": en una tarjeta cuyo contenido está escrito a
+   medida, delatan un problema que no existe y ensucian el remate.
+
+   El "…" de `-webkit-line-clamp` lo dibuja `text-overflow`, así que alcanza
+   con pedirle `clip`. El recorte sigue funcionando igual; simplemente corta.
+   Los textos de `plano.ts` están escritos cortos para que ni se active.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@utility recorte-* {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: --value(integer);
+  overflow: hidden;
+  text-overflow: clip;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PULSO DEL PUNTO DE ACCESO — ver src/features/venue-map/components/
+
+   Un anillo que sale del punto de entrada cuando el lugar activo es el acceso.
+   Marca de dónde arranca todo el recorrido.
+
+   LATE MIENTRAS EL ACCESO SEA EL LUGAR ACTIVO, y se apaga al elegir otro: el
+   elemento deja de existir. No hace falta ningún temporizador para eso.
+
+   SOBRE WCAG 2.2.2 — el criterio pide control de pausa para el movimiento que
+   arranca solo y dura más de cinco segundos, y exceptúa el movimiento que es
+   ESENCIAL para la actividad. Acá el pulso es justamente eso: es la marca de
+   dónde nace el recorrido, la razón por la que el punto se distingue de los
+   otros ocho. No transporta información que haya que leer —va `aria-hidden`—
+   ni compite con texto. Con `prefers-reduced-motion` no late.
+
+   Es una decisión tomada, no un descuido: queda anotada en 03-pendientes.md.
+
+   Solo se anima `scale` y `opacity`: las dos las resuelve el compositor.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+  .mapa-pulso {
+    animation: mapa-pulso 2s var(--ease-out-expo) infinite;
+  }
+
+  @keyframes mapa-pulso {
+    from {
+      scale: 1;
+      opacity: 0.6;
+    }
+    to {
+      scale: 3.4;
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mapa-pulso {
+      animation: none;
+      opacity: 0;
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RIEL DE NOTICIAS — ver src/features/news/components/
+
+   Mismo criterio que el riel del mapa: el asomo de la tarjeta anterior y la
+   siguiente se DESVANECE en vez de cortarse a cuchillo. Un `overflow: hidden`
+   solo deja un borde que se lee como el límite de una caja; con la máscara, el
+   asomo se apaga y se lee como que el listado sigue.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+  .noticias-riel {
+    overflow: hidden;
+    mask-image: linear-gradient(to right, transparent 0%, #000 10%, #000 90%, transparent 100%);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ACORDEÓN DE PREGUNTAS — ver src/features/faq/components/
+
+   SE SIRVE ABIERTO. El estado plegado no está en el marcado: es esta regla, y
+   solo aplica detrás de `.js`, la clase que un script inline agrega al <html>
+   antes del primer pintado. Si el JavaScript no corre, la sección es una lista
+   de preguntas con sus respuestas a la vista. Nunca al revés.
+
+   POR QUÉ ACÁ SÍ SE ANIMA UNA PROPIEDAD DE LAYOUT
+
+   La regla del proyecto es animar solo `opacity`, `scale`, `translate` y
+   `clip-path`, porque son las que el compositor resuelve sin recalcular
+   layout. Un acordeón es la excepción y no hay forma de evitarla: para que el
+   contenido de abajo suba al plegarse, el panel TIENE que dejar de ocupar
+   lugar. Con `clip-path` el panel se recortaría pero seguiría ocupando su
+   alto, y quedaría un hueco.
+
+   Se anima `grid-template-rows` de 0fr a 1fr —y no `height` de 0 a auto— para
+   no tener que medir el contenido con JavaScript ni volver a medirlo cuando
+   cambie. El recálculo es aceptable porque ocurre UNA VEZ por clic, en
+   respuesta a una acción del usuario, y no una vez por frame de scroll, que es
+   lo que la regla existe para evitar.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+  .faq-panel {
+    display: grid;
+    /* Valor de reposo: abierto. */
+    grid-template-rows: 1fr;
+  }
+
+  .js .faq-panel {
+    transition: grid-template-rows var(--duration-enter) var(--ease-out-expo);
+  }
+
+  .js .faq-panel:not([data-abierta]) {
+    grid-template-rows: 0fr;
+  }
+
+  /* Con movimiento reducido el panel abre y cierra, pero de golpe. Quitar la
+     animación nunca debe quitar el contenido: acá se sigue pudiendo abrir. */
+  @media (prefers-reduced-motion: reduce) {
+    .js .faq-panel {
+      transition: none;
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GRILLA DE SPONSORS — ver src/features/sponsors/components/
+
+   Dieciséis fichas en 4×4 y un marcador de esquinas que VIAJA de una a otra.
+
+   EL MARCADOR NO SE MIDE, SE CALCULA
+
+   Es un solo elemento fuera de flujo, del tamaño exacto de una celda, que se
+   mueve con `translate`. Como las dieciséis celdas son idénticas, nunca tiene
+   que cambiar de tamaño: alcanza con trasladarlo, que es justo la propiedad
+   que el compositor resuelve sin recalcular layout.
+
+   Su posición sale de DOS NÚMEROS: `--sponsors-i`, el índice activo, que
+   escribe el componente, y `--sponsors-cols`, que declara este archivo en cada
+   breakpoint. La columna es el resto y la fila el cociente entero, los dos
+   resueltos por CSS con `mod()` y `round()`.
+
+   La consecuencia de fondo: NO HAY UNA SOLA MEDICIÓN EN JAVASCRIPT. Ni
+   `getBoundingClientRect`, ni `ResizeObserver`, ni un listener de resize que
+   recalcule al girar el teléfono. El marcador queda alineado en cualquier
+   viewport por construcción, y cuando el breakpoint cambia la cantidad de
+   columnas, la posición se reacomoda sola porque la cuenta es la misma.
+
+   POR QUÉ LOS PORCENTAJES DEL `translate` FUNCIONAN
+
+   En `translate`, un porcentaje se resuelve contra la caja del PROPIO
+   elemento: el primero contra su ancho y el segundo contra su alto. Y el
+   marcador mide exactamente una celda. Entonces `100% + hueco` es el paso de
+   la grilla —celda más separación— en los dos ejes a la vez, sin que ninguno
+   de los dos valores tenga que escribirse en ningún lado.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+  .sponsors {
+    /* MÓVIL: dos columnas, 8 filas.
+
+       Una sola columna se probó y se descartó por una razón medible: con una
+       columna el ancho de la ficha es el de la grilla entera y su alto sale
+       del ratio, así que la sección se ESTIRA a medida que crece la pantalla
+       —2420px a 402px de ancho, 4848px a 767px, casi seis pantallas de puros
+       logos—. Con dos columnas el ancho de la ficha se parte al medio y las
+       dieciséis entran en 8 filas en vez de 16. */
+    --sponsors-cols: 2;
+    --sponsors-hueco: 0.75rem;
+    /* Rectángulo acostado. Más chato que en escritorio: en dos columnas
+       angostas, 16/9 deja fichas demasiado altas para un logotipo. */
+    --sponsors-ratio: 2 / 1;
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(var(--sponsors-cols), minmax(0, 1fr));
+    gap: var(--sponsors-hueco);
+  }
+
+  @media (width >= 48rem) {
+    .sponsors {
+      --sponsors-cols: 4;
+      --sponsors-hueco: 1rem;
+      --sponsors-ratio: 16 / 9;
+    }
+  }
+
+  .sponsors__ficha {
+    display: grid;
+    place-items: center;
+    /* La relación de aspecto la reserva la ficha, no la imagen: cuando el
+       logotipo real reemplace a la "J", el layout no se mueve. */
+    aspect-ratio: var(--sponsors-ratio);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface-raised);
+    /* La "J" va en monocromía y hereda este color por `currentColor`. */
+    color: var(--color-border-strong);
+    transition:
+      color var(--duration-control) var(--ease-standard),
+      background-color var(--duration-control) var(--ease-standard);
+  }
+
+  .sponsors__ficha[data-activa] {
+    color: var(--color-link);
+    background-color: var(--color-surface-overlay);
+  }
+
+  .sponsors__marcador {
+    position: absolute;
+    top: 0;
+    left: 0;
+    /* El mismo ancho que una pista de la grilla, escrito con la misma cuenta
+       que `repeat()` resuelve internamente. */
+    width: calc((100% - (var(--sponsors-cols) - 1) * var(--sponsors-hueco)) / var(--sponsors-cols));
+    aspect-ratio: var(--sponsors-ratio);
+    translate: calc(mod(var(--sponsors-i), var(--sponsors-cols)) * (100% + var(--sponsors-hueco)))
+      calc(
+        round(down, var(--sponsors-i) / var(--sponsors-cols), 1) * (100% + var(--sponsors-hueco))
+      );
+    transition: translate var(--duration-control) var(--ease-standard);
+    /* No intercepta el puntero: el hover lo tienen que recibir las fichas que
+       quedan debajo. Sin esto el marcador se taparía a sí mismo el destino. */
+    pointer-events: none;
+  }
+
+  /* Las cuatro "L". Van con esquinas VIVAS —radio 0— como todo el sistema, y
+     desbordan tres píxeles hacia afuera para que se lean como un corchete que
+     encierra la ficha y no como un borde pegado a ella. */
+  .sponsors__marcador > span {
+    position: absolute;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid var(--color-primary);
+  }
+
+  .sponsors__marcador > span:nth-child(1) {
+    top: -3px;
+    left: -3px;
+    border-right-width: 0;
+    border-bottom-width: 0;
+  }
+  .sponsors__marcador > span:nth-child(2) {
+    top: -3px;
+    right: -3px;
+    border-bottom-width: 0;
+    border-left-width: 0;
+  }
+  .sponsors__marcador > span:nth-child(3) {
+    bottom: -3px;
+    left: -3px;
+    border-top-width: 0;
+    border-right-width: 0;
+  }
+  .sponsors__marcador > span:nth-child(4) {
+    bottom: -3px;
+    right: -3px;
+    border-top-width: 0;
+    border-left-width: 0;
+  }
+
+  /* Con movimiento reducido el marcador SALTA en vez de viajar. Sigue
+     marcando: quitar la animación nunca debe quitar la función. */
+  @media (prefers-reduced-motion: reduce) {
+    .sponsors__marcador,
+    .sponsors__ficha {
+      transition: none;
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ENTRADAS — ver src/features/tickets/components/
+
+   LOS TRES PANELES SE SIRVEN VISIBLES, igual que el acordeón de Preguntas.
+   El estado oculto no está en el marcado sino en estas reglas, que solo
+   aplican detrás de `.js`. Sin JavaScript la sección es una lista de tres
+   tarjetas de precio, una abajo de la otra.
+
+   Al revés —ocultar con el atributo `hidden` y mostrar con JavaScript— un
+   fallo del script dejaría dos de los tres precios inalcanzables.
+
+   ⚠️ EL PANEL NO PUEDE LLEVAR UNA UTILIDAD DE DISPLAY. Esta regla vive en
+   @layer components y las utilidades de Tailwind en @layer utilities, que va
+   después: un `grid` o un `block` sobre `.entradas-panel` le ganaría por capa
+   —no por especificidad— y el panel no se ocultaría nunca. El layout va en el
+   hijo.
+
+   EL RIEL DE MEDIOS DE PAGO se separa con `margin-right` y NO con `gap`, por
+   lo mismo que el bento: con la lista duplicada, 2N ítems dejan 2N−1 huecos y
+   el `-50%` se queda medio hueco corto, así que el bucle pega un tirón en cada
+   vuelta. Con el margen, cada ítem mide siempre ítem+hueco y la media vuelta
+   cae en un múltiplo entero.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+  .js .entradas-panel:not([data-activo]) {
+    display: none;
+  }
+
+  /* El nombre del tipo solo hace falta sin JavaScript: con las píldoras
+     funcionando, la activa ya lo dice. Misma regla `.js`, usada para sacar una
+     redundancia en vez de para ocultar contenido. */
+  .js .entradas-panel__nombre {
+    display: none;
+  }
+
+  .medios {
+    --medios-hueco: 0.75rem;
+    /* Tiempo de una vuelta entera. El riel lleva la lista duplicada y recorre
+       la mitad de su ancho, así que esto es lo que tarda en pasar la muestra
+       completa de once medios. */
+    --medios-dur: 40s;
+    overflow: hidden;
+    /* Los bordes se desvanecen: un corte recto se lee como el límite de una
+       caja, no como una fila que sigue. */
+    mask-image: linear-gradient(to right, transparent 0%, #000 8%, #000 92%, transparent 100%);
+  }
+
+  .medios__riel {
+    display: flex;
+    /* Sin esto el riel se achica al ancho del contenedor y el `-50%` deja de
+       significar "media lista". */
+    width: max-content;
+    animation: medios-corre var(--medios-dur) linear infinite;
+    will-change: translate;
+  }
+
+  .medios__item {
+    /* Sin `gap` A PROPÓSITO — ver el encabezado del bloque. */
+    margin-right: var(--medios-hueco);
+    flex: none;
+  }
+
+  @keyframes medios-corre {
+    from {
+      translate: 0 0;
+    }
+    to {
+      translate: -50% 0;
+    }
+  }
+
+  /* PAUSA — WCAG 2.2.2. El botón es el mecanismo obligatorio; el foco es
+     comodidad, para poder leer sin perseguir. El CSS es el único dueño del
+     estado de reproducción: nadie llama a `pause()` por API. */
+  .medios[data-pausado] .medios__riel,
+  .medios:focus-within .medios__riel {
+    animation-play-state: paused;
+  }
+
+  /* La pausa por puntero, SOLO donde hay un puntero que pueda posarse. El
+     hover táctil es pegajoso: se queda activo después de soltar y deja el riel
+     clavado sin que nadie haya apretado nada. */
+  @media (hover: hover) and (pointer: fine) {
+    .medios:hover .medios__riel {
+      animation-play-state: paused;
+    }
+  }
+
+  /* MOVIMIENTO REDUCIDO — el riel se DESPLIEGA, no se congela. Congelarlo
+     dejaría visibles los primeros medios de pago y el resto inalcanzable, sin
+     animación que los traiga. Quitar el movimiento nunca debe quitar el
+     contenido: la fila envuelve y la copia del bucle se esconde. */
+  @media (prefers-reduced-motion: reduce) {
+    .medios {
+      overflow: visible;
+      mask-image: none;
+    }
+
+    .medios__riel {
+      width: auto;
+      flex-wrap: wrap;
+      animation: none;
+    }
+
+    .medios__item[aria-hidden="true"] {
+      display: none;
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FORMULARIO DE PAGO — modal ilustrativo de Entradas.
+
+   Es un `<dialog>` NATIVO abierto con `showModal()`. El navegador resuelve el
+   foco al abrir y su devolución al cerrar, la inertización del resto de la
+   página, el cierre con Escape y el fondo por `::backdrop`. Acá solo va la
+   apariencia.
+
+   ⚠️ HAY QUE RESETEAR AL AGENTE DE USUARIO. Un `<dialog>` trae borde, relleno
+   y fondo BLANCO propios, y sobre un sitio oscuro eso se ve como un error.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+  .dialogo-pago {
+    margin: auto; /* centrado en la capa superior */
+    width: 100%;
+    max-width: min(32rem, calc(100vw - 2.5rem));
+    padding: 0;
+    border: 1px solid var(--color-border-strong);
+    background-color: var(--color-surface-raised);
+    color: var(--color-text);
+
+    /* Aparición. `overlay` y `display` con `allow-discrete` son lo que permite
+       que un elemento que pasa de `display: none` a visible pueda animarse: sin
+       ellos el diálogo aparece de golpe y la transición de salida no ocurre
+       nunca, porque el elemento ya dejó de existir para el layout. */
+    opacity: 0;
+    scale: 0.98;
+    transition:
+      opacity var(--duration-control) var(--ease-standard),
+      scale var(--duration-control) var(--ease-standard),
+      overlay var(--duration-control) allow-discrete,
+      display var(--duration-control) allow-discrete;
+  }
+
+  /* El valor de reposo es VISIBLE: si el navegador no soporta la transición o
+     `@starting-style`, el diálogo abre igual, sin animación. Nunca al revés. */
+  .dialogo-pago[open] {
+    opacity: 1;
+    scale: 1;
+  }
+
+  @starting-style {
+    .dialogo-pago[open] {
+      opacity: 0;
+      scale: 0.98;
+    }
+  }
+
+  .dialogo-pago::backdrop {
+    background-color: rgb(4 3 7 / 0.8);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dialogo-pago {
+      transition: none;
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CONTACTO — los dos caminos del envío.
+
+   Con JavaScript manda el botón: valida contra `ValidityState`, compone el
+   correo con los campos escritos y abre el cliente. Sin JavaScript el botón no
+   puede hacer NADA, así que no se muestra: en su lugar queda un enlace
+   `mailto:` con el destinatario y el asunto ya puestos.
+
+   POR QUÉ NO ALCANZABA CON `action="mailto:"`
+
+   Es lo que había, y funcionaba mejor —serializaba los campos en el cuerpo—,
+   pero Chrome trata cualquier `action` con esquema distinto de https como
+   contenido mixto, aunque un `mailto:` no mande nada por la red. Lighthouse lo
+   cobraba en dos auditorías, `is-on-https` (peso 5) e `inspector-issues`
+   (peso 1), y dejaba Buenas prácticas en 77 contra el objetivo de 90 que fija
+   el plan. Los `mailto:` de un ENLACE no los marca; los de un `action`, sí.
+
+   ⚠️ NI EL BOTÓN NI EL PÁRRAFO PUEDEN LLEVAR UNA UTILIDAD DE DISPLAY. Estas
+   reglas viven en @layer components y las utilidades de Tailwind en @layer
+   utilities, que va después: un `block` o un `inline-flex` les ganaría por
+   capa, no por especificidad, y el elemento no se ocultaría nunca.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+  /* Sin `.js` —el script no corrió— el botón no aparece. */
+  html:not(.js) .contacto-enviar {
+    display: none;
+  }
+
+  /* Con `.js`, el enlace sobra. Se sirve VISIBLE: si el script falla, queda. */
+  .js .contacto-sin-js {
+    display: none;
+  }
+}
