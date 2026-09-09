@@ -2,6 +2,7 @@ import { DatosEstructurados } from "./datos-estructurados";
 import { PageLoader } from "@/shared/components/brand/page-loader";
 import { ScrollProgress } from "@/shared/components/layout/scroll-progress";
 import { SiteHeader } from "@/shared/components/layout/site-header";
+import { SectionRail } from "@/shared/components/layout/section-rail";
 import { BackToTop } from "@/shared/components/layout/back-to-top";
 import { SiteFooter } from "@/shared/components/layout/site-footer";
 import { HeroSection } from "@/features/hero/components/hero-section";
@@ -36,6 +37,7 @@ export default function HomePage() {
       <PageLoader />
       <ScrollProgress />
       <SiteHeader />
+      <SectionRail />
 
       {/* DOS COSAS ACÁ SON ESTRUCTURALES, NO ESTÉTICAS, Y LAS DOS SOSTIENEN EL
           FOOTER REVELADO.

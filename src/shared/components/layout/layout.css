@@ -664,3 +664,208 @@
     padding-block-end: var(--espacio-barra-movil);
   }
 }
+
+@layer components {
+  /* ═══════════════════════════════════════════════════════════════════════
+     ÍNDICE LATERAL DE SECCIONES
+
+     Nueve números al costado que dicen dónde estás y dejan saltar a cualquier
+     sección. La medición y el porqué de cada decisión de comportamiento están
+     en `section-rail.tsx`; acá queda solo lo que es dibujo.
+
+     NO TIENE FONDO PROPIO. Se apoya sobre la sección que tenga detrás, y el
+     sitio alterna papel y tinta, así que el color del texto no puede ser uno
+     solo: el script le pone a cada número el atributo `data-sobre` con la
+     familia que le toca, y las dos familias están escritas acá con su
+     contraste verificado. No se mezclan capas ni se usa `mix-blend-mode`,
+     que darían un color que no se puede medir.
+     ═══════════════════════════════════════════════════════════════════════ */
+  .riel {
+    display: none;
+  }
+
+  /* SIN JAVASCRIPT NO SE DIBUJA, y no se pierde nada: los mismos nueve
+     enlaces están en el menú del encabezado, que se sirve desde el servidor.
+     Sin script no hay forma de saber qué superficie tiene detrás cada número,
+     y sobre papel la mitad del riel quedaría invisible.
+
+     Por debajo de 72rem tampoco, y el límite no es una talla redonda: es dónde
+     el riel deja de pisar el texto. El contenedor se topa en 64rem y se centra,
+     con 2.5rem de relleno adentro, así que el texto arranca en
+     (ancho - 1024px) / 2 + 40px. Para que entre un riel de 3.5rem hace falta
+     que eso llegue a 56px, o sea 1056px de ventana. A 72rem quedan 104px de
+     canal libre, casi el doble del riel, que es el aire que necesita además la
+     etiqueta que asoma al apuntar. */
+  @media (min-width: 72rem) {
+    .js .riel {
+      display: flex;
+      position: fixed;
+      inset-block: 0;
+      inset-inline-start: 0;
+      z-index: 70; /* mismo escalón que la barra móvil, que acá no existe */
+      width: 3.5rem;
+      align-items: center;
+      /* El riel ocupa toda la altura para poder centrar su lista, pero solo la
+         lista recibe eventos: si no, una columna invisible de 3.5rem se comería
+         los clicks a lo largo de toda la página. */
+      pointer-events: none;
+    }
+  }
+
+  .riel ol {
+    display: grid;
+    padding-inline-start: 1rem;
+    pointer-events: auto;
+  }
+
+  .riel li {
+    /* La etiqueta se posiciona contra su ítem, no contra la lista. */
+    position: relative;
+  }
+
+  .riel a {
+    display: flex;
+    align-items: stretch;
+    gap: 0.5rem;
+    text-decoration: none;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: var(--color-text-subtle); /* 4.50:1 sobre tinta */
+    transition: color var(--duration-micro) var(--ease-standard);
+  }
+
+  .riel a:hover,
+  .riel a:focus-visible {
+    color: var(--color-text);
+  }
+
+  .riel a[data-activo] {
+    color: var(--color-link); /* 7.83:1 sobre tinta */
+  }
+
+  .riel a:focus-visible {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 2px;
+  }
+
+  /* La familia clara. Los cuatro valores son los mismos tokens derivados que
+     usa `.en-papel`, con su contraste ya verificado en globals.css: no hay un
+     color nuevo acá, solo el mismo juego leído desde afuera de la sección. */
+  .riel a[data-sobre="papel"] {
+    color: var(--papel-text-subtle); /* 4.51:1 sobre papel */
+  }
+
+  .riel a[data-sobre="papel"]:hover,
+  .riel a[data-sobre="papel"]:focus-visible {
+    color: var(--papel-text);
+  }
+
+  .riel a[data-sobre="papel"][data-activo] {
+    color: var(--papel-link); /* 5.92:1 - el lavanda daría 2.08:1 */
+  }
+
+  .riel a[data-sobre="papel"]:focus-visible {
+    outline-color: var(--papel-focus-ring);
+  }
+
+  .riel__n {
+    align-self: center;
+    font-variant-numeric: tabular-nums;
+    flex: none;
+  }
+
+  /* ── EL TESTIGO ──────────────────────────────────────────────────────────
+     Cada enlace aporta un tramo de columna. Se tocan por el canto, sin aire
+     entre ellos: es lo que hace que se lea como una barra de material cortado
+     y no como una barra de progreso segmentada. Toma `currentColor`, así que
+     cambia de familia junto con el número sin una sola regla más.
+
+     EL ESTADO NUNCA DEPENDE SOLO DEL COLOR (WCAG 1.4.1): el tramo activo
+     además se ensancha, de 0.5rem a 1.1rem. */
+  .riel__tramo {
+    flex: none;
+    width: 0.5rem;
+    height: 2.25rem;
+    background: currentColor;
+    opacity: 0.22;
+    transition:
+      width var(--duration-control) var(--ease-standard),
+      opacity var(--duration-control) var(--ease-standard);
+  }
+
+  .riel a:hover .riel__tramo,
+  .riel a:focus-visible .riel__tramo {
+    opacity: 0.5;
+  }
+
+  /* El tramo ya recorrido queda pintado: la columna se llena a medida que se
+     baja. Es la misma información que da la sección activa, acumulada. */
+  .riel a[data-visto] .riel__tramo {
+    opacity: 0.85;
+  }
+
+  .riel a[data-activo] .riel__tramo {
+    width: 1.1rem;
+    opacity: 1;
+  }
+
+  /* ── LA ETIQUETA ─────────────────────────────────────────────────────────
+     El nombre aparece SOLO en el ítem apuntado, no en los nueve a la vez, y
+     va fuera del flujo para que la columna no cambie de ancho al mostrarlo.
+
+     El fondo es el color EXACTO de la sección que hay detrás, que el script
+     mide y entrega en `--superficie`. Con un valor fijo, sobre la sección
+     gris la etiqueta se leería como una calcomanía pegada encima en vez de
+     como parte de la misma superficie.
+
+     El texto se anuncia por `aria-label` del enlace y no por este nodo: ver
+     el comentario en `section-rail.tsx`. */
+  .riel__nombre {
+    position: absolute;
+    inset-inline-start: 100%;
+    inset-block-start: 50%;
+    translate: 0.75rem -50%;
+    align-self: center;
+    white-space: nowrap;
+    padding: 0.4rem 0.7rem;
+    background: var(--superficie, var(--color-surface-sunken));
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity var(--duration-micro) var(--ease-standard),
+      visibility var(--duration-micro) var(--ease-standard);
+  }
+
+  .riel a[data-sobre="papel"] .riel__nombre {
+    border-color: var(--papel-border);
+    color: var(--papel-text);
+  }
+
+  .riel a:hover .riel__nombre,
+  .riel a:focus-visible .riel__nombre {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* ── ENTRADA ─────────────────────────────────────────────────────────────
+     Los tramos aparecen de arriba hacia abajo, cada uno creciendo desde su
+     canto superior. Detrás de `.js` y de la consulta de movimiento: sin
+     animación el riel se pinta entero desde el primer cuadro. */
+  @media (prefers-reduced-motion: no-preference) {
+    .js .riel__tramo {
+      transform-origin: 50% 0;
+      animation: riel-entrar var(--duration-control) var(--ease-out-expo) backwards;
+      animation-delay: calc(var(--i, 0) * 60ms);
+    }
+  }
+
+  @keyframes riel-entrar {
+    from {
+      scale: 1 0;
+      opacity: 0;
+    }
+  }
+}
