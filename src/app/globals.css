@@ -486,15 +486,28 @@
    DE DÓNDE SALEN LOS UMBRALES
 
    Del alto real del footer medido en el navegador, que NO crece de forma
-   monótona con el ancho. Medición de septiembre de 2026, ya con el colchón de
-   la isla flotante y con el correo partido en dos líneas:
+   monótona con el ancho. Medición con el bloque de redes en cuatro renglones
+   de ícono más usuario:
 
-     320px → 973 · 360px → 838 · 366px → 819 · 368px → 789 · 393px → 790
-     430px → 792 · 768px → 768 · 1024px → 572 · 1440px → 584
+     320px → 986 · 360px → 882 · 368px → 863 · 393px → 864 · 412px → 865
+     430px → 866 · 768px → 794 · 1024px → 599 · 1440px → 610
 
-   Por debajo de `lg` el contenido va apilado y el footer ronda los 790px; de
-   `lg` para arriba la fila se arma en horizontal y baja a ~580. Si no llega, el
+   Por debajo de `lg` el contenido va apilado y el footer ronda los 865px; de
+   `lg` para arriba la fila se arma en horizontal y baja a ~600. Si no llega, el
    footer queda estático: se pierde el efecto, no el contenido.
+
+   QUÉ SE LLEVÓ LOS 74px QUE FALTABAN
+
+   El bloque de redes pasó de dos renglones a cuatro. Con el ícono adelante, el
+   ítem mide 88px y la columna del pie 148px en el peor ancho, así que dos no
+   entran nunca y cada red se lleva su renglón: 61px de bloque pasaron a 135.
+
+   Y NO HABÍA DE DÓNDE SACARLOS. Medido a 393px: la columna de la izquierda
+   -las nueve secciones- mide 305px de contenido y la de la derecha -datos más
+   redes- 323px. La derecha ya era la más alta, así que el alto de la fila lo
+   fija ella y cada renglón que suma redes se lo suma al footer entero, uno a
+   uno. Mover el bloque a un ancho completo es PEOR, no mejor: deja de compartir
+   la fila con las secciones y suma 104px en vez de 74.
 
    POR QUÉ EL UMBRAL APILADO TAMBIÉN MIRA EL ANCHO
 
@@ -505,29 +518,38 @@
 
    Sin el guarda de ancho había un caso real y común que rompía: el Galaxy S20
    reporta 360x800, o sea que entraba por `min-height: 50rem` con un footer de
-   838px y sus primeros 38px quedaban fuera de alcance para siempre. Con el
+   882px y sus primeros 82px quedaban fuera de alcance para siempre. Con el
    guarda, ese teléfono cae al footer estático, que es el modo correcto.
 
-   ATENCION: EL MARGEN ES DE 11px (789 contra 800) y antes era de 38. Se comió
-   la diferencia el colchón de la isla flotante (+8px) y el correo del footer
-   partido en dos líneas (+21px), que es lo que corrige el desborde horizontal.
-   Si el footer crece un renglón más, hay que volver a medir y subir el umbral.
+   ATENCION: LO QUE ESTE UMBRAL CUESTA, ESCRITO PARA QUE NO SE OLVIDE
+
+   El umbral apilado subió de 50rem (800px) a 55rem (880px) porque el footer
+   ahora mide 866px en el peor caso. Eso NO es gratis: el revelado se apaga en
+   todo teléfono de menos de 880px de alto, y ahí caen varios comunes que antes
+   lo tenían -iPhone 12 mini (812), iPhone 12 a 14 Pro (844), Pixel 5 (851)-.
+   Lo conservan Pixel 7 a 9 (915), Galaxy S20 Ultra (915), los Pro Max (932 y
+   956) y de tablet para arriba.
+
+   Es la degradación prevista y no rompe nada: sin efecto, el footer queda
+   estático y su contenido sigue completo y alcanzable. Pero si el bloque de
+   redes vuelve a dos renglones, este umbral tiene que volver a 50rem.
    ═══════════════════════════════════════════════════════════════════════════ */
 @layer components {
   .footer-revelado {
     position: static;
   }
 
-  /* Apilado (< lg): peor caso medido 792px, y solo a partir del escalón de
-     368px = 23rem. Ver arriba por qué el ancho también entra en la condición. */
-  @media (min-width: 23rem) and (min-height: 50rem) {
+  /* Apilado (< lg): peor caso medido 866px, y solo a partir del escalón de
+     368px = 23rem. Ver arriba por qué el ancho también entra en la condición y
+     qué teléfonos deja afuera el salto de 50rem a 55rem. */
+  @media (min-width: 23rem) and (min-height: 55rem) {
     .footer-revelado {
       position: sticky;
       bottom: 0;
     }
   }
 
-  /* En fila (≥ lg): peor caso medido 584px. */
+  /* En fila (≥ lg): peor caso medido 610px. */
   @media (min-width: 64rem) and (min-height: 42rem) {
     .footer-revelado {
       position: sticky;

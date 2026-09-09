@@ -1,4 +1,5 @@
 import { Reveal } from "@/shared/components/motion/reveal";
+import { IconoRed } from "@/shared/components/ui/icono-red";
 import { CONTACTO, SITE, SOCIAL_LINKS } from "@/shared/constants/site";
 import { ContactForm } from "./contact-form";
 import { TramaModular } from "./trama-modular";
@@ -59,10 +60,28 @@ export function ContactSection() {
 
             <ul role="list" className="mt-6 flex flex-wrap gap-x-6 gap-y-1 text-sm">
               {SOCIAL_LINKS.map((red) => (
-                <li key={red.label}>
-                  <Enlace href={red.href} externo>
-                    {red.label}
-                  </Enlace>
+                <li key={red.id}>
+                  {/* NO REUSA `Enlace` A PROPÓSITO. Ese componente subraya todo
+                      su contenido, y un subrayado que pasa por debajo del ícono
+                      se lee como un error de dibujo. Acá el subrayado es sólo
+                      del usuario; el ícono queda afuera pero comparte el color
+                      y el hover, que es lo que los mantiene como una sola cosa. */}
+                  <a
+                    href={red.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group inline-flex items-center gap-2 py-1 transition-colors duration-micro ease-standard hover:text-link"
+                  >
+                    <IconoRed red={red.id} size={16} />
+                    <span className="underline decoration-border-strong underline-offset-4 transition-colors duration-micro ease-standard group-hover:decoration-link">
+                      {red.usuario}
+                    </span>
+                    {/* Las cuatro muestran el mismo usuario: sin el nombre de
+                        la red, los cuatro enlaces tendrían el mismo nombre
+                        accesible (WCAG 2.4.4). Lo que los distingue a la vista
+                        es el ícono, que no tiene texto. */}
+                    <span className="sr-only"> en {red.label} (se abre en una pestaña nueva)</span>
+                  </a>
                 </li>
               ))}
             </ul>
