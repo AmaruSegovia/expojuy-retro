@@ -124,6 +124,16 @@
     cursor: grabbing;
   }
 
+  /* SOBRE UN EDIFICIO, EL CURSOR AVISA QUE SE PUEDE ELEGIR.
+     El volumen entero es un objetivo, no solo su marcador de 12px, y sin esta
+     señal eso sería un secreto: en el dibujo nada distingue un edificio que
+     lleva lugar de uno que no. El atributo lo escribe el script, que es el
+     único que puede saber qué hay debajo del puntero. Mientras se arrastra
+     manda `grabbing`: ahí no se está eligiendo, se está girando. */
+  .js .plano-marco[data-sobre-lugar]:not([data-arrastre]) {
+    cursor: pointer;
+  }
+
   /* `pan-y` deja pasar el scroll vertical de la página y reserva el horizontal
      para el giro. Va SIN consulta de medios: antes se declaraba solo a partir de
      34rem, y por debajo de eso el arrastre horizontal se lo quedaba el scroll

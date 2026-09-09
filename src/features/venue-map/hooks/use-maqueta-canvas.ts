@@ -19,6 +19,7 @@ import {
 } from "../constants/plano";
 import {
   aReticula,
+  dentroDelPoligono,
   extensionProyectada,
   ordenarPorProfundidad,
   proyectar,
@@ -235,9 +236,12 @@ function aLuz(
 export function useMaquetaCanvas({
   activo,
   ruta,
+  onElegir,
 }: {
   activo: string;
   ruta: [number, number][] | null;
+  /** Se llama con el índice del lugar cuando se toca su edificio en el dibujo. */
+  onElegir: (indice: number) => void;
 }) {
   const marco = useRef<HTMLDivElement | null>(null);
   const lienzo = useRef<HTMLCanvasElement | null>(null);
@@ -263,6 +267,14 @@ export function useMaquetaCanvas({
   const vuelta = useRef(0);
   const activoRef = useRef(activo);
   const rutaRef = useRef(ruta);
+  /**
+   * El manejador se guarda en un ref y no se usa directo, por la misma razón
+   * que `activo` y `ruta`: el efecto que instala los listeners depende de
+   * `[volver]` y nada más. Si `onElegir` entrara como dependencia, cada render
+   * del padre volvería a desmontar y montar los seis listeners y el observador
+   * de tamaño, y el arrastre en curso se cortaría solo.
+   */
+  const onElegirRef = useRef(onElegir);
 
   const volver = useCallback(() => {
     const desdeZ = giro.current.z;
@@ -822,8 +834,35 @@ export function useMaquetaCanvas({
       }
     };
 
+    /**
+     * El cursor avisa que el edificio se puede tocar.
+     *
+     * Sin esto el volumen sería un objetivo secreto: nada en el dibujo dice que
+     * además del punto se puede elegir el edificio. Se resuelve con el cursor,
+     * que es la convención que ya conoce cualquiera.
+     *
+     * Va estrangulado por cuadro y solo cuando NO se está arrastrando: mientras
+     * se gira, el cursor es `grabbing` y la pregunta no tiene sentido.
+     */
+    let sondaPendiente = false;
+    const sondearCursor = (e: PointerEvent) => {
+      if (sondaPendiente || reducido) return;
+      sondaPendiente = true;
+      const x = e.clientX;
+      const y = e.clientY;
+      requestAnimationFrame(() => {
+        sondaPendiente = false;
+        if (!vivo || origen) return;
+        if (lugarEn(x, y) >= 0) cont.dataset.sobreLugar = "";
+        else delete cont.dataset.sobreLugar;
+      });
+    };
+
     const alMover = (e: PointerEvent) => {
-      if (!origen) return;
+      if (!origen) {
+        sondearCursor(e);
+        return;
+      }
       const dx = e.clientX - origen.x;
       const dy = e.clientY - origen.y;
       if (!movio) {
@@ -893,11 +932,83 @@ export function useMaquetaCanvas({
     // queda donde la dejaron, resetearla al mover el foco sería quitarle al
     // visitante algo que eligió. Vuelve con el botón, con Inicio o con Escape.
 
+    /**
+     * QUÉ LUGAR HAY DEBAJO DE UN PUNTO DE LA PANTALLA.
+     *
+     * EL EDIFICIO ENTERO SE PUEDE TOCAR, NO SOLO SU MARCADOR. El marcador mide
+     * 12 píxeles de dibujo y el pabellón techado ocupa unos 200: apuntarle al
+     * punto cuando el edificio está ahí abajo es pedirle puntería a alguien
+     * para elegir algo que ya está señalado. Ahora el volumen es el objetivo.
+     *
+     * SE RECORRE DE ADELANTE HACIA ATRÁS, que es el orden del pintor al revés:
+     * gana el primer bloque que cubra el punto, o sea el que se ve. Con el
+     * orden de dibujo pasaría lo contrario y se elegiría un edificio tapado.
+     *
+     * Se prueban el techo y las cuatro paredes. Las dos que miran para el otro
+     * lado quedan siempre dentro de la silueta del propio bloque, así que
+     * probarlas de más no agrega ni un acierto falso, y ahorra repetir acá el
+     * descarte de caras traseras que hace el dibujo.
+     *
+     * Los bloques sin lugar -los módulos sueltos de la arboleda- se saltean y
+     * el punto sigue buscando detrás: un bloque decorativo no se come el click.
+     *
+     * Corre SOLO al soltar el puntero y al moverlo sin arrastrar, nunca por
+     * cuadro. Son 31 bloques por cinco caras, unas 620 comparaciones, y en el
+     * peor caso se paga una vez cada cuadro de movimiento del mouse.
+     */
+    const lugarEn = (clienteX: number, clienteY: number): number => {
+      const caja = cv.getBoundingClientRect();
+      const px = clienteX - caja.left;
+      const py = clienteY - caja.top;
+      const crece = construccion.current;
+      const orden = ordenarPorProfundidad(BLOQUES, camara, (b) => [b.x + b.w / 2, b.y + b.h / 2]);
+
+      for (let i = orden.length - 1; i >= 0; i--) {
+        const b = orden[i];
+        if (!b?.punto) continue;
+        const e = eco.current.get(b.id) ?? 0;
+        const base = e * 0.55;
+        const alto = b.volumen * crece;
+        const esquina = (ix: number, iy: number, z: number) =>
+          proyectar(camara, b.x + ix * b.w, b.y + iy * b.h, z);
+
+        const caras = [
+          [
+            esquina(0, 0, base + alto),
+            esquina(1, 0, base + alto),
+            esquina(1, 1, base + alto),
+            esquina(0, 1, base + alto),
+          ],
+          ...PAREDES.map((pared) => [
+            esquina(pared.dx[0] ?? 0, pared.dy[0] ?? 0, base),
+            esquina(pared.dx[1] ?? 0, pared.dy[1] ?? 0, base),
+            esquina(pared.dx[2] ?? 0, pared.dy[2] ?? 0, base + alto),
+            esquina(pared.dx[3] ?? 0, pared.dy[3] ?? 0, base + alto),
+          ]),
+        ];
+
+        if (caras.some((cara) => dentroDelPoligono(cara, px, py))) {
+          return PUNTOS.findIndex((p) => p.id === b.punto);
+        }
+      }
+      return -1;
+    };
+
     const alHacerClic = (e: MouseEvent) => {
-      if (!movio) return;
-      e.preventDefault();
-      e.stopPropagation();
-      movio = false;
+      // Venía de un arrastre: el click es la cola del gesto de girar, no una
+      // elección. Se cancela antes de que llegue a nadie.
+      if (movio) {
+        e.preventDefault();
+        e.stopPropagation();
+        movio = false;
+        return;
+      }
+      // El marcador ya tiene su propio manejador y elige el mismo lugar: dejar
+      // que además corra este sería elegirlo dos veces.
+      if ((e.target as Element | null)?.closest(".plano-punto")) return;
+
+      const indice = lugarEn(e.clientX, e.clientY);
+      if (indice >= 0) onElegirRef.current(indice);
     };
 
     cont.addEventListener("pointerdown", alBajar);
@@ -936,6 +1047,10 @@ export function useMaquetaCanvas({
     rutaRef.current = ruta;
     animarEcoRef.current?.();
   }, [activo, ruta]);
+
+  useEffect(() => {
+    onElegirRef.current = onElegir;
+  }, [onElegir]);
 
   return { marco, lienzo, rotulos, girada, usada, volver: volverYEnfocar };
 }

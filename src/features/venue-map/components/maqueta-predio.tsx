@@ -52,7 +52,11 @@ export function MaquetaPredio({
   ruta: [number, number][] | null;
   onElegir: (indice: number) => void;
 }) {
-  const { marco, lienzo, rotulos, girada, usada, volver } = useMaquetaCanvas({ activo, ruta });
+  const { marco, lienzo, rotulos, girada, usada, volver } = useMaquetaCanvas({
+    activo,
+    ruta,
+    onElegir,
+  });
 
   return (
     // TODO LO VISUAL CUELGA DE `.js`, Y ESO ES MEJORA PROGRESIVA, NO UN PARCHE.

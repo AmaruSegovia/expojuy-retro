@@ -117,3 +117,29 @@ export function extensionProyectada(
   }
   return { anchoU, altoU };
 }
+
+/**
+ * Si un punto de pantalla cae dentro de un polígono ya proyectado.
+ *
+ * Es el test del rayo: se tira una semirrecta horizontal desde el punto y se
+ * cuentan los cruces con los lados. Impar, adentro; par, afuera. Sirve para
+ * cualquier polígono, cóncavo incluido, y no le importa el sentido en que estén
+ * ordenadas las esquinas, que es justo lo que hace falta acá: las caras de un
+ * bloque cambian de sentido según desde dónde se mire.
+ *
+ * Va en este archivo y no en el hook porque es geometría pura: entra un punto,
+ * sale un booleano, y no toca ni React ni el documento.
+ */
+export function dentroDelPoligono(pts: readonly Proyectado[], x: number, y: number): boolean {
+  let dentro = false;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    const a = pts[i];
+    const b = pts[j];
+    if (!a || !b) continue;
+    // El lado cruza la altura del punto, y el cruce cae a su derecha.
+    if (a.y > y !== b.y > y && x < ((b.x - a.x) * (y - a.y)) / (b.y - a.y) + a.x) {
+      dentro = !dentro;
+    }
+  }
+  return dentro;
+}
