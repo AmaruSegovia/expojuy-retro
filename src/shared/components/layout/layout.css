@@ -629,15 +629,29 @@
   }
 
   /* ─────────────────────────────────────────────────────────────────────────
-     6. DESTINO DE LAS ANCLAS
+     6. DESTINO DE LAS ANCLAS: UNA SECCIÓN VA A TOPE
 
-     ACÁ NO VA NADA, Y ESO ES EL ARREGLO.
+     El borde de la sección se apoya en el techo de la página, no debajo de la
+     barra, y la barra queda flotando sobre su relleno superior. Es la lectura
+     correcta: al saltar a una sección, esa sección PASA A SER la página, y
+     dejarla empezar más abajo deja asomando una franja de la anterior, que
+     desde que el sitio alterna papel y tinta es una franja del otro color
+     justo encima del título.
 
-     Había un `scroll-margin-top` por sección con el mismo valor que el
-     `scroll-padding-top` del `html`, y los dos se aplican: el salto nativo
-     sumaba 184px en vez de 88 y el del menú 272. La cuenta y la medición están
-     en `globals.css`, donde ahora vive el único número.
+     EL TÍTULO NO QUEDA TAPADO, Y ESO ESTÁ MEDIDO, NO SUPUESTO: la sección más
+     apretada es Agenda, con `py-24`, o sea 96px de relleno arriba en todos los
+     anchos. La barra mide 80px en escritorio y 64 en móvil, así que sobran 16
+     y 32. Si alguna sección bajara de ese relleno, el título se metería debajo.
+
+     EL VALOR NEGATIVO ANULA EL `scroll-padding-top` DEL DOCUMENTO, que existe
+     para proteger a los demás destinos del foco de teclado (ver globals.css).
+     Los dos offsets se suman -esa suma fue el bug de las 184px-, así que acá se
+     usa esa misma suma a propósito para que dé cero. Sale del mismo token: si
+     cambia el alto de la barra, se siguen cancelando.
      ───────────────────────────────────────────────────────────────────────── */
+  main > section[id] {
+    scroll-margin-top: calc(-1 * var(--alto-nav));
+  }
 
   /* ─────────────────────────────────────────────────────────────────────────
      7. PIE

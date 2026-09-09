@@ -376,45 +376,30 @@
     /* Lenis maneja el scroll suave por JS; el nativo entraría en conflicto. */
     scroll-behavior: auto;
 
-    /* DÓNDE PARA UN ANCLA. ESTE ES EL ÚNICO NÚMERO, Y ANTES HABÍA DOS.
-       El destino no es el borde de la sección sino ese borde menos el alto del
-       encabezado fijo, o el título queda tapado. Hasta acá había `6rem` suelto
-       en esta línea Y ADEMÁS `scroll-margin-top` en cada sección, y los dos se
-       aplican: para el navegador el destino se alinea dentro del área útil
-       -el viewport menos el scroll-padding- y todavía se le suma el
-       scroll-margin del elemento. Medido sobre `#sobre`, que arranca en 900:
+    /* DÓNDE PARA UN ANCLA.
 
-         salto nativo esperado    borde a  80px del techo, el alto de la barra
-         salto nativo real        borde a 184px  = 96 + 88
-         salto por menú real      borde a 272px  = 96 + 88 + 88
+       ESTE VALOR NO ES PARA LAS SECCIONES: es el piso para cualquier OTRO
+       destino. La barra es fija y tapa los primeros píxeles del viewport, así
+       que un elemento traído a la vista por el navegador -y el caso que
+       importa es el foco de teclado yendo hacia atrás, que apoya el elemento
+       contra el techo- quedaría debajo de ella. Eso es WCAG 2.4.11. El valor
+       sale del token, así que sigue al alto real de la barra.
 
-       Los 88 de más del tercer caso son de `use-click-ancla`, que le pasaba a
-       Lenis un offset que Lenis ya aplica solo. Con todo el sitio en oscuro el
-       error no se veía; con secciones claras quedaba una franja negra sobre el
-       título, que es como apareció.
+       Las secciones lo anulan aparte, en layout.css, porque van a tope.
 
-       EL VALOR ES EL ALTO DE LA BARRA, SIN AIRE. Hubo un intento con medio rem
-       de más y estaba mal: esos 8px son 8px de la sección ANTERIOR asomando
-       bajo la barra, y desde que el sitio alterna papel y tinta eso es una
-       franja del otro color sobre el título. El borde de la sección se apoya
-       contra el canto de la barra, no cerca. Como `.encabezado` declara
-       `height: var(--alto-nav)`, este token es su alto real y no una
-       aproximación: las dos medidas no se pueden separar.
+       BUG CORREGIDO, Y ERA UNA SUMA DE TRES. Acá había `6rem` suelto Y ADEMÁS
+       `scroll-margin-top` en cada sección, y los dos se aplican: el navegador
+       alinea el destino dentro del área útil -el viewport menos el
+       scroll-padding- y encima le suma el scroll-margin del elemento. El
+       tercero lo ponía `use-click-ancla`, que le pasaba a Lenis un offset que
+       Lenis ya aplica solo. Medido sobre `#sobre`, que arranca en 900:
 
-       EL PÍXEL QUE SE RESTA NO ES UN AJUSTE A OJO. Lenis termina el viaje en
-       una posición fraccionaria, así que el borde caía indistintamente arriba o
-       abajo del canto: medido sobre las nueve secciones, entre 79,53 y 80,36.
-       Los casos por debajo de 80 se meten bajo la barra y no se ven; los de
-       arriba dejan hasta 0,36px de la sección anterior, que en el borde entre
-       papel y tinta se lee como una línea. Restando 1px el redondeo solo puede
-       caer del lado que se esconde. Lo que queda tapado es el borde superior de
-       la sección, que bajo la barra no se veía igual.
+         salto nativo    borde a 184px del techo  = 96 + 88
+         salto por menú  borde a 272px            = 96 + 88 + 88
 
-       Queda `scroll-padding-top` y NO `scroll-margin-top` en las secciones,
-       porque protege a cualquier destino y no solo a los nueve: cuando el foco
-       de teclado entra a un control que está arriba de todo en su sección, el
-       navegador también lo trae a la vista y el encabezado también lo taparía. */
-    scroll-padding-top: calc(var(--alto-nav) - 1px);
+       Con todo el sitio en oscuro no se veía; lo destapó la alternancia, que
+       dejaba una franja del otro color sobre el título. */
+    scroll-padding-top: var(--alto-nav);
     -webkit-text-size-adjust: 100%;
   }
 
