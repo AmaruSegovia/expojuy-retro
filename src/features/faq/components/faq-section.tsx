@@ -24,7 +24,7 @@ export function FaqSection() {
     <section
       id="faq"
       aria-labelledby="faq-titulo"
-      className="border-t border-border py-24 md:py-32"
+      className="en-papel border-t border-border py-24 md:py-32"
     >
       <div className="container-content">
         <div className="grid items-start gap-12 lg:grid-cols-[5fr_7fr] lg:gap-16">

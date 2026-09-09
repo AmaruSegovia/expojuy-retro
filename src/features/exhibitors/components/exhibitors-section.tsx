@@ -21,7 +21,7 @@ export function ExhibitorsSection() {
     <section
       id="expositores"
       aria-labelledby="expositores-titulo"
-      className="border-t border-border py-24 md:py-32"
+      className="en-papel en-papel-gris border-t border-border py-24 md:py-32"
     >
       <div className="container-content">
         <Reveal>

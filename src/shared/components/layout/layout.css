@@ -67,11 +67,18 @@
     height: var(--alto-nav);
     color: var(--color-text);
 
-    /* El velo toma el color de la sección de abajo. Hoy el sitio tiene una
-       sola superficie de fondo -no hay tema claro, ver CLAUDE.md- así que
-       todas las secciones resuelven al mismo valor; la indirección queda
-       igual, para que agregar una sección con otra superficie sea una línea
-       acá y no un rediseño del header. */
+    /* EL ENCABEZADO SE QUEDA EN TINTA AUNQUE PASE SOBRE UNA SECCIÓN CLARA.
+       Es cromo, no contenido: cambiar de familia cuatro veces al bajar lo haría
+       parpadear, y una barra que se mantiene igual es la que se deja de mirar,
+       que es lo que se quiere de una barra de navegación.
+
+       Y no hace falta que cambie: el velo del 70% mezclado contra la sección
+       clara da un gris oscuro, y `--color-text` encima queda en 6,68:1, holgado
+       sobre los 4,5:1 de WCAG 1.4.3. Es el mismo peor caso que ya estaba
+       calculado abajo, ahora con una superficie real detrás y no hipotética.
+
+       La indirección se conserva igual, para que una sección con otro fondo se
+       resuelva con una línea acá y no con un rediseño. */
     --fondo-seccion: var(--color-surface-sunken);
 
     transition:

@@ -95,6 +95,16 @@
   --color-link: var(--color-brand-lavender); /* 7.83:1 sobre surface */
   --color-focus-ring: var(--color-brand-lavender);
 
+  /* TEXTO SOBRE UN RELLENO CLARO DE LA MARCA: lavanda y cian.
+     Único token de color que NO sigue a la superficie de la sección, y es a
+     propósito. El relleno es un color de marca fijo, igual sobre tinta que
+     sobre papel, así que su par de texto tampoco puede moverse: cuando esto
+     apuntaba a `--color-surface`, el monograma de un expositor daba 7.83:1
+     sobre tinta y 1.60:1 en cuanto la sección pasaba a papel. Por eso lleva el
+     valor y no una referencia: lo que hay que congelar es justamente que no
+     acompañe al cambio. */
+  --color-on-brand-light: #0b0911; /* 7.83:1 sobre lavanda, 9.02:1 sobre cian */
+
   /* Error de formulario. Como el resto del sistema, NO se eligió: se derivó.
 
      HUE - ni el sistema ni la marca tienen un rojo, así que no hay de dónde
@@ -216,6 +226,108 @@
   :root {
     --alto-nav: 5rem;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LA OTRA MITAD DEL SISTEMA: PAPEL
+
+   El sitio alterna dos superficies al bajar. No es un tema claro: no hay
+   preferencia del sistema que lo active ni interruptor que lo cambie. Es una
+   decisión de composición, sección por sección, y las dos mitades conviven en
+   la misma página.
+
+   POR QUÉ HACE FALTA, Y NO ES DECORACIÓN. Los dos colores más vivos de la
+   marca son ILEGIBLES sobre claro: lavanda 2,47:1 y cian 2,15:1 sobre papel.
+   Sobre tinta dan 7,83:1 y 9,02:1. Es decir que la marca solo se enciende
+   sobre oscuro, y por eso el oscuro manda: hero, mapa, noticias, agenda,
+   contacto y el pie. El papel es donde se lee y se opera.
+
+   POR QUÉ ESTOS VALORES NO ESTÁN EN `@theme`. Ahí adentro cada token genera
+   una utilidad, y `bg-papel` sería una puerta para pintar una caja de blanco
+   sin que su texto se entere. La única forma de usar esta familia es la clase
+   `.en-papel`, que reasigna los tokens SEMÁNTICOS: un componente adentro sigue
+   escribiendo `text-text-muted` y `border-border` y no necesita saber sobre
+   qué fondo está. Es la misma indirección que ya hace posible recolorear el
+   sitio sin tocar componentes, usada en la otra dirección.
+
+   CÓMO SE DERIVARON, con el mismo método que §2 y §3 y ninguna excepción:
+
+   - Las cuatro superficies son el mismo hue 297.8° de los neutros oscuros,
+     con croma mínimo creciente con la jerarquía. En tinta la elevación SUBE
+     la claridad; en papel la BAJA, que es lo que hace que una tarjeta se
+     despegue del fondo en vez de fundirse con él.
+
+   - Cada escalón de texto y borde se resolvió por búsqueda binaria en OKLCH,
+     conservando hue y croma de su equivalente oscuro, hasta alcanzar el MISMO
+     objetivo de contraste que aquel. La regla de peor caso de §3 se invierte
+     con la superficie: allá se resuelve contra la más clara, acá contra la
+     más oscura, que es `--papel-overlay`. El ratio anotado es el del peor
+     caso, no el del papel.
+
+   - Tres roles NO se pudieron trasladar y se rederivaron enteros. El enlace
+     pasa de lavanda a violeta profundo, que es el mismo color de marca en su
+     valor oscuro. El acento pasa de cian a cian profundizado: mismo hue y
+     mismo croma del cian oficial, bajando claridad hasta 4,5:1, que es
+     exactamente lo que se hizo con el rojo de error en §4. Y el anillo de
+     foco pasa a violeta, que sobre papel da 4,14:1 en el peor caso, muy por
+     encima del 3:1 que pide WCAG 1.4.11 para un indicador no textual.
+
+   El violeta primario se queda como está: sobre papel es RELLENO, no texto
+   (4,14:1 en el peor caso, por encima del 3:1 no textual), y el blanco encima
+   sigue dando 5,05:1. Es la regla de §4 leída en el otro sentido.
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root {
+  --papel-sunken: #fdfcff; /* la página en claro */
+  --papel-surface: #f8f7fb; /* superficie base */
+  --papel-raised: #f3f2f6; /* tarjeta, panel - el gris de bloque */
+  --papel-overlay: #e9e8ee; /* el más oscuro: referencia de contraste */
+
+  --papel-text: #232125; /* 13.10:1 */
+  --papel-text-muted: #56535c; /*  6.19:1 */
+  --papel-text-subtle: #696872; /*  4.51:1 */
+  --papel-border-strong: #878390; /*  3.04:1 - AA no textual */
+  --papel-border: #d0ccdb; /*  1.29:1 - solo separación */
+
+  --papel-link: var(--color-brand-violet-deep); /*  5.92:1 - lavanda daría 2.08:1 */
+  --papel-accent: #007387; /*  4.53:1 - cian oficial, L bajada */
+  --papel-on-accent: #ffffff; /*  5.52:1 sobre el acento */
+  --papel-focus-ring: var(--color-brand-violet); /*  4.14:1 - basta 3:1 */
+}
+
+/* LA LLAVE. Reasigna los tokens semánticos y nada más: no toca tipografía, ni
+   espacio, ni radios, porque el sistema es el mismo de un lado y del otro.
+
+   Va SIN capa a propósito. `@theme` declara los mismos nombres en `:root`
+   dentro de la capa `theme`, y una regla sin capa le gana a cualquier regla
+   con capa sin importar la especificidad. Metiéndola en `@layer components`
+   ganaría igual por especificidad, pero por accidente y no por diseño. */
+.en-papel {
+  background-color: var(--color-surface-sunken);
+
+  --color-surface-sunken: var(--papel-sunken);
+  --color-surface: var(--papel-surface);
+  --color-surface-raised: var(--papel-raised);
+  --color-surface-overlay: var(--papel-overlay);
+
+  --color-text: var(--papel-text);
+  --color-text-muted: var(--papel-text-muted);
+  --color-text-subtle: var(--papel-text-subtle);
+  --color-border-strong: var(--papel-border-strong);
+  --color-border: var(--papel-border);
+
+  --color-link: var(--papel-link);
+  --color-accent: var(--papel-accent);
+  --color-on-accent: var(--papel-on-accent);
+  --color-focus-ring: var(--papel-focus-ring);
+}
+
+/* La tercera superficie: el mismo papel un escalón más apagado. Existe para
+   que dos tramos claros seguidos no se lean como uno solo largo, que es
+   justamente lo que pasaba con Expositores entre Agenda y Mapa. Hereda todo
+   lo demás de `.en-papel`, así que no repite un solo token de texto. */
+.en-papel-gris {
+  --color-surface-sunken: var(--papel-raised);
+  --color-surface: var(--papel-raised);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

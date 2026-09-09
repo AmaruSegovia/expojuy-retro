@@ -54,7 +54,7 @@ const RUBROS_PRESENTES = rubrosDe(EXPOSITORES);
  * inventado: el dato elige un índice, y los colores posibles son estos.
  * Contraste del texto sobre su relleno, medido:
  *   0 blanco sobre violeta 5.05:1 · 1 superficie sobre cian 9.02:1
- *   2 superficie sobre lavanda 7.83:1 · 3 blanco sobre violeta profundo 7.21:1
+ *   2 on-brand-light sobre lavanda 7.83:1 · 3 blanco sobre violeta profundo 7.21:1
  *
  * El violeta profundo aparece SOLO como relleno. Como texto da 2.74:1 y el
  * sistema lo prohíbe; debajo de blanco es un fondo válido.
@@ -62,7 +62,7 @@ const RUBROS_PRESENTES = rubrosDe(EXPOSITORES);
 const TONOS = [
   "bg-primary text-on-primary",
   "bg-accent text-on-accent",
-  "bg-brand-lavender text-surface",
+  "bg-brand-lavender text-on-brand-light",
   "bg-brand-violet-deep text-on-primary",
 ] as const;
 

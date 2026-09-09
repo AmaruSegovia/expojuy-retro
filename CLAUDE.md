@@ -92,14 +92,40 @@ Reglas no negociables:
 1. **Nunca escribir un color literal en un componente.** Usar los tokens
    (`bg-surface-raised`, `text-text-muted`, `border-border`, `text-accent`).
    Si hace falta un color que no existe, no se inventa: se plantea.
-2. **Sobre fondo oscuro el violeta es color de relleno, no de texto.** Los
-   unicos acentos validos para texto son lavanda y cian. `brand-violet-deep`
-   esta prohibido para texto porque da 2.74:1.
-3. Cada escalon de texto y borde se resuelve contra `--color-surface-overlay`,
-   la superficie mas clara del sistema. Satisfacer la mas clara satisface a
-   todas las demas por construccion.
-4. El sitio no tiene tema claro. `colorScheme: "dark"` esta declarado en el
-   viewport.
+2. **Cada superficie invierte que color de marca sirve para texto**, y es la
+   razon de fondo por la que el sitio alterna las dos.
+
+   Sobre tinta el violeta es color de RELLENO: los unicos acentos validos para
+   texto son lavanda (7.83:1) y cian (9.02:1), y `brand-violet-deep` esta
+   prohibido porque da 2.74:1. Sobre papel es al reves: lavanda da 2.08:1 y
+   cian 1.80:1, asi que el enlace pasa a `brand-violet-deep` (5.92:1) y el
+   acento a su version profundizada (4.53:1). Los dos juegos estan resueltos en
+   `globals.css`; no hay que elegir nada al escribir un componente.
+3. Cada escalon de texto y borde se resuelve contra la superficie mas
+   desfavorable de su familia. En tinta es `--color-surface-overlay`, la mas
+   clara; en papel es `--papel-overlay`, la mas oscura. Satisfacer la peor
+   satisface a todas las demas por construccion.
+4. **El sitio alterna dos superficies al bajar, y eso NO es un tema claro.** No
+   hay preferencia del sistema que lo active ni interruptor que lo cambie: es
+   una decision de composicion, seccion por seccion, y las dos mitades conviven
+   en la misma pagina. `colorScheme: "dark"` sigue declarado en el viewport
+   porque el primer pintado, la barra del navegador y el rebote del scroll son
+   oscuros.
+
+   Van en papel Sobre, Expositores, Entradas y Preguntas; el resto en tinta.
+   Hero y Mapa no pueden pasar a papel: el hero por el video y la pantalla de
+   carga, y el mapa porque la maqueta construye sus cuatro tonos como
+   `color-mix` sobre `--color-surface-overlay` y habria que rederivar la paleta
+   entera del dibujo.
+
+   Una seccion clara se marca con `.en-papel`, que reasigna los tokens
+   SEMANTICOS. Un componente adentro sigue escribiendo `text-text-muted` y no
+   necesita saber sobre que fondo esta: si escribe tokens, funciona en los dos
+   lados. `.en-papel-gris` agrega la tercera superficie.
+
+   La unica excepcion es `--color-on-brand-light`, el texto sobre un relleno
+   claro de marca: el relleno no cambia de un lado al otro, asi que su par de
+   texto tampoco puede seguir a la superficie.
 
 El CSS complejo que no se expresa con utilidades va en `@layer components`,
 dentro del `styles.css` del feature. Nunca en un `<style>` suelto ni en estilos

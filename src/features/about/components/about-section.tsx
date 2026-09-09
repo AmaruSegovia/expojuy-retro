@@ -38,7 +38,7 @@ export function AboutSection() {
     <section
       id="sobre"
       aria-labelledby="sobre-titulo"
-      className="border-t border-border py-24 md:py-32"
+      className="en-papel border-t border-border py-24 md:py-32"
     >
       <div className="container-content">
         <Reveal>
