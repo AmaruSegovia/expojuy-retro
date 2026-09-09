@@ -83,7 +83,8 @@ const etiquetaDe = (id: NavSectionId) => NAV_SECTIONS.find((s) => s.id === id)?.
  * de forma nativa y no justifica ese acoplamiento.
  *
  * MEJORA PROGRESIVA. Sin JavaScript el HTML igual se sirve completo: las tres
- * anclas funcionan con el salto nativo, que respeta `scroll-margin-top`, y el
+ * anclas funcionan con el salto nativo, que respeta el `scroll-padding-top`
+ * del documento, y el
  * indicador simplemente no aparece porque nunca hay sección activa. Lo que se
  * pierde es la marca de posición, no el acceso.
  *

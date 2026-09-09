@@ -631,18 +631,13 @@
   /* ─────────────────────────────────────────────────────────────────────────
      6. DESTINO DE LAS ANCLAS
 
-     BUG CORREGIDO, y es una sola línea. Con movimiento reducido el scroll a
-     un ancla perdía el offset del encabezado fijo y el título quedaba tapado
-     por la barra. `scroll-margin-top` lo resuelve para los tres caminos: el
-     salto nativo sin JavaScript, `scrollIntoView` y el `scrollTo` de Lenis,
-     que lee este mismo valor computado en vez de repetir el número.
+     ACÁ NO VA NADA, Y ESO ES EL ARREGLO.
 
-     4.5rem = 72px en móvil (alto-nav 4rem + aire), 88px de 40rem para
-     arriba. El número no está escrito dos veces: sale del token.
+     Había un `scroll-margin-top` por sección con el mismo valor que el
+     `scroll-padding-top` del `html`, y los dos se aplican: el salto nativo
+     sumaba 184px en vez de 88 y el del menú 272. La cuenta y la medición están
+     en `globals.css`, donde ahora vive el único número.
      ───────────────────────────────────────────────────────────────────────── */
-  main > section[id] {
-    scroll-margin-top: calc(var(--alto-nav) + 0.5rem);
-  }
 
   /* ─────────────────────────────────────────────────────────────────────────
      7. PIE

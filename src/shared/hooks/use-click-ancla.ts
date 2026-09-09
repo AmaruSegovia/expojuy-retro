@@ -19,11 +19,11 @@ import { usePrefersReducedMotion } from "@/shared/hooks/use-prefers-reduced-moti
  * BUG CORREGIDO: EL OFFSET DEL ENCABEZADO
  *
  * El destino no es el borde de la sección sino ese borde menos el alto del
- * encabezado fijo, o el título queda tapado. Ese número NO está escrito acá:
- * se lee del `scroll-margin-top` computado de la sección (lo define
- * layout.css a partir de `--alto-nav`). Así el camino con JavaScript y el
- * salto nativo -sin JavaScript, o con movimiento reducido- usan exactamente el
- * mismo valor y no pueden separarse.
+ * encabezado fijo, o el título queda tapado. Ese número NO está escrito acá y
+ * tampoco se lee: lo declara `scroll-padding-top` en `globals.css` y lo aplica
+ * el navegador, y Lenis lo respeta igual. Así el camino con JavaScript, el
+ * salto nativo sin JavaScript y `scrollIntoView` usan el mismo valor y no
+ * pueden separarse. Leerlo acá para volver a restarlo era justamente el bug.
  *
  * @param alNavegar se ejecuta solo cuando la navegación ocurre en esta
  *   pestaña, con el id de destino. Sirve para marcar el ítem activo antes de
@@ -69,8 +69,6 @@ export function useClickAncla(alNavegar?: (id: string) => void) {
       evento.preventDefault();
       alNavegar?.(id);
 
-      const margen = Number.parseFloat(getComputedStyle(destino).scrollMarginTop) || 0;
-
       if (lenis) {
         // `immediate` respeta la preferencia del sistema: con movimiento
         // reducido el salto es instantáneo, pero CONSERVA el offset.
@@ -88,14 +86,24 @@ export function useClickAncla(alNavegar?: (id: string) => void) {
         // Con duración fija el tiempo de llegada no depende de la distancia:
         // saltar a la sección de al lado y a la última cuestan lo mismo, que es
         // además lo que el visitante espera de un menú.
+        //
+        // BUG CORREGIDO: EL OFFSET RESTADO TRES VECES
+        //
+        // Acá iba `offset: -margen`, leyendo el `scroll-margin-top` de la
+        // sección. Sobraba: Lenis ya respeta por su cuenta el área útil que
+        // declara el `scroll-padding-top` del documento. Medido sobre `#sobre`,
+        // que arranca en el píxel 900: el borde de la sección quedaba a 272px
+        // del techo -96 del padding viejo, 88 del scroll-margin que había en
+        // las secciones y 88 de este offset- cuando tiene que apoyarse contra
+        // el canto de la barra. El número no se escribe acá: vive una sola vez
+        // en `globals.css`.
         lenis.scrollTo(destino, {
-          offset: -margen,
           duration: DURACION_SALTO_S,
           immediate: reducido,
         });
       } else {
         // Sin Lenis (todavía montando), scrollIntoView respeta por sí solo el
-        // scroll-margin-top de la sección.
+        // `scroll-padding-top` del documento, que es el mismo número.
         destino.scrollIntoView({ behavior: reducido ? "auto" : "smooth" });
       }
 
