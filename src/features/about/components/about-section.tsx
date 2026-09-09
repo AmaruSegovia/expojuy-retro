@@ -1,5 +1,6 @@
 import { Reveal } from "@/shared/components/motion/reveal";
 import { CIFRAS, PRESENTACION, VALORES } from "../constants/contenido";
+import { MontanaTrazo } from "./montana-trazo";
 
 /**
  * SOBRE EXPOJUY - portado del prototipo de Maru (`src/components/Sobre.astro`
@@ -38,7 +39,7 @@ export function AboutSection() {
     <section
       id="sobre"
       aria-labelledby="sobre-titulo"
-      className="en-papel border-t border-border py-24 md:py-32"
+      className="sobre en-papel border-t border-border py-24 md:py-32"
     >
       <div className="container-content">
         <Reveal>
@@ -119,6 +120,12 @@ export function AboutSection() {
           </ul>
         </Reveal>
       </div>
+
+      {/* VA ÚLTIMO EN EL MARCADO Y PRIMERO EN EL DIBUJO. Último porque es
+          decorativo y no debe interponerse en el orden de lectura ni en el de
+          tabulación; primero en profundidad porque el texto tiene que pasarle
+          por encima, y de eso se encarga el z-index del contenedor. */}
+      <MontanaTrazo className="sobre-cordon" />
     </section>
   );
 }

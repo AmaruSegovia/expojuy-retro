@@ -41,3 +41,120 @@
     }
   }
 }
+
+@layer components {
+  /* ═══════════════════════════════════════════════════════════════════════
+     EL CORDÓN
+
+     Dibujo de línea de la sierra apoyado en el ángulo inferior derecho de la
+     sección, que aparece barriéndose a medida que entra en pantalla. El porqué
+     del marcado está en `montana-trazo.tsx`.
+     ═══════════════════════════════════════════════════════════════════════ */
+
+  /* La sección pasa a ser el marco del dibujo.
+
+     `overflow-x: clip` Y NO `hidden`: el dibujo sale por el borde derecho a
+     propósito, y sin recorte eso saca una barra de scroll horizontal en toda
+     la página. `hidden` lo resolvería igual pero convierte la sección en un
+     contenedor de scroll, lo que rompe cualquier `position: sticky` de adentro
+     y cambia dónde ancla el foco. `clip` recorta y nada más. El eje vertical
+     queda visible para no cortar la entrada de `Reveal`, que desplaza sus
+     bloques unos píxeles hacia arriba. */
+  .sobre {
+    position: relative;
+    overflow-x: clip;
+  }
+
+  /* El contenido va POR ENCIMA del dibujo. Sin esta línea el orden lo decidiría
+     el árbol y el dibujo, que va después en el marcado, taparía el texto. */
+  .sobre > .container-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .sobre-cordon {
+    position: absolute;
+    inset-block-end: 0;
+    /* Se corre PASADO el borde derecho a propósito: la sierra sigue más allá
+       del cuadro en vez de terminar justo, que es lo que la hace leer como
+       paisaje y no como ilustración pegada en una esquina. Lo que sobra lo
+       recorta `overflow-x: clip` de la sección. */
+    inset-inline-end: -4%;
+    z-index: 0;
+    width: min(80rem, 140%);
+    /* Alto derivado de la proporción del dibujo (600 x 199): 199/600 = 0.3317. */
+    aspect-ratio: 600 / 199;
+    pointer-events: none;
+
+    /* MÁS APAGADO QUE UN BORDE, PORQUE NO ES INFORMACIÓN. Es la tinta del
+       sistema al 12%: sobre papel queda en un gris claro que se lee como marca
+       de agua y nunca compite con el texto que tiene encima. No usa un token de
+       texto porque no es texto, y no necesita cumplir contraste: WCAG 1.4.11
+       excluye lo puramente decorativo. */
+    color: var(--color-text);
+    opacity: 0.12;
+  }
+
+  /* EN PANTALLA ANGOSTA SE CORRE MÁS. El corrimiento es porcentual, así que en
+     un tel�fono los mismos 4% son 16px y el dibujo termina adentro del cuadro,
+     dejando un vac�o a la derecha que lo hace leer como una calcoman�a. Con 18%
+     la sierra vuelve a salirse por el borde, que es lo que la hace leer como
+     paisaje que sigue. */
+  @media (width < 48rem) {
+    .sobre-cordon {
+      inset-inline-end: -18%;
+    }
+  }
+
+  /* SE RELLENA, NO SE TRAZA, Y ESA ES LA CORRECCIÓN.
+
+     El archivo viene de un vectorizado automático: cada línea del dibujo es en
+     realidad una figura RELLENA muy fina. Pintarla como trazo dibujaba su
+     CONTORNO, así que cada línea de la sierra salía doble, con el centro
+     hueco. Rellenando se ve exactamente el dibujo original, que es lo que se
+     buscaba; lo único que cambia respecto del archivo es que el color sale del
+     sistema y no está escrito. */
+  .sobre-cordon path {
+    fill: currentColor;
+    stroke: none;
+  }
+
+  /* LA APARICIÓN.
+
+     Un barrido de izquierda a derecha sobre el SVG entero. Antes esto se hacía
+     dibujando los 47 trazados con `pathLength` y guionado, que es la técnica
+     del ejemplo de referencia, pero esa técnica EXIGE que las figuras sean
+     líneas: sobre figuras rellenas dibuja contornos. Con el relleno correcto,
+     el barrido es además más barato: una propiedad sobre un elemento en vez de
+     dos sobre cuarenta y siete.
+
+     El recorte se anima con `clip-path`, que el compositor resuelve sin
+     repintar el dibujo.
+
+     ESTADO POR DEFECTO: VISIBLE. Lo que se agrega es el recorte, no el dibujo,
+     así que donde no haya scroll progresivo -Firefox hoy- el cordón se ve
+     entero y quieto en vez de no verse nunca. Es la misma regla que el resto
+     del sitio: lo que se oculta es la mejora. */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .sobre-cordon {
+        animation: cordon-aparecer var(--ease-out-expo) both;
+        /* `view()` mide el propio dibujo contra la ventana, no la página
+           entera. El tramo termina en el 55% de la entrada y no al final: así
+           la sierra ya está completa cuando el visitante la tiene a la vista,
+           en vez de completarse recién cuando está por pasar de largo. */
+        animation-timeline: view();
+        animation-range: entry 0% entry 55%;
+      }
+    }
+  }
+
+  @keyframes cordon-aparecer {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
+    to {
+      clip-path: inset(0 -1px 0 0);
+    }
+  }
+}
