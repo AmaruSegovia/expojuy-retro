@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { NAV_SECTIONS } from "@/shared/constants/site";
+import { useClickAncla } from "@/shared/hooks/use-click-ancla";
 import { useActiveSection } from "@/shared/hooks/use-active-section";
 
 const IDS = NAV_SECTIONS.map((s) => s.id);
@@ -90,7 +91,12 @@ function fondoDe(el: Element): string {
  * encabezado, que se sirve desde el servidor y no depende de esto.
  */
 export function SectionRail() {
-  const [activo] = useActiveSection(IDS);
+  const [activo, setActivo] = useActiveSection(IDS);
+  // El mismo manejador que el menú del encabezado y la barra móvil: salto
+  // suave por Lenis, con el offset del encabezado ya resuelto, y `setActivo`
+  // adelanta la marca porque el viaje dura 0,8s y si no el número recién se
+  // encendería al llegar.
+  const alClickAncla = useClickAncla(setActivo);
   const nav = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -177,6 +183,7 @@ export function SectionRail() {
             <li key={seccion.id} style={{ "--i": i } as React.CSSProperties}>
               <a
                 href={`#${seccion.id}`}
+                onClick={alClickAncla}
                 data-riel-item=""
                 data-activo={esActiva ? "" : undefined}
                 data-visto={posicionActiva >= 0 && i <= posicionActiva ? "" : undefined}
