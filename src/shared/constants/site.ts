@@ -54,13 +54,31 @@ export const CONTACTO = {
   direccion: "Ciudad Cultural, San Salvador de Jujuy",
 } as const;
 
-/** PROVISORIO - reemplazar por los perfiles oficiales de la organización. */
+/**
+ * Perfiles en redes sociales.
+ *
+ * ATENCION: PROVISORIO - la organización no entregó ninguno. El usuario es de
+ * maqueta, y los `href` apuntan a la PORTADA de cada plataforma a propósito y
+ * no al perfil: un enlace a un perfil inventado da 404, y en una propuesta que
+ * el jurado va a clickear es peor un enlace roto que uno genérico. Cuando
+ * lleguen los perfiles reales se reemplazan `usuario` y `href` JUNTOS, o el
+ * texto visible y el destino dejan de coincidir.
+ *
+ * El mismo usuario en las cuatro no es un descuido: una organización usa un
+ * solo nombre en todas, y así es como se va a reemplazar.
+ *
+ * `id` NO es decorativo: lo lee `IconoRed` para elegir el glifo, y el tipo
+ * `RedSocialId` que sale de acá hace que agregar una red sin su ícono no
+ * compile. La lista y los íconos no se pueden desincronizar.
+ */
 export const SOCIAL_LINKS = [
-  { label: "Instagram", href: "https://instagram.com" },
-  { label: "Facebook", href: "https://facebook.com" },
-  { label: "LinkedIn", href: "https://linkedin.com" },
-  { label: "YouTube", href: "https://youtube.com" },
+  { id: "instagram", label: "Instagram", usuario: "@expojuy", href: "https://instagram.com" },
+  { id: "facebook", label: "Facebook", usuario: "/expojuy", href: "https://facebook.com" },
+  { id: "linkedin", label: "LinkedIn", usuario: "/expojuy", href: "https://linkedin.com" },
+  { id: "youtube", label: "YouTube", usuario: "/expojuy", href: "https://youtube.com" },
 ] as const;
+
+export type RedSocialId = (typeof SOCIAL_LINKS)[number]["id"];
 
 /**
  * Arquitectura de navegación. El orden de este array ES el orden de las

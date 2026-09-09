@@ -86,7 +86,6 @@ export const MEDIOS_PAGO: string[] = [
   "Mercado Pago",
   "MODO",
   "Ualá",
-  "Cuenta DNI",
   "Transferencia",
   "Efectivo",
 ];

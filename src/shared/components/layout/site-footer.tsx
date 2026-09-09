@@ -1,4 +1,5 @@
 import { BrandMark } from "@/shared/components/brand/brand-mark";
+import { IconoRed } from "@/shared/components/ui/icono-red";
 import { CONTACTO, NAV_SECTIONS, SITE, SOCIAL_LINKS } from "@/shared/constants/site";
 import { cn } from "@/shared/lib/cn";
 
@@ -45,11 +46,12 @@ const ENLACE =
  *    no hay forma de llegar. Por eso el contenido va en dos columnas desde el
  *    teléfono y el relleno se suelta recién en `lg`. La red de seguridad son
  *    los umbrales de `.footer-revelado` en globals.css, medidos: peor caso
- *    792px apilado -y solo de 368px de ancho para arriba, donde el pie deja de
- *    crecer- y 584px en fila. Si el pie crece, hay que volver a medir y mover
+ *    866px apilado -y solo de 368px de ancho para arriba, donde el pie deja de
+ *    crecer- y 610px en fila. Si el pie crece, hay que volver a medir y mover
  *    esos umbrales. A ese presupuesto entran también el colchón para la isla
- *    flotante que agrega `.pie-sitio` en layout.css y la segunda línea que
- *    ocupa el correo al partirse.
+ *    flotante que agrega `.pie-sitio` en layout.css, la segunda línea que ocupa
+ *    el correo al partirse, y los cuatro renglones del bloque de redes, que es
+ *    lo que obligó a subir el umbral apilado de 50rem a 55rem.
  *
  * DE DÓNDE SALE LA COMPOSICIÓN
  *
@@ -188,19 +190,30 @@ export function SiteFooter() {
             >
               Redes
             </h2>
-            <ul aria-labelledby="pie-redes" className="mt-2 flex flex-wrap gap-x-5">
+            {/* Una red por renglón: con el ícono adelante, el ítem mide 88px y
+                la columna del pie 161px en un teléfono de 393, así que dos no
+                entran. Envolver con `flex-wrap` dejaría filas de un solo ítem
+                igual, pero desparejas; la grilla las hace parejas a propósito. */}
+            <ul aria-labelledby="pie-redes" className="mt-2 grid gap-y-1">
               {SOCIAL_LINKS.map((r) => (
-                <li key={r.label}>
+                <li key={r.id}>
                   <a
                     href={r.href}
                     // `noopener` evita que la pestaña destino pueda tocar
                     // window.opener; `noreferrer` no filtra de dónde vino.
                     rel="noopener noreferrer"
                     target="_blank"
-                    className={ENLACE}
+                    className={cn(ENLACE, "inline-flex items-center gap-2")}
                   >
-                    {r.label}
-                    <span className="sr-only"> (se abre en una pestaña nueva)</span>
+                    <IconoRed red={r.id} size={16} />
+                    {r.usuario}
+                    {/* EL NOMBRE DE LA RED VA ACÁ Y NO ES DECORACIÓN. Las
+                        cuatro muestran el mismo usuario, así que sin esto los
+                        cuatro enlaces tendrían el nombre accesible idéntico y
+                        un lector de pantalla los leería como cuatro veces lo
+                        mismo (WCAG 2.4.4). Lo que los distingue a la vista es
+                        el ícono, que no tiene texto: acá se lo damos. */}
+                    <span className="sr-only"> en {r.label} (se abre en una pestaña nueva)</span>
                   </a>
                 </li>
               ))}
