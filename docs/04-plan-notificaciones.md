@@ -319,14 +319,18 @@ Decisiones de construcción:
 
 ## Dependencias y licencias
 
-- `web-push` (licencia MIT) y `@types/web-push` en desarrollo. Se agrega su
-  aviso a `docs/licencias.md`.
-- ATENCION: `CLAUDE.md` dice que el aviso de Tabler está transcrito en
-  `docs/licencias.md`, pero **el archivo no existe** en el repositorio. Hay que
-  crearlo con los dos avisos.
-- El QR lo aportó Leandro para la demo (`qrcode_retro.png`). Confirmar con qué
-  herramienta se generó antes de publicarlo: un QR no tiene autoría, pero
-  algunos generadores gratuitos meten una redirección propia en el medio.
+- `web-push` y `@types/web-push` en desarrollo. ATENCION: **la licencia de
+  `web-push` es MPL-2.0, no MIT** como decía la primera versión de este plan;
+  verificado con su `package.json`. Leandro aprobó usarla igual: el copyleft de
+  la MPL-2.0 alcanza solo a los archivos de la propia librería, que no se
+  modifican. Sus dependencias transitivas son MIT, ISC, BSD-3-Clause y
+  Apache-2.0.
+- `docs/licencias.md` no existía aunque `CLAUDE.md` lo citaba. Se creó con
+  Tabler, Lucide, `web-push` y el resto de las dependencias de ejecución.
+- El QR lo aportó Leandro. Se descartaron dos versiones: la de me-qr.com, que
+  pasa por una redirección propia del generador, y una con marca de agua de
+  the-qrcode-generator.com. La elegida se decodificó y codifica
+  `https://expojuy-retro.vercel.app/` directo, versión 3 (29x29 módulos).
 
 ## Verificación
 

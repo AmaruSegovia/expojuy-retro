@@ -171,3 +171,34 @@ function construirIcono(): string {
 
 /** Favicon listo para `metadata.icons`. Ver `construirIcono`. */
 export const BRAND_ICON_DATA_URI = construirIcono();
+
+/**
+ * La J en un solo color sobre fondo transparente, para la INSIGNIA de las
+ * notificaciones: el ícono chico que Android muestra en la barra de estado.
+ *
+ * Android usa únicamente el canal alfa de la insignia y la pinta con su propio
+ * color, así que el relleno da igual mientras sea opaco. Va blanco para que el
+ * archivo se lea bien si alguien lo abre suelto.
+ *
+ * Sin fondo y con menos aire que el favicon (84 de alto en un lienzo de 96):
+ * se ve a 24dp, y cada unidad de aire es marca que se pierde.
+ */
+function construirInsignia(): string {
+  const LIENZO = 96;
+  const ALTO = 84;
+  const ESCALA = ALTO / 229.8555;
+  const x = (LIENZO - 164.6901 * ESCALA) / 2;
+  const y = (LIENZO - ALTO) / 2;
+  const paths = BRAND_PATHS.map(
+    (p) =>
+      `<path fill="#ffffff"${p.fillRule ? ` fill-rule="${p.fillRule}"` : ""} d="${p.d.replace(/\s+/g, " ").trim()}"/>`,
+  ).join("");
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${LIENZO}" height="${LIENZO}" viewBox="0 0 ${LIENZO} ${LIENZO}">` +
+    `<g transform="translate(${x.toFixed(3)}, ${y}) scale(${ESCALA.toFixed(5)})">` +
+    `<g transform="${BRAND_FLIP_Y}">${paths}</g></g></svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
+/** Insignia de notificación. Ver `construirInsignia`. */
+export const BRAND_BADGE_DATA_URI = construirInsignia();
