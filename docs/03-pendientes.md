@@ -397,6 +397,17 @@ Resumen:
     con `pointer-events: auto`
 34. **El Chrome de las pruebas comparte perfil con el de Leandro** - permisos y
     suscripciones incluidos. Lo que los toca se prueba en contexto aislado
+35. **`.en-papel` le gana a `bg-*`** - pinta su fondo fuera de las capas. Sin
+    utilidad de fondo en el mismo elemento
+
+### Notificaciones en producción
+
+ATENCION: **en `expojuy-retro.vercel.app` el botón de notificaciones no aparece
+hasta que el dueño del repositorio cargue en Vercel `NEXT_PUBLIC_VAPID_PUBLIC_KEY`,
+`VAPID_PRIVATE_KEY` y `VAPID_SUBJECT`.** Hoy viven solo en `.env.local`. Sin la
+clave pública el botón se oculta a propósito, en vez de fallar al tocarlo.
+Después de cargarlas hay que volver a desplegar: la clave pública se incrusta
+en el bundle al compilar.
 
 ## Para la memoria descriptiva
 

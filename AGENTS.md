@@ -412,6 +412,11 @@ Cosas que costaron tiempo. No repetirlas:
 - **Un ancestro con `inert` vuelve inerte a un `<dialog>` modal que tenga
   adentro.** El aviso y el anuncio de estado van FUERA del envoltorio que se
   oculta, no dentro.
+- **`.en-papel` pinta su propio fondo FUERA de las capas de Tailwind**, así que
+  le gana a cualquier utilidad `bg-*` puesta en el mismo elemento. En la
+  entrada digital la tarjeta del QR salía en dos tonos: el fondo de
+  `.en-papel` y un rectángulo en `surface`. Sobre un elemento con `.en-papel`
+  no va utilidad de fondo; lo de adentro usa `surface-sunken` para coincidir.
 - **El Chrome de las pruebas automatizadas comparte perfil con el de Leandro.**
   Tiene sus permisos y su suscripción push de `localhost:3000`: tocar el
   interruptor ahí da de baja la suya. Toda prueba que cambie permisos,

@@ -47,6 +47,20 @@ arrancando cuando la página terminó de hidratar. El video del hero espera a qu
 el loader termine. Validado en el A13 por Leandro; el detalle y los números
 están en `AGENTS.md`, sección "Trampas ya pisadas".
 
+**Notificaciones push y entrada digital (14/9).** Comprar una entrada en el modal
+de Entradas termina con una notificación push real, "¡Ya podés utilizar tu QR
+de acceso!", y tocarla lleva a `/entrada-digital`, con el QR de la demo sobre
+el morado del loader. Web Push sin base de datos: la suscripción viaja con la
+compra y el contenido lo fija el servidor. Las notificaciones se activan desde
+un botón flotante apilado debajo de volver arriba, que aparece a partir de
+Sobre, con un aviso previo propio antes del pedido de permiso del navegador.
+El estado se deduce del permiso y de la suscripción del dispositivo y se
+reconcilia solo. Validado en un Samsung A13 y en Chrome de PC; en Brave el
+servicio push del navegador no responde y el sitio lo explica. Plan y
+decisiones en `docs/04-plan-notificaciones.md`. ATENCION: en producción no
+funciona hasta que se carguen las claves VAPID en Vercel, ver
+`03-pendientes.md`.
+
 El footer va `sticky` contra el borde inferior con z-index negativo, tapado
 por el fondo opaco de `main`; al terminar el documento el borde de main sube y
 lo destapa. El recorrido del efecto es exactamente el alto del footer, así que

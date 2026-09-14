@@ -1,7 +1,18 @@
 # Plan - Notificaciones push
 
 > Escrito el 14 de septiembre de 2026 y revisado con Leandro el mismo día.
-> Estado: **plan aprobado, sin implementar.** Rama `feat/funcionalidades-extra`.
+> Estado: **implementado y validado** en un Samsung A13 y en Chrome de PC, en
+> cuatro commits sobre `feat/funcionalidades-extra`. Falta cargar las claves
+> VAPID en Vercel para que funcione en producción.
+>
+> Diferencias con lo planeado, todas medidas o pedidas:
+>
+> - El QR no va como `<img>`: se leyeron sus 29x29 módulos del PNG y se dibuja
+>   como SVG, nítido a cualquier tamaño. Verificado decodificando una captura
+>   de la pantalla.
+> - El fondo de la entrada digital es el morado del loader, a pedido de Leandro.
+> - El aviso previo suma una tercera variante, "fallo", para cuando el servicio
+>   push del navegador no deja suscribir. Apareció en Brave.
 
 ## Objetivo
 
