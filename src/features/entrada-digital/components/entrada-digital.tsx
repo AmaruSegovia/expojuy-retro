@@ -48,7 +48,7 @@ export function EntradaDigital() {
 
         {/* Sin utilidad de fondo: `.en-papel` ya pinta el suyo, y como vive
             fuera de las capas le ganaría a cualquier `bg-*`. */}
-        <div className="en-papel mt-8 w-full max-w-[18rem] border border-border p-3">
+        <div className="en-papel mt-8 w-full max-w-[18rem] border border-border p-1">
           <QrAcceso className="block w-full" />
         </div>
 

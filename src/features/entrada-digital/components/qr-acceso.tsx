@@ -1,7 +1,13 @@
 import { QR_DEMO } from "../constants/qr-demo";
 
-/** Zona de silencio en módulos. La norma del QR pide cuatro. */
-const SILENCIO = 4;
+/**
+ * Zona de silencio en módulos. La norma del QR pide cuatro, pero con cuatro
+ * más el relleno de la tarjeta el marco blanco medía ~40px por lado y se comía
+ * la vista. Con dos queda en ~20px, y se verificó que una captura de la
+ * pantalla se sigue decodificando a la URL. Los módulos, además, salen más
+ * grandes, que es lo que más ayuda a una cámara.
+ */
+const SILENCIO = 2;
 
 /**
  * Un trazado por fila con los módulos oscuros contiguos fusionados en un solo
