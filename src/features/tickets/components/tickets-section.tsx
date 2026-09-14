@@ -1,19 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
-import { useLenis } from "lenis/react";
+import { useRef, useState, type KeyboardEvent } from "react";
 import { Check } from "lucide-react";
 import { cn } from "@/shared/lib/cn";
 import { Reveal } from "@/shared/components/motion/reveal";
-import { BrandMark } from "@/shared/components/brand/brand-mark";
 import { BotonPausa } from "@/shared/components/ui/boton-pausa";
 import { PlaceholderVisual } from "@/shared/components/ui/placeholder-visual";
-import {
-  MEDIOS_PAGO,
-  METODOS_EJEMPLO,
-  TIPOS_ENTRADA,
-  type TipoEntrada,
-} from "../constants/entradas";
+import { MEDIOS_PAGO, TIPOS_ENTRADA, type TipoEntrada } from "../constants/entradas";
+import { ModalPago } from "./modal-pago";
 
 /**
  * ENTRADAS - mitad píldoras de tipo de entrada, mitad collage; abajo, el riel
@@ -41,11 +35,12 @@ import {
  * para pasar de largo, que es exactamente lo que el patrón de pestañas existe
  * para evitar.
  *
- * EL BOTÓN ABRE UN FORMULARIO DE PAGO ILUSTRATIVO
+ * EL BOTÓN ABRE UNA COMPRA DE DEMOSTRACIÓN
  *
- * No hay pasarela de pago, así que el modal no simula una: DICE que es un
- * ejemplo y muestra qué iría en su lugar. Un checkout falso que pidiera datos
- * de tarjeta sería otra cosa, y no una que convenga prototipar.
+ * No hay pasarela de pago. El modal deja elegir un método y confirma la
+ * compra, pero no pide ningún dato de pago y sigue diciendo que es un ejemplo:
+ * un checkout falso que pidiera datos de tarjeta sería otra cosa, y no una que
+ * convenga prototipar. Ver modal-pago.tsx.
  *
  * Y los precios se muestran como lo que son. Un precio inventado sin aviso es
  * lo único de la maqueta que alguien podría anotar y presupuestar.
@@ -205,7 +200,9 @@ export function TicketsSection() {
         </div>
       </div>
 
-      <ModalPago tipo={pagando} onCerrar={() => setPagando(null)} />
+      {/* `key` por tipo: cada apertura arranca la compra de cero, sin un efecto
+          que tenga que resetear el estado del modal. */}
+      <ModalPago key={pagando?.id ?? "cerrado"} tipo={pagando} onCerrar={() => setPagando(null)} />
     </section>
   );
 }
@@ -272,132 +269,6 @@ function Panel({
         </button>
       </div>
     </div>
-  );
-}
-
-/**
- * MODAL DE PAGO - ejemplo ilustrativo.
- *
- * NO SIMULA UN CHECKOUT. El prototipo no tiene pasarela de pago, así que el
- * modal dice qué iría en su lugar en vez de pedir datos de tarjeta. Un
- * formulario de pago falso que acepte un número y responda "listo" es la clase
- * de maqueta que se puede confundir con la realidad, y encima entrenaría a
- * alguien a tipear una tarjeta en un sitio que no la procesa.
- *
- * POR QUÉ `<dialog>` NATIVO Y NO UN DIV CON POSITION FIXED
- *
- * `showModal()` trae resuelto, del navegador, todo lo que un modal a mano
- * suele hacer mal: el foco entra al abrir y VUELVE SOLO al botón que lo abrió
- * al cerrar, el resto de la página queda inerte -ni el tabulador ni el lector
- * de pantalla se escapan afuera-, Escape cierra, y el fondo se pinta con
- * `::backdrop` sin agregar un elemento.
- *
- * LO ÚNICO QUE HAY QUE HACER A MANO ES FRENAR A LENIS. El scroll suave escucha
- * `wheel` sobre `window`, y la capa superior del diálogo no le impide recibir
- * el evento: sin `lenis.stop()` la página de atrás se desplaza debajo del
- * modal. Se reanuda en el evento `close`, que dispara tanto si cierra el botón
- * como si cierra Escape, así que no hay dos caminos que mantener.
- */
-function ModalPago({ tipo, onCerrar }: { tipo: TipoEntrada | null; onCerrar: () => void }) {
-  const ref = useRef<HTMLDialogElement>(null);
-  const lenis = useLenis();
-
-  useEffect(() => {
-    const dialogo = ref.current;
-    if (!dialogo) return;
-
-    if (tipo && !dialogo.open) {
-      dialogo.showModal();
-      lenis?.stop();
-    } else if (!tipo && dialogo.open) {
-      dialogo.close();
-    }
-  }, [tipo, lenis]);
-
-  useEffect(() => {
-    const dialogo = ref.current;
-    if (!dialogo) return;
-
-    // `close` cubre los tres caminos -botón, Escape y click en el fondo-, así
-    // que reanudar el scroll y avisar hacia arriba se escribe una sola vez.
-    const alCerrar = () => {
-      lenis?.start();
-      onCerrar();
-    };
-    dialogo.addEventListener("close", alCerrar);
-    return () => dialogo.removeEventListener("close", alCerrar);
-  }, [lenis, onCerrar]);
-
-  return (
-    <dialog
-      ref={ref}
-      aria-labelledby="pago-titulo"
-      aria-describedby="pago-desc"
-      // Al hacer click en el fondo, el objetivo del evento es el propio
-      // <dialog>: el contenido está en el hijo, así que si el objetivo es este
-      // elemento, el click fue afuera.
-      onClick={(e) => {
-        if (e.target === ref.current) ref.current?.close();
-      }}
-      className="dialogo-pago"
-    >
-      <div className="p-8">
-        <h2 id="pago-titulo" className="text-xl font-bold text-text">
-          Formulario de pago
-        </h2>
-        <p id="pago-desc" className="mt-3 text-sm text-pretty text-text-muted">
-          Acá irían los métodos de pago aceptados -transferencia, checkout de la pasarela- con el
-          detalle de la compra.
-          {tipo ? ` Entrada ${tipo.nombre}, ${tipo.precio}.` : ""}
-        </p>
-
-        <ul role="list" className="mt-6 grid gap-2">
-          {METODOS_EJEMPLO.map((m) => (
-            <li
-              key={m}
-              className="flex items-center gap-3 border border-border bg-surface px-4 py-3 text-sm text-text-muted"
-            >
-              {/* Circunferencia vacía: se lee como una opción sin elegir, que es
-                  justamente el estado que la sección quiere mostrar. */}
-              <span
-                aria-hidden="true"
-                className="size-4 shrink-0 rounded-full border border-border-strong"
-              />
-              {m}
-            </li>
-          ))}
-        </ul>
-
-        {/* ESTADO VACÍO. La "J" en monocromía y atenuada: ocupa el lugar del
-            formulario que no existe y se lee como un hueco a propósito, no
-            como algo que falló al cargar. Decorativa, así que `aria-hidden`;
-            lo que hay que leer lo dice el texto de abajo. */}
-        <div className="mt-8 grid place-items-center gap-4 border border-dashed border-border py-10">
-          <BrandMark className="h-14 w-auto text-border-strong" monocromo />
-          <p className="max-w-[26ch] text-center text-xs text-text-subtle">
-            Ejemplo ilustrativo: el prototipo no tiene pasarela de pago conectada.
-          </p>
-        </div>
-
-        <div className="mt-8 flex justify-end">
-          <button
-            type="button"
-            // El foco entra acá al abrir: `showModal()` enfoca el primer
-            // elemento enfocable, y que sea "Cerrar" es lo correcto en un modal
-            // que no pide nada.
-            autoFocus
-            onClick={() => ref.current?.close()}
-            className={cn(
-              "rounded-full bg-primary px-7 py-3 text-sm font-semibold text-on-primary",
-              "transition-colors duration-micro ease-standard",
-              "hover:bg-primary-hover active:bg-primary-active",
-            )}
-          >
-            Cerrar
-          </button>
-        </div>
-      </div>
-    </dialog>
   );
 }
 
