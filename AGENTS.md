@@ -393,6 +393,12 @@ Cosas que costaron tiempo. No repetirlas:
   efecto; con la CPU 6x más lenta arrancaba a los 3,1 s y la pausa de 300 ms se
   estiraba a 1,5 s. Las fases que dependen de otra animación se encadenan por
   `animationend`.
+- **Lo que marca el script de arranque vale en TODAS las rutas.** Vive en el
+  layout, así que `data-loader` aparece también en `/sistema-de-diseno`, donde
+  no hay loader que lo retire. Una regla atada solo a ese atributo -el bloqueo
+  de scroll- dejó esa página sin scroll táctil toda la sesión. Toda regla que
+  dependa de `data-loader` exige además que el loader exista:
+  `html[data-loader]:has(.page-loader)`.
 
 ## Contenido
 

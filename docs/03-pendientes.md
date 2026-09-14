@@ -387,6 +387,9 @@ Resumen:
 30. **Un `setTimeout` que arranca al hidratar no mide desde el primer pintado** -
     la salida del loader llegaba a los 3,1 s en vez de 1,7 s con la CPU lenta.
     Las fases se encadenan por `animationend`
+31. **El script de arranque marca `data-loader` en todas las rutas** - el
+    bloqueo de scroll dejó `/sistema-de-diseno` sin scroll táctil. Va
+    `html[data-loader]:has(.page-loader)`
 
 ## Para la memoria descriptiva
 

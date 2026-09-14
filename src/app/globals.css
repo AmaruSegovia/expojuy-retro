@@ -836,8 +836,14 @@
   }
 
   /* Sin scroll mientras dura. Desde el CSS y no desde un efecto: así rige
-     desde el primer pintado y no recién al hidratar. */
-  html[data-loader] body {
+     desde el primer pintado y no recién al hidratar.
+
+     `:has(.page-loader)` NO ES REDUNDANTE. El script de arranque vive en el
+     layout y marca `data-loader` en TODAS las rutas, pero el loader solo existe
+     en la página de inicio, que es la única que lo retira. Sin esta condición,
+     `/sistema-de-diseno` quedaba con el scroll bloqueado toda la sesión:
+     medido, `overflow: hidden` en el body y el dedo sin poder bajar. */
+  html[data-loader]:has(.page-loader) body {
     overflow: hidden;
   }
 
