@@ -161,6 +161,36 @@ real, así que el reemplazo no cambia ni la semántica ni el layout.
   esto es un costo asumido, no un defecto. Si se quisiera recuperar el punto
   hay que discutir el loader, y eso es decisión de Leandro.
 
+  **Remedido el 14/9, al rehacer el loader** para que vaya fluido en un
+  teléfono de gama baja. La entrada ahora arranca al terminar la hidratación en
+  vez de al primer pintado. Medido contra `next start` local con
+  `scripts/audit.mjs`, mismo equipo, la versión anterior compilada en un
+  worktree aparte. Mediana de cuatro corridas en móvil:
+
+  | Versión | Rend. | LCP simulado | Primer pintado observado |
+  | --- | --- | --- | --- |
+  | Loader anterior | 95 | 2,88 s | 84 ms |
+  | Loader nuevo | 94 | 3,07 s | 90 ms |
+
+  Escritorio da 99 o 100 con las dos versiones -LCP entre 0,7 y 0,8 s, TBT 0,
+  CLS 0-, y Accesibilidad, Buenas prácticas y SEO siguen en 100 en los dos
+  perfiles.
+
+  ATENCION: **UNA SOLA CORRIDA NO ALCANZA PARA COMPARAR.** La misma versión
+  anterior dio 99, 95, 93 y 95; la primera sola hacía parecer que el loader
+  nuevo perdía ocho puntos. La simulación de Lighthouse amplifica cualquier
+  tarea de CPU antes del LCP, así que se compara la mediana, y en los números
+  observados.
+
+  Lo que sí fue una regresión real, y quedó corregida antes del commit: la
+  primera versión cubría el viewport con un `box-shadow` de 150vmax, una capa de
+  ~2600px de lado que había que rasterizar en el primer pintado. El primer
+  pintado observado subía a 362 ms y el puntaje a 91. Se reemplazó por cuatro
+  bordes de un solo color en capas propias, que Chrome dibuja sin rasterizar.
+
+  Las cifras de la tabla anterior eran contra producción; estas son locales.
+  No mezclarlas.
+
 - **`prefers-reduced-motion` validado indirectamente.** `emulate` del MCP de
   chrome-devtools no expone esa preferencia. La degradación del bento se
   verificó extrayendo del CSSOM el bloque autorado y aplicándolo sin el
@@ -190,6 +220,14 @@ real, así que el reemplazo no cambia ni la semántica ni el layout.
   WCAG 2.2.2 exige, y duplicado cada copia podía perder por su cuenta el
   `aria-pressed`, el nombre accesible o el área táctil de 48×48. El bento se
   verificó después de migrar.
+
+- **El cordón de "Sobre ExpoJuy" anima `clip-path`, y eso NO se compone.** El
+  comentario de `features/about/styles.css` dice que el compositor lo resuelve
+  sin repintar, y el trace dice lo contrario: Chrome lo marca con el motivo
+  `8192` (propiedad no soportada) y lo repinta en el hilo principal. Como va
+  atado al scroll y es un solo elemento, no se nota; conviene corregir el
+  comentario y, si algún día se ve trabado en un teléfono, pasar el barrido a
+  una propiedad compuesta.
 
 - **"Sobre ExpoJuy" todavía tiene su copia del carrusel.** La máquina de estados
   se extrajo a `shared/hooks/use-carrusel-circular.ts` y ya la usan Mapa y
@@ -335,6 +373,41 @@ Resumen:
     antes que la caja del body, que no tapa nada a la vista pero gana el
     click. El footer se veía bien y sus enlaces eran inertes. Para tapar algo,
     SUBIR al de arriba, no hundir al de abajo
+26. **`scale`/`translate` sobre hijos de SVG y `clip-path` no se componen** -
+    motivos 524288 y 8192. El loader perdía hasta 44 de cada 45 cuadros de la
+    entrada mientras la página hidrataba. Cada pieza pasó a su propia caja HTML
+27. **Una animación de escala rasteriza a la escala MÁXIMA** - con tope en el
+    viewport al cuadrado por capa, y desde que está asignada. Curva escalonada
+    en reposo y, en un A13, un zoom que saltaba de escala 1 a ~25. Va
+    `perspective()` en todos los keyframes
+28. **Pausar una animación esconde cómo la rasteriza Chrome** - la captura sale
+    perfecta. Se inspecciona corriendo con `playbackRate` casi cero
+29. **El minificador reescribe `300ms` como `.3s`** - un `parseFloat` a secas
+    leía una pausa de 0,3 ms
+30. **Un `setTimeout` que arranca al hidratar no mide desde el primer pintado** -
+    la salida del loader llegaba a los 3,1 s en vez de 1,7 s con la CPU lenta.
+    Las fases se encadenan por `animationend`
+31. **El script de arranque marca `data-loader` en todas las rutas** - el
+    bloqueo de scroll dejó `/sistema-de-diseno` sin scroll táctil. Va
+    `html[data-loader]:has(.page-loader)`
+32. **`push service error` es del navegador, no del sitio** - Brave trae
+    apagado el servicio push de Google. Se explica con un aviso
+33. **`pointer-events: none` e `inert` se heredan hasta un `<dialog>`** aunque
+    esté en la capa superior. El aviso va fuera del envoltorio que se oculta y
+    con `pointer-events: auto`
+34. **El Chrome de las pruebas comparte perfil con el de Leandro** - permisos y
+    suscripciones incluidos. Lo que los toca se prueba en contexto aislado
+35. **`.en-papel` le gana a `bg-*`** - pinta su fondo fuera de las capas. Sin
+    utilidad de fondo en el mismo elemento
+
+### Notificaciones en producción
+
+ATENCION: **en `expojuy-retro.vercel.app` el botón de notificaciones no aparece
+hasta que el dueño del repositorio cargue en Vercel `NEXT_PUBLIC_VAPID_PUBLIC_KEY`,
+`VAPID_PRIVATE_KEY` y `VAPID_SUBJECT`.** Hoy viven solo en `.env.local`. Sin la
+clave pública el botón se oculta a propósito, en vez de fallar al tocarlo.
+Después de cargarlas hay que volver a desplegar: la clave pública se incrusta
+en el bundle al compilar.
 
 ## Para la memoria descriptiva
 

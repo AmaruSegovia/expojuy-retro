@@ -108,7 +108,9 @@ Otras reglas que salieron de medir, no de suponer:
 `src/shared/components/brand/brand-mark-paths.ts` es la **fuente única** de la
 geometría del isologotipo. Los `d` se extrajeron del stream del PDF oficial
 (inflado con zlib) y están **sin modificar**, para que sean verificables con un
-diff. De ahí salen el logotipo visible, la máscara del page loader y el favicon.
+diff. De ahí salen el logotipo visible, las piezas y la placa del page loader y
+el favicon. Las cajas de cada pieza también se derivan de sus `d`
+(`cajaDePieza`), no se escriben aparte.
 
 No duplicar los paths en ningún lado: cualquier ajuste desalinearía la ventana
 del loader respecto del logotipo.
@@ -126,8 +128,20 @@ Expositores es el precedente: botón de pausa con `aria-pressed`, pausa también
 al puntero y al foco, y con `prefers-reduced-motion` no arranca. Un slider
 nuevo que se mueva solo hereda el requisito completo.
 
-Animar solo `opacity`, `scale`, `translate` y `clip-path`: son las que el
-compositor resuelve sin recalcular layout. Nunca `width`, `height`, `top`.
+Animar solo `opacity`, `scale`, `translate` y `rotate`, y sobre cajas HTML: son
+las que el compositor resuelve sin el hilo principal. Nunca `width`, `height`,
+`top`. Dos matices medidos:
+
+- **`clip-path` no se compone.** Chrome la repinta en el hilo principal en cada
+  cuadro (motivo `8192` en el trace). Tolerable para algo chico atado al scroll;
+  no para una animación que tiene que ir fluida mientras la página carga.
+- **Sobre hijos de un `<svg>`, `scale` y `translate` tampoco se componen**
+  (motivo `524288`). Si una pieza de un SVG tiene que moverse sola, va en su
+  propia caja HTML. Así se rehízo el page loader.
+
+Y una regla para los zooms grandes: **una animación de escala lleva
+`perspective()` en todos sus keyframes.** Ver la trampa del raster a escala
+máxima más abajo.
 
 **La única excepción es el acordeón de Preguntas**, y no se puede evitar: para
 que el contenido de abajo suba al plegarse, el panel tiene que dejar de ocupar
@@ -201,8 +215,10 @@ Cosas que costaron tiempo. No repetirlas:
   tapado por un overlay opaco sigue contando; uno transparente, no. Por eso el
   page loader **sí** retrasa el LCP, aunque el HTML se sirva completo debajo:
   no lo bloquea el overlay, lo bloquea que las animaciones de aparición
-  arranquen en `opacity: 0`. Medido: el H1 del hero queda en `opacity: 0`
-  durante los 3,1 s del loader y el LCP real cae en 3,5 s.
+  arranquen en `opacity: 0`. Medido el 8/9: el H1 del hero queda en
+  `opacity: 0` durante los 3,1 s del loader y el LCP real cae en 3,5 s. Desde el
+  14/9 la entrada arranca al hidratar y no al primer pintado, así que ese número
+  hay que volver a medirlo.
 - **Una imagen a viewport completo no es candidata a LCP.** Chrome las trata
   como fondo. El póster del hero está optimizado pero *no* es el elemento LCP,
   así que optimizarlo más no mueve la métrica.
@@ -351,6 +367,60 @@ Cosas que costaron tiempo. No repetirlas:
   los otros 9 eran inalcanzables. La degradación correcta es DESPLEGAR -soltar
   el alto y el recorte de la ventana y esconder la copia del bucle-, no
   detener. Quitar el movimiento nunca debe quitar el contenido.
+- **Una animación de escala hace que Chrome rasterice la capa a la escala
+  MÁXIMA de la animación**, con tope en el viewport al cuadrado por capa
+  (`AdjustRasterScaleForTransformAnimation`, cc/layers/picture_layer_impl.cc).
+  Cuenta desde que la animación está ASIGNADA, aunque siga en su demora. Con el
+  zoom de 34x del loader salieron dos síntomas que no parecían relacionados:
+  en reposo la J se mostraba reducida desde ese raster enorme y la curva del
+  gancho salía escalonada, y en un Samsung A13 ese raster tardaba tanto que la
+  salida saltaba de escala 1 a ~25 (unos 780 ms del zoom perdidos). En la PC no
+  se reproduce: la GPU lo resuelve al instante. **La solución es
+  `perspective()` en TODOS los keyframes**: `ScaleComponent` devuelve falso,
+  Chrome no conoce la escala máxima y rasteriza a la escala normal. Con z = 0 la
+  perspectiva no cambia ningún píxel. Si un solo keyframe la omite, Chrome toma
+  su escala como máxima y el problema vuelve.
+- **Para ver cómo rasteriza Chrome una animación, NO pausarla.** `pause()` le
+  saca la animación al compositor y la capa se vuelve a rasterizar normal, así
+  que la captura sale perfecta y esconde el defecto. Lo que sirve es dejarla
+  corriendo casi quieta -`playbackRate = 0.00001`- y capturar a resolución de
+  dispositivo.
+- **El minificador de CSS reescribe las duraciones.** `--l-pausa: 300ms` llega
+  al navegador como `.3s`, y un `parseFloat` a secas lee 0,3 ms. Toda duración
+  que JavaScript lea del CSS se interpreta mirando la unidad.
+- **Un temporizador que empieza a contar al hidratar no marca una hora del
+  primer pintado.** La salida del loader era un `setTimeout` de 1700 ms desde el
+  efecto; con la CPU 6x más lenta arrancaba a los 3,1 s y la pausa de 300 ms se
+  estiraba a 1,5 s. Las fases que dependen de otra animación se encadenan por
+  `animationend`.
+- **Lo que marca el script de arranque vale en TODAS las rutas.** Vive en el
+  layout, así que `data-loader` aparece también en `/sistema-de-diseno`, donde
+  no hay loader que lo retire. Una regla atada solo a ese atributo -el bloqueo
+  de scroll- dejó esa página sin scroll táctil toda la sesión. Toda regla que
+  dependa de `data-loader` exige además que el loader exista:
+  `html[data-loader]:has(.page-loader)`.
+- **`AbortError: Registration failed - push service error` no es un error del
+  sitio.** Es la respuesta de Chromium cuando SU servicio push no deja
+  suscribir. Pasó en Brave, que trae apagado el servicio push de Google,
+  mientras el mismo código funcionaba en Chrome de PC y en un Samsung A13. Se
+  captura, se registra como advertencia -un `console.error` además levanta el
+  overlay de Next en desarrollo- y la interfaz lo explica con un aviso.
+- **`pointer-events: none` se hereda hasta un `<dialog>` modal**, aunque esté
+  en la capa superior y se vea encima de todo. La pila flotante no captura
+  toques y el aviso de notificaciones vive adentro: sin `pointer-events: auto`
+  en el propio diálogo, sus botones no responden.
+- **Un ancestro con `inert` vuelve inerte a un `<dialog>` modal que tenga
+  adentro.** El aviso y el anuncio de estado van FUERA del envoltorio que se
+  oculta, no dentro.
+- **`.en-papel` pinta su propio fondo FUERA de las capas de Tailwind**, así que
+  le gana a cualquier utilidad `bg-*` puesta en el mismo elemento. En la
+  entrada digital la tarjeta del QR salía en dos tonos: el fondo de
+  `.en-papel` y un rectángulo en `surface`. Sobre un elemento con `.en-papel`
+  no va utilidad de fondo; lo de adentro usa `surface-sunken` para coincidir.
+- **El Chrome de las pruebas automatizadas comparte perfil con el de Leandro.**
+  Tiene sus permisos y su suscripción push de `localhost:3000`: tocar el
+  interruptor ahí da de baja la suya. Toda prueba que cambie permisos,
+  suscripciones o almacenamiento va en una pestaña con contexto aislado.
 
 ## Contenido
 

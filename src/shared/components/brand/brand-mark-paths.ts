@@ -12,13 +12,19 @@
  * 0.4667/0.3098/0.9412 → #774FF0, y así los cuatro. Coinciden exactamente con
  * los tokens de marca de globals.css.
  *
- * Este módulo existe para que la marca visible (brand-mark.tsx) y la máscara
+ * Este módulo existe para que la marca visible (brand-mark.tsx) y la placa
  * del page loader usen la MISMA geometría. Si estuviera duplicada, cualquier
  * ajuste desalinearía la ventana respecto del logotipo.
  */
 
 /** Caja del logo en unidades del PDF: 503.2749−338.5848 × 412.3633−182.5078 */
 export const BRAND_VIEW_BOX = "0 0 164.6901 229.8555";
+
+/**
+ * La misma caja en números, con las coordenadas del PDF. Existe para DERIVAR
+ * geometría -la caja de cada pieza, la placa del loader- en vez de copiarla.
+ */
+export const BRAND_CAJA = { x: 338.5848, y: 182.5078, ancho: 164.6901, alto: 229.8555 } as const;
 
 /** Lleva el origen a la esquina de la caja e invierte la vertical. */
 export const BRAND_FLIP_Y = "translate(-338.5848, 412.3633) scale(1, -1)";
@@ -58,24 +64,33 @@ type BrandPath = {
 };
 
 /**
- * La misma "J" como data URI, en negro sólido, para usarla como máscara CSS.
- *
- * Se genera a partir de BRAND_PATHS en vez de escribirse aparte: si se
- * duplicara, cualquier ajuste desalinearía la ventana respecto del logotipo.
- *
- * Va como máscara de CSS y no como <mask> de SVG: con una máscara de CSS el
- * agujero está horneado en la capa y crece por `transform`, que el compositor
- * resuelve sin rerasterizar la máscara en cada frame.
+ * Caja de una pieza en unidades de logo, con el origen arriba a la izquierda de
+ * la caja del isologotipo y la Y hacia abajo, como en pantalla.
  */
-function construirMascara(): string {
-  const paths = BRAND_PATHS.map(
-    (p) =>
-      `<path fill="#000"${p.fillRule ? ` fill-rule="${p.fillRule}"` : ""} d="${p.d.replace(/\s+/g, " ").trim()}"/>`,
-  ).join("");
-  const svg =
-    `<svg xmlns="http://www.w3.org/2000/svg" width="164.6901" height="229.8555" viewBox="${BRAND_VIEW_BOX}">` +
-    `<g transform="${BRAND_FLIP_Y}">${paths}</g></svg>`;
-  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+export type CajaPieza = { izquierda: number; arriba: number; ancho: number; alto: number };
+
+/**
+ * Deriva la caja de una pieza leyendo su propio `d`.
+ *
+ * Toma los extremos de TODOS los puntos, anclas y controles. La caja del
+ * polígono de control siempre contiene a la curva; que además coincida con
+ * ella depende de que los extremos caigan en anclas, y en estas cuatro piezas
+ * caen: verificado contra los números del gancho, el único con curvas. Los
+ * cuatro `d` usan solo comandos absolutos (M, L, C, Z), así que los números se
+ * leen de a pares sin interpretar comandos.
+ */
+export function cajaDePieza(d: string): CajaPieza {
+  const numeros = (d.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number);
+  const xs = numeros.filter((_, i) => i % 2 === 0);
+  const ys = numeros.filter((_, i) => i % 2 === 1);
+  const minX = Math.min(...xs);
+  const maxY = Math.max(...ys);
+  return {
+    izquierda: minX - BRAND_CAJA.x,
+    arriba: BRAND_CAJA.y + BRAND_CAJA.alto - maxY,
+    ancho: Math.max(...xs) - minX,
+    alto: maxY - Math.min(...ys),
+  };
 }
 
 /** El orden es el de pintado: primero el asta, último la barra superior. */
@@ -119,9 +134,6 @@ export const BRAND_PATHS: readonly BrandPath[] = [
   },
 ];
 
-/** Máscara lista para usar en `mask-image`. Ver `construirMascara`. */
-export const BRAND_MASK_URL = construirMascara();
-
 /**
  * El isologotipo como SVG autocontenido, sobre el fondo oscuro de la barra de
  * navegación (--color-surface, #0b0911), listo para usar como favicon.
@@ -159,3 +171,34 @@ function construirIcono(): string {
 
 /** Favicon listo para `metadata.icons`. Ver `construirIcono`. */
 export const BRAND_ICON_DATA_URI = construirIcono();
+
+/**
+ * La J en un solo color sobre fondo transparente, para la INSIGNIA de las
+ * notificaciones: el ícono chico que Android muestra en la barra de estado.
+ *
+ * Android usa únicamente el canal alfa de la insignia y la pinta con su propio
+ * color, así que el relleno da igual mientras sea opaco. Va blanco para que el
+ * archivo se lea bien si alguien lo abre suelto.
+ *
+ * Sin fondo y con menos aire que el favicon (84 de alto en un lienzo de 96):
+ * se ve a 24dp, y cada unidad de aire es marca que se pierde.
+ */
+function construirInsignia(): string {
+  const LIENZO = 96;
+  const ALTO = 84;
+  const ESCALA = ALTO / 229.8555;
+  const x = (LIENZO - 164.6901 * ESCALA) / 2;
+  const y = (LIENZO - ALTO) / 2;
+  const paths = BRAND_PATHS.map(
+    (p) =>
+      `<path fill="#ffffff"${p.fillRule ? ` fill-rule="${p.fillRule}"` : ""} d="${p.d.replace(/\s+/g, " ").trim()}"/>`,
+  ).join("");
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${LIENZO}" height="${LIENZO}" viewBox="0 0 ${LIENZO} ${LIENZO}">` +
+    `<g transform="translate(${x.toFixed(3)}, ${y}) scale(${ESCALA.toFixed(5)})">` +
+    `<g transform="${BRAND_FLIP_Y}">${paths}</g></g></svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
+/** Insignia de notificación. Ver `construirInsignia`. */
+export const BRAND_BADGE_DATA_URI = construirInsignia();

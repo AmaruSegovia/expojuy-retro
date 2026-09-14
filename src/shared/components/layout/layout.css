@@ -359,6 +359,10 @@
     --icono-casilla: 1.25rem;
     --casillas: 3;
     --aire-isla: 0.25rem;
+    /* Separación entre la píldora y el canto de la isla, arriba y abajo. La
+       leen el indicador de sección activa Y el fondo del hover: si cada uno
+       tuviera su medida, la píldora del hover saldría de otro tamaño. */
+    --aire-pildora: 0.3125rem;
 
     position: fixed;
     inset-inline: 0;
@@ -461,11 +465,35 @@
     min-height: calc(var(--alto-barra-movil) - 2px);
     border-radius: var(--radius-full);
     color: var(--color-text);
+    /* Contexto de apilamiento propio: la píldora del hover va con z-index
+       negativo, detrás del ícono y el rótulo, y sin esto se iría detrás de la
+       isla entera. */
+    position: relative;
+    isolation: isolate;
+  }
+
+  /* LA PÍLDORA DEL HOVER TIENE LA GEOMETRÍA EXACTA DEL INDICADOR. Antes el hover
+     pintaba el fondo del ancla, que ocupa el alto entero de la isla, y el
+     indicador deja `--aire-pildora` arriba y abajo: medido, la del hover salía
+     10px más alta que la activa y se leía como otro control. El ancho ya
+     coincide, porque el ancla y el indicador miden una casilla. */
+  .barra-movil a::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset-block: var(--aire-pildora);
+    inset-inline: 0;
+    border-radius: var(--radius-full);
     transition: background-color var(--duration-micro) var(--ease-standard);
   }
 
-  .barra-movil a:hover {
-    background: color-mix(in srgb, var(--color-text) 10%, transparent);
+  /* Solo con un puntero que de verdad pasa por encima. En táctil el `:hover`
+     queda pegado en la última casilla tocada: al seguir bajando, el indicador
+     se iba a otra sección y quedaban DOS píldoras en la isla. */
+  @media (hover: hover) and (pointer: fine) {
+    .barra-movil a:hover::before {
+      background: color-mix(in srgb, var(--color-text) 10%, transparent);
+    }
   }
 
   .barra-movil a:focus-visible {
@@ -511,7 +539,7 @@
     /* El bloque contenedor de un absoluto es la CAJA DE RELLENO del ancestro
        posicionado, así que `100%` incluye el aire de los dos costados y hay
        que descontarlo para que la casilla dé exacta. */
-    inset-block: 0.3125rem;
+    inset-block: var(--aire-pildora);
     inset-inline-start: var(--aire-isla);
     width: calc((100% - var(--aire-isla) * 2) / var(--casillas));
     translate: calc(var(--indice, 0) * 100%);
@@ -569,8 +597,8 @@
   /* En la casilla destacada el que reacciona es el disco, no el fondo de la
      casilla: un rectángulo redondeado detrás de un disco de color plano se lee
      como suciedad. */
-  .barra-movil a.barra-movil__destacado:hover {
-    background: transparent;
+  .barra-movil a.barra-movil__destacado::before {
+    content: none;
   }
 
   .barra-movil__destacado:hover .barra-movil__disco {
@@ -875,6 +903,69 @@
     from {
       scale: 1 0;
       opacity: 0;
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   AVISO DE NOTIFICACIONES - ver src/shared/components/ui/aviso-notificaciones.tsx
+
+   Tarjeta arriba y centrada, en tinta como el resto del cromo del sitio. De la
+   referencia se tomó la composición -marca a la izquierda, título y bajada a
+   la derecha, dos botones abajo- y se tradujo al sistema: ESQUINAS VIVAS,
+   porque el sistema solo usa radio 0 o píldora, y la píldora queda para los
+   botones.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+  .aviso-notificaciones {
+    /* Arriba y centrado. `margin-block-start` y no `top`: un <dialog> modal ya
+       es fijo en la capa superior, y con `margin: auto` en los costados se
+       centra solo. */
+    margin: 1rem auto auto;
+    width: 100%;
+    max-width: min(34rem, calc(100vw - 2.5rem));
+    padding: 0;
+    border: 1px solid var(--color-border-strong);
+    background-color: var(--color-surface-overlay);
+    color: var(--color-text);
+    box-shadow: 0 24px 48px -24px color-mix(in srgb, var(--color-surface-sunken) 90%, transparent);
+
+    /* El botón flotante que lo abre vive en una pila con `pointer-events:
+       none`, y esa propiedad se hereda aunque el diálogo esté en la capa
+       superior. Sin esto los botones del aviso no reciben el toque. */
+    pointer-events: auto;
+
+    /* Entra bajando apenas desde arriba, que es de donde viene. El valor de
+       reposo es VISIBLE: sin soporte de `@starting-style` abre igual, sin
+       animación. */
+    opacity: 0;
+    translate: 0 -0.75rem;
+    transition:
+      opacity var(--duration-control) var(--ease-standard),
+      translate var(--duration-control) var(--ease-standard),
+      overlay var(--duration-control) allow-discrete,
+      display var(--duration-control) allow-discrete;
+  }
+
+  .aviso-notificaciones[open] {
+    opacity: 1;
+    translate: 0 0;
+  }
+
+  @starting-style {
+    .aviso-notificaciones[open] {
+      opacity: 0;
+      translate: 0 -0.75rem;
+    }
+  }
+
+  .aviso-notificaciones::backdrop {
+    background-color: color-mix(in srgb, var(--color-surface-sunken) 60%, transparent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .aviso-notificaciones {
+      transition: none;
     }
   }
 }

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { HERO_MEDIA } from "../constants/media";
 import { usePrefersReducedMotion } from "@/shared/hooks/use-prefers-reduced-motion";
+import { alTerminarLoader } from "@/shared/lib/al-terminar-loader";
 import { cn } from "@/shared/lib/cn";
 
 /**
@@ -21,7 +22,8 @@ import { cn } from "@/shared/lib/cn";
  * el LCP.
  *
  * El video se monta con `src` vacío y solo empieza a cargar después de que la
- * página quedó interactiva: es decoración, no debe competir con el contenido.
+ * pantalla de carga terminó y la página quedó interactiva: es decoración, no
+ * debe competir con el contenido ni con la animación de entrada.
  */
 export function HeroVideo() {
   const reducirMovimiento = usePrefersReducedMotion();
@@ -49,13 +51,24 @@ export function HeroVideo() {
       el.play().catch(() => {});
     };
 
-    // requestIdleCallback deja que primero terminen el hero y la hidratación.
-    if ("requestIdleCallback" in window) {
-      const id = requestIdleCallback(cargar, { timeout: 2000 });
-      return () => cancelIdleCallback(id);
-    }
-    const id = setTimeout(cargar, 400);
-    return () => clearTimeout(id);
+    // Primero se espera a la pantalla de carga: detrás del overlay el video no
+    // se ve, y decodificarlo durante la salida le quita cuadros justo a la
+    // animación que sí se ve. Después, requestIdleCallback deja que termine
+    // la hidratación.
+    let cancelarReposo = () => {};
+    const cancelarEspera = alTerminarLoader(() => {
+      if ("requestIdleCallback" in window) {
+        const id = requestIdleCallback(cargar, { timeout: 2000 });
+        cancelarReposo = () => cancelIdleCallback(id);
+      } else {
+        const id = setTimeout(cargar, 400);
+        cancelarReposo = () => clearTimeout(id);
+      }
+    });
+    return () => {
+      cancelarEspera();
+      cancelarReposo();
+    };
   }, [reducirMovimiento]);
 
   return (
