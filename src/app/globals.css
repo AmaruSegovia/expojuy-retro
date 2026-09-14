@@ -745,7 +745,7 @@
    PANTALLA DE CARGA - ver src/shared/components/brand/page-loader.tsx
 
    ENTRADA - las cuatro piezas del isologotipo entran una por una:
-     2 · gancho lavanda  - se revela en abanico radial desde la izquierda
+     2 · gancho lavanda  - una cortina gira y lo descubre de izquierda a derecha
      4 · barra púrpura   - pop desde el centro de la propia pieza
      3 · asta violeta    - ídem, apenas después
      1 · barra cian      - cae desde arriba y rebota sobre la pieza 4
@@ -753,23 +753,43 @@
    SALIDA - efecto intro de Los Simpsons. La "J" no se desvanece: ES un
    agujero en el morado. Al crecer, el hero se ve a través de ella y el morado
    queda empujado fuera del viewport.
+
+   REGLA 1: SOLO SE ANIMAN `scale`, `translate`, `rotate` Y `opacity` SOBRE
+   CAJAS HTML. Es lo que el compositor resuelve sin el hilo principal, y
+   durante el loader el hilo principal está hidratando la página entera.
+   Medido en la versión anterior, con la CPU 6x más lenta: las piezas eran
+   hijos de un SVG y con `clip-path`, Chrome no componía ninguna y se perdían
+   hasta 44 de cada 45 cuadros de la entrada.
+
+   REGLA 2: EL ZOOM LLEVA `perspective()` Y NO SE PUEDE SACAR. Cuando una capa
+   recibe una animación de escala, Chrome la vuelve a rasterizar a la escala
+   MÁXIMA de la animación, con tope en el viewport al cuadrado por capa (ver
+   `AdjustRasterScaleForTransformAnimation` en cc/layers/picture_layer_impl.cc).
+   Con un zoom de 34x eso tuvo dos síntomas medidos:
+     - en reposo la marca se mostraba REDUCIDA desde ese raster enorme, y la
+       curva del gancho salía escalonada (capturas a resolución de dispositivo);
+     - en un Samsung A13 ese raster tardaba lo suficiente como para que la
+       salida saltara de escala 1 a ~25: se perdían unos 780ms del zoom.
+   `ScaleComponent` devuelve falso para un keyframe con `perspective()`, y
+   entonces Chrome no conoce la escala máxima y rasteriza a la escala normal.
+   Sobre contenido plano, con z = 0, la perspectiva no cambia ningún píxel.
+   Verificado: con el zoom asignado y `perspective()`, la curva sale suave.
    ═══════════════════════════════════════════════════════════════════════════ */
 @layer components {
   .page-loader {
-    /* Tamaño de la marca como NÚMERO además de longitud: scale() necesita un
-       valor sin unidad, y de acá sale el factor que lleva el logo de unidades
-       de PDF a píxeles. */
-    --l-marca-num: 96;
-    --l-marca: calc(var(--l-marca-num) * 1px);
-    --l-k: calc(var(--l-marca-num) / 164.6901);
+    /* Tamaño de la marca. Toda la geometría interna va en porcentajes de esta
+       caja, así que es el único largo que hay que declarar. */
+    --l-marca: 96px;
 
-    /* Tiempos. El TSX solo necesita el total y la duración de salida.
+    /* Tiempos. Son la ÚNICA fuente: la pausa la lee coreografia-loader.tsx
+       desde acá, y el resto de las fases las encadena `animationend`.
          entrada = barrido 620 + caída 780 = 1400ms
          pausa   = 300ms
          salida  = 1400ms   ->  total 3100ms */
     --l-barrido: 620ms;
     --l-pieza: 520ms;
     --l-caida: 780ms;
+    --l-pausa: 300ms;
     --l-salida-dur: 1400ms;
 
     /* Cuánto crece la J hasta que su entorno macizo cubre el viewport.
@@ -788,11 +808,22 @@
        siempre. */
     display: grid;
     place-items: center;
+
+    /* RED DE SEGURIDAD. Las fases las marca JavaScript, así que si el script
+       no llega a correr el morado quedaría tapando el sitio para siempre. A
+       los 12s el overlay se oculta solo, pase lo que pase. El caso normal
+       termina mucho antes y retira el loader por atributo. */
+    animation: loader-rescate 1ms 12s both;
+  }
+
+  /* Al empezar la salida deja pasar los toques. */
+  .page-loader[data-saliendo] {
+    pointer-events: none;
   }
 
   @media (min-width: 40rem) {
     .page-loader {
-      --l-marca-num: 128;
+      --l-marca: 128px;
     }
   }
 
@@ -804,106 +835,220 @@
     display: none;
   }
 
-  /* ── FONDO ENMASCARADO ──────────────────────────────────────────────────
-     Rectángulo morado con la "J" restada por composición `exclude`: donde la
-     máscara es opaca, el morado se recorta y se ve el hero. La máscara se
-     dimensiona igual que la marca visible y se centra igual, así el agujero
-     queda exactamente debajo del logotipo pintado. */
-  .page-loader__backdrop {
-    position: absolute;
-    inset: 0;
-    background-color: var(--color-loader-backdrop);
-    /* Avisa al compositor que esta capa se va a transformar, para que la
-       promueva y no la repinte en cada frame. */
-    will-change: transform, opacity;
-
-    /* El zoom crece alrededor del PUNTO DE ENTRADA, no del centro del
-       viewport. El centro de la caja del logo cae en el hueco entre la barra
-       púrpura y el asta: creciendo desde ahí se agrandaría el vacío y quedaría
-       una mancha morada en el medio de la pantalla.
-       El desplazamiento sale de la geometría: el punto de entrada está a
-       (−0.495, +94.93) unidades de logo del centro de la caja, y --l-k lleva
-       esas unidades a píxeles. Es el mismo punto físico que el 49.7%/91.3%
-       que usa la marca visible, así que ambos escalan superpuestos. */
-    transform-origin: calc(50% - 0.495px * var(--l-k)) calc(50% + 94.93px * var(--l-k));
+  /* Sin scroll mientras dura. Desde el CSS y no desde un efecto: así rige
+     desde el primer pintado y no recién al hidratar. */
+  html[data-loader] body {
+    overflow: hidden;
   }
 
-  /* La máscara SOLO existe durante la salida.
-     Durante la entrada el morado tiene que tapar el hero por completo: es el
-     telón. Si el agujero estuviera abierto desde el principio, cada pieza que
-     todavía no apareció dejaría ver el hero recortado con su propia silueta.
-     Recortarlo recién al salir es correcto porque en ese instante la marca
-     pintada sigue opaca y cubre el hueco exactamente. */
-  .page-loader[data-saliendo] .page-loader__backdrop {
-    mask-image: var(--l-mascara), linear-gradient(#000, #000);
-    mask-repeat: no-repeat, no-repeat;
-    mask-position: center, center;
-    mask-size:
-      var(--l-marca) calc(var(--l-marca) * 1.39557),
-      cover;
-    mask-composite: exclude;
-    -webkit-mask-image: var(--l-mascara), linear-gradient(#000, #000);
-    -webkit-mask-repeat: no-repeat, no-repeat;
-    -webkit-mask-position: center, center;
-    -webkit-mask-size:
-      var(--l-marca) calc(var(--l-marca) * 1.39557),
-      cover;
-    -webkit-mask-composite: xor;
-  }
+  /* La ventana y la marca comparten caja, centro y origen de zoom, así que
+     escalan superpuestas sin calcular ningún desplazamiento.
 
-  .page-loader__mark {
-    transform-box: fill-box;
-    transform-origin: 49.7% 91.3%;
-    position: relative; /* por encima del backdrop, que es absolute */
+     El origen es el PUNTO DE ENTRADA, no el centro de la caja: el centro cae
+     en el hueco entre la barra púrpura y el asta, y creciendo desde ahí se
+     agrandaría el vacío y quedaría una mancha morada en el medio de la
+     pantalla. Ver BRAND_ZOOM_ORIGIN. */
+  .page-loader__ventana,
+  .page-loader__marca {
+    grid-area: 1 / 1;
+    position: relative;
     width: var(--l-marca);
-    /* El SVG recorta a su viewBox por defecto. La pieza 1 cae DESDE AFUERA de
-       esa caja, así que sin esto entraría ya cortada. */
+    aspect-ratio: 164.6901 / 229.8555;
+    transform-origin: 49.7% 91.3%;
+    /* Capas propias desde el primer pintado. Sin esto, recién al empezar la
+       salida se promoverían y se rasterizarían en el mismo cuadro en que tiene
+       que arrancar el zoom. Así ese trabajo ocurre durante la carga, con todo
+       quieto. */
+    will-change: transform;
+  }
+
+  /* ── VENTANA ────────────────────────────────────────────────────────────
+     La placa lleva el agujero con la forma exacta de la J; los cuatro bordes
+     cubren el resto del viewport. Ninguno es una máscara de CSS: la placa se
+     rasteriza una vez y después solo escala.
+
+     LOS BORDES NO SON UN `box-shadow`, Y ES A PROPÓSITO. Con un anillo de
+     `box-shadow: 0 0 0 150vmax` la ventana era una capa de ~2600px de lado que
+     había que rasterizar en el primer pintado: medido con Lighthouse móvil, el
+     primer pintado observado pasaba de ~85 a 362ms y el puntaje caía a 91. Un
+     bloque de un solo color en su propia capa es una capa sólida, y Chrome no
+     le crea tiles: no cuesta raster a ninguna escala. Con los bordes el primer
+     pintado vuelve a ~90ms, lo mismo que antes de rehacer el loader.
+
+     Cada borde se come las esquinas y los laterales pisan a los horizontales:
+     si dos bordes terminaran en la misma línea, el suavizado dejaría una raya
+     que el zoom agranda. 100vmax alcanza con la caja en su tamaño inicial, que
+     es cuando más tienen que cubrir: al crecer, crecen con ella. */
+  .page-loader__borde {
+    position: absolute;
+    background-color: var(--color-loader-backdrop);
+    will-change: transform;
+  }
+
+  .page-loader__borde--arriba,
+  .page-loader__borde--abajo {
+    left: -100vmax;
+    right: -100vmax;
+    height: 100vmax;
+  }
+
+  .page-loader__borde--arriba {
+    bottom: 100%;
+  }
+
+  .page-loader__borde--abajo {
+    top: 100%;
+  }
+
+  .page-loader__borde--izquierda,
+  .page-loader__borde--derecha {
+    top: -100vmax;
+    bottom: -100vmax;
+    width: 100vmax;
+  }
+
+  .page-loader__borde--izquierda {
+    right: 100%;
+  }
+
+  .page-loader__borde--derecha {
+    left: 100%;
+  }
+
+  .page-loader[data-saliendo] .page-loader__ventana {
+    animation:
+      loader-zoom var(--l-salida-dur) var(--ease-in-out-quint) both,
+      loader-transparenta calc(var(--l-salida-dur) * 0.3) var(--ease-standard)
+        calc(var(--l-salida-dur) * 0.7) both;
+  }
+
+  /* El telón mide lo mismo que la placa y no lo que la caja, por el mismo
+     motivo que la placa solapa a los bordes: tres piezas tocan el borde de la
+     caja, así que ahí el agujero termina justo donde terminaría el telón.
+     Medido: con `inset: 0` quedaba una línea oscura punteada en el borde
+     superior y en el izquierdo. */
+  .page-loader__placa,
+  .page-loader__telon {
+    position: absolute;
+    left: var(--placa-x);
+    top: var(--placa-y);
+    width: var(--placa-ancho);
+    height: var(--placa-alto);
+  }
+
+  .page-loader__placa path {
+    fill: var(--color-loader-backdrop);
+  }
+
+  /* El telón tapa el agujero durante la entrada. Si estuviera abierto desde el
+     principio, cada pieza que todavía no apareció dejaría ver el hero con su
+     silueta. Se retira de golpe al empezar la salida, que es cuando la marca
+     pintada sigue opaca y cubre el hueco exactamente.
+
+     `will-change: opacity` lo deja en su propia capa, sólida como los bordes.
+     Sin eso se pintaría dentro de la ventana, y retirarlo obligaría a
+     rasterizarla de nuevo justo en el primer cuadro de la salida. */
+  .page-loader__telon {
+    background-color: var(--color-loader-backdrop);
+    will-change: opacity;
+  }
+
+  .page-loader[data-saliendo] .page-loader__telon {
+    opacity: 0;
+  }
+
+  /* ── MARCA ──────────────────────────────────────────────────────────────
+     Cada pieza es su propia caja, ubicada con la caja que sale de su `d`. Por
+     eso los porcentajes de `translate` y el origen `center` de `scale` se
+     resuelven contra la pieza y no contra el logo entero, igual que hacía
+     `transform-box: fill-box` cuando las piezas vivían en un solo SVG.
+
+     Hasta que arranca la entrada, solo se ve el morado. */
+  .page-loader:not([data-entrando]) .page-loader__marca {
+    visibility: hidden;
+  }
+
+  .page-loader[data-saliendo] .page-loader__marca {
+    animation:
+      loader-zoom var(--l-salida-dur) var(--ease-in-out-quint) both,
+      loader-transparenta calc(var(--l-salida-dur) * 0.42) var(--ease-standard) both;
+  }
+
+  .page-loader__pieza {
+    position: absolute;
+    left: var(--pieza-x);
+    top: var(--pieza-y);
+    width: var(--pieza-ancho);
+    height: var(--pieza-alto);
+  }
+
+  .page-loader__pieza svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    /* La pieza 1 cae DESDE AFUERA de su caja. */
     overflow: visible;
   }
 
-  /* ── ENTRADA ────────────────────────────────────────────────────────────
-     `transform-box: fill-box` en cada pieza hace que scale y sus porcentajes
-     se calculen contra la caja del propio path y no contra el viewBox del
-     SVG. Sin eso el origen queda fuera del elemento y el "pop" desde el
-     centro se ve como un desplazamiento. */
+  /* 2 · gancho - una cortina del color del fondo lo tapa y gira media vuelta
+     sobre el centro de su borde superior, en sentido antihorario: lo primero
+     que descubre es la punta izquierda y lo último la derecha, así parece que
+     se dibuja la sonrisa.
 
-  /* 2 · gancho - revelado RADIAL desde el borde izquierdo. Un `inset()` daría
-     un frente recto vertical, que contra una curva se lee como una persiana;
-     el círculo acompaña la forma del gancho y parece que se dibuja la
-     sonrisa. 135% alcanza la esquina más lejana desde ese origen. */
-  .page-loader__mark .brand-mark__hook {
+     Reemplaza a un `clip-path: circle()` que crecía desde la izquierda. Se veía
+     parecido, pero `clip-path` no se compone y repintaba el gancho en cada
+     cuadro. Girar es `rotate`.
+
+     El gancho recorta a su caja para que la cortina no se vea afuera. No pisa
+     a nadie: entre el borde superior del gancho y la barra púrpura hay 22
+     unidades de logo de aire. */
+  .page-loader__pieza.brand-mark__hook {
+    overflow: hidden;
+  }
+
+  .page-loader__cortina {
+    position: absolute;
+    top: 0;
+    left: calc(50% - var(--cortina-ancho) / 2);
+    width: var(--cortina-ancho);
+    height: var(--cortina-alto);
+    background-color: var(--color-loader-backdrop);
+    transform-origin: 50% 0;
+  }
+
+  .page-loader[data-entrando] .page-loader__cortina {
     animation: loader-barrido var(--l-barrido) var(--ease-standard) both;
   }
 
   /* 4 · barra púrpura - tiene que estar en su lugar antes de que la pieza 1
      le rebote encima, así que entra durante el barrido. */
-  .page-loader__mark .brand-mark__bar-low {
-    transform-box: fill-box;
-    transform-origin: center;
+  .page-loader[data-entrando] .page-loader__pieza.brand-mark__bar-low {
     animation: loader-pop var(--l-pieza) var(--ease-out-expo) 260ms both;
   }
 
   /* 3 · asta violeta */
-  .page-loader__mark .brand-mark__stem {
-    transform-box: fill-box;
-    transform-origin: center;
+  .page-loader[data-entrando] .page-loader__pieza.brand-mark__stem {
     animation: loader-pop var(--l-pieza) var(--ease-out-expo) 400ms both;
   }
 
-  /* 1 · barra cian - arranca justo cuando termina el barrido del gancho. */
-  .page-loader__mark .brand-mark__bar-high {
-    transform-box: fill-box;
-    /* `linear` a propósito: el ritmo del rebote lo marca cada keyframe con su
-       propio timing-function. Una curva global los aplastaría a todos. */
+  /* 1 · barra cian - arranca justo cuando termina el barrido del gancho. Es
+     la última pieza en terminar: su `animationend` es el que abre la pausa.
+     `linear` a propósito: el ritmo del rebote lo marca cada keyframe con su
+     propio timing-function. Una curva global los aplastaría a todos. */
+  .page-loader[data-entrando] .page-loader__pieza.brand-mark__bar-high {
     animation: loader-caida var(--l-caida) linear var(--l-barrido) both;
   }
 
-  @keyframes loader-barrido {
-    from {
-      clip-path: circle(0% at 0% 50%);
-    }
+  @keyframes loader-rescate {
     to {
-      clip-path: circle(135% at 0% 50%);
+      visibility: hidden;
+      pointer-events: none;
+    }
+  }
+
+  @keyframes loader-barrido {
+    to {
+      rotate: -180deg;
     }
   }
 
@@ -920,17 +1065,12 @@
 
   /* Caída con rebote. Cada tramo declara su propia curva: acelera al caer
      (ease-in, como la gravedad) y frena al subir (ease-out), con dos rebotes
-     cada vez más chicos.
-
-     OJO CON EL SIGNO: el <g> del isologotipo lleva scale(1, -1) para resolver
-     que el PDF tiene el eje Y hacia arriba. Ese flip invierte el sentido de
-     los translate de sus hijos, así que acá un valor POSITIVO desplaza la
-     pieza hacia ARRIBA en pantalla. Con el signo intuitivo la barra caía
-     hacia abajo, atravesando el gancho. */
+     cada vez más chicos. Los valores son negativos porque la pieza ya no vive
+     dentro del grupo con scale(1, -1) del isologotipo: acá arriba es arriba. */
   @keyframes loader-caida {
     0% {
       opacity: 0;
-      translate: 0 420%;
+      translate: 0 -420%;
       animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.35);
     }
     10% {
@@ -941,7 +1081,7 @@
       animation-timing-function: cubic-bezier(0.15, 0.85, 0.4, 1);
     }
     66% {
-      translate: 0 34%;
+      translate: 0 -34%;
       animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.35);
     }
     82% {
@@ -949,7 +1089,7 @@
       animation-timing-function: cubic-bezier(0.15, 0.85, 0.4, 1);
     }
     91% {
-      translate: 0 11%;
+      translate: 0 -11%;
       animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.35);
     }
     100% {
@@ -957,34 +1097,16 @@
     }
   }
 
-  /* ── SALIDA ─────────────────────────────────────────────────────────────
-     La marca de colores y el agujero de la máscara escalan con la MISMA curva
-     y el MISMO origen, así que se mantienen superpuestos. La marca se
-     desvanece temprano: a partir de ahí lo que se ve por el hueco ya no es
-     la J pintada sino el hero. */
-  .page-loader[data-saliendo] .page-loader__mark {
-    animation:
-      loader-zoom var(--l-salida-dur) var(--ease-in-out-quint) both,
-      loader-transparenta calc(var(--l-salida-dur) * 0.42) var(--ease-standard) both;
-  }
-
-  .page-loader[data-saliendo] .page-loader__backdrop {
-    animation:
-      loader-zoom var(--l-salida-dur) var(--ease-in-out-quint) both,
-      loader-transparenta calc(var(--l-salida-dur) * 0.3) calc(var(--l-salida-dur) * 0.7)
-        var(--ease-standard) both;
-  }
-
-  .page-loader[data-saliendo] {
-    pointer-events: none;
-  }
-
+  /* `transform` y no la propiedad `scale`, porque tiene que llevar
+     `perspective()` en los DOS keyframes: si uno solo la omite, Chrome toma
+     la escala de ese keyframe como máxima y vuelve a rasterizar a 34x. Ver la
+     REGLA 2 arriba. La distancia es indistinta: con z = 0 no deforma nada. */
   @keyframes loader-zoom {
     from {
-      scale: 1;
+      transform: perspective(1000px) scale(1);
     }
     to {
-      scale: var(--l-zoom-final);
+      transform: perspective(1000px) scale(var(--l-zoom-final));
     }
   }
 
@@ -994,16 +1116,13 @@
     }
   }
 
-  /* Cinturón y tirantes: el componente ya no se monta con movimiento
-     reducido, pero si alguna vez se montara, no debe animarse. */
+  /* Cinturón y tirantes: el script no marca el atributo con movimiento
+     reducido, pero si alguna vez se mostrara, no debe animarse. */
   @media (prefers-reduced-motion: reduce) {
     .page-loader,
-    .page-loader__backdrop,
-    .page-loader__mark,
-    .page-loader__mark * {
+    .page-loader * {
       animation: none !important;
       transition: none !important;
-      clip-path: none !important;
     }
   }
 }

@@ -45,7 +45,8 @@ cada una:
 | Color, tipografía, espaciado | bloque `@theme` de `src/app/globals.css` | todo el CSS |
 | Secciones, orden y anclas | `NAV_SECTIONS` en `src/shared/constants/site.ts` | menú, header, página, pie |
 | Datos institucionales | `SITE` y `CONTACTO` en el mismo archivo | secciones, metadata, datos estructurados |
-| Geometría del isologotipo | `src/shared/components/brand/brand-mark-paths.ts` | marca visible, máscara del loader, favicon, manifiesto |
+| Geometría del isologotipo | `src/shared/components/brand/brand-mark-paths.ts` | marca visible, piezas y placa del loader, favicon, manifiesto |
+| Tiempos de la pantalla de carga | bloque PANTALLA DE CARGA de `src/app/globals.css` | animaciones; `coreografia-loader.tsx` lee la pausa y encadena el resto por `animationend` |
 | Geometría del predio | `src/features/venue-map/constants/plano.ts` | dibujo, leyenda, recorridos |
 
 La regla operativa: si un dato aparece escrito en dos lugares, uno de los dos

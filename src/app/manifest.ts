@@ -6,7 +6,7 @@ import { BRAND_ICON_DATA_URI } from "@/shared/components/brand/brand-mark-paths"
  * Manifiesto de aplicación web.
  *
  * El ícono sale de la misma geometría del isologotipo que usan la marca
- * visible y la máscara del loader, no de un archivo aparte que pueda
+ * visible y la placa del loader, no de un archivo aparte que pueda
  * desincronizarse. Es un SVG, así que una sola declaración cubre todas las
  * escalas y `purpose: "any maskable"` deja que Android lo recorte sin comerse
  * el trazo.

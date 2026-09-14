@@ -1,25 +1,30 @@
-"use client";
+import type { CSSProperties } from "react";
+import { BRAND_CAJA, BRAND_FLIP_Y, BRAND_PATHS, cajaDePieza } from "./brand-mark-paths";
+import { CoreografiaLoader } from "./coreografia-loader";
 
-import { useEffect, useState } from "react";
-import { BrandMark } from "./brand-mark";
-import { LoaderBackdrop } from "./loader-backdrop";
-import { STORAGE_KEYS } from "@/shared/constants/storage";
+const ID_LOADER = "pantalla-de-carga";
 
 /**
- * Duración total. DEBE coincidir con la suma de los tiempos declarados en
- * globals.css (bloque PANTALLA DE CARGA):
- *   barrido 620 + caída 780 = 1400 de entrada
- *   + 300 de pausa
- *   + 1400 de salida
+ * Cuánto se extiende la placa más allá de la caja del logo, en unidades de
+ * logo. Es SOLAPE, no aire: los bordes de color empiezan en el borde de la caja
+ * y la placa los pisa. Si terminaran en la misma línea, cada uno
+ * suavizaría ese píxel por su lado y quedaría una línea translúcida que el
+ * zoom de 34x agranda a una raya visible.
  */
-const DURACION_MS = 3100;
+const SOLAPE_PLACA = 8;
 
-/** Cuánto dura la salida. Debe coincidir con --l-salida-dur en globals.css. */
-const SALIDA_MS = 1400;
+/**
+ * Aire alrededor del gancho, en unidades de logo. El gancho recorta a su caja
+ * para que la cortina no se vea afuera, y sin este margen el recorte se comería
+ * el suavizado de sus bordes.
+ */
+const AIRE_GANCHO = 1;
+
+const pct = (n: number) => `${(n * 100).toFixed(4)}%`;
 
 /**
  * Pantalla de carga: las cuatro piezas del isologotipo entran una por una y
- * después la "J" crece y se desvanece dejando ver el hero.
+ * después la "J" crece como una ventana que deja ver el hero.
  *
  * POR QUÉ LA VISIBILIDAD NO ESTÁ EN EL ESTADO DE REACT
  *
@@ -28,7 +33,31 @@ const SALIDA_MS = 1400;
  * dependiera de un efecto de React el orden sería pintar el hero → hidratar →
  * recién ahí tapar con el morado: el usuario vería la página y DESPUÉS el
  * loader. Con el atributo puesto antes del primer pintado, el morado está
- * desde el frame cero. React acá solo maneja los temporizadores de salida.
+ * desde el frame cero.
+ *
+ * POR QUÉ ESTÁ ARMADO ASÍ Y NO COMO UN <BrandMark> CON UNA MÁSCARA
+ *
+ * Medido con la CPU 6x más lenta en un viewport de 412px: con la versión
+ * anterior se perdían entre 15 y 44 de cada 45 cuadros durante la entrada.
+ * Chrome no componía NINGUNA de las cuatro piezas -`scale` y `translate` sobre
+ * un hijo de SVG no se componen (motivo 524288), `clip-path` tampoco (8192)-,
+ * así que cada cuadro se pintaba en el hilo principal justo mientras React
+ * hidrataba. Ese es el "va a los saltos" de un teléfono de gama baja.
+ *
+ * - Cada pieza es su propia caja HTML, ubicada con la caja que sale de su `d`.
+ *   Sobre HTML, `scale`, `translate`, `rotate` y `opacity` los resuelve el
+ *   compositor aunque el hilo principal esté ocupado.
+ * - La ventana de salida ya no es un `mask-image`. Una máscara de CSS sobre una
+ *   capa a pantalla completa obliga a la GPU a pintarla aparte y enmascararla
+ *   en cada cuadro; ahora es una placa SVG con la J restada por `evenodd` más
+ *   cuatro bordes de un solo color, que Chrome dibuja sin rasterizar.
+ * - Las fases se encadenan por `animationend` y no por temporizadores con
+ *   duraciones copiadas del CSS. Antes la salida la disparaba un `setTimeout`
+ *   de 1700ms que empezaba a contar recién al hidratar: con la CPU 6x más
+ *   lenta arrancaba a los 3,1s y la pausa de 300ms se estiraba a 1,5s.
+ * - El zoom lleva `perspective()`. Sin eso Chrome rasteriza la marca a 34x:
+ *   en reposo la curva sale escalonada y en un Samsung A13 la salida saltaba
+ *   de escala 1 a ~25. Ver la REGLA 2 en globals.css.
  *
  * OTRAS DECISIONES QUE NO SON ESTÉTICAS
  *
@@ -40,50 +69,105 @@ const SALIDA_MS = 1400;
  *   muestra en absoluto. No "más rápido": no se muestra.
  */
 export function PageLoader() {
-  const [saliendo, setSaliendo] = useState(false);
-
-  useEffect(() => {
-    const raiz = document.documentElement;
-    // Si el script inline no marcó el atributo, este loader no corresponde:
-    // el CSS ya lo tiene oculto y no hay nada que temporizar.
-    if (!raiz.hasAttribute("data-loader")) return;
-
-    document.body.style.overflow = "hidden";
-
-    // Estos setState viven dentro de callbacks asíncronos, no en el cuerpo del
-    // efecto: no provocan el render extra que penaliza set-state-in-effect.
-    const aSalir = setTimeout(() => setSaliendo(true), DURACION_MS - SALIDA_MS);
-    const aTerminar = setTimeout(() => {
-      raiz.removeAttribute("data-loader");
-      document.body.style.overflow = "";
-      try {
-        sessionStorage.setItem(STORAGE_KEYS.loaderVisto, "1");
-      } catch {
-        // Incógnito o storage bloqueado: que falle no debe romper nada.
-      }
-    }, DURACION_MS);
-
-    return () => {
-      clearTimeout(aSalir);
-      clearTimeout(aTerminar);
-      document.body.style.overflow = "";
-    };
-  }, []);
-
   return (
     <div
+      id={ID_LOADER}
       // Sin `grid place-items-center`: ese layout lo define .page-loader en
       // globals.css. Ver el comentario ahí - usar utilidades acá haría que
       // ningún `display: none` pudiera ocultarlo (las capas ganan a la
       // especificidad).
       className="page-loader fixed inset-0 z-[200]"
-      data-saliendo={saliendo ? "" : undefined}
       aria-hidden="true"
     >
-      {/* El morado NO es un color de fondo: es un rect con la "J" recortada
-          como ventana. Ver loader-backdrop.tsx. */}
-      <LoaderBackdrop />
-      <BrandMark className="page-loader__mark" />
+      <Ventana />
+      <div className="page-loader__marca">
+        {BRAND_PATHS.map((pieza) => (
+          <Pieza key={pieza.className} {...pieza} />
+        ))}
+      </div>
+      <CoreografiaLoader idLoader={ID_LOADER} />
+    </div>
+  );
+}
+
+/** Los cuatro bordes que cubren el viewport alrededor de la placa. */
+const BORDES = ["arriba", "abajo", "izquierda", "derecha"] as const;
+
+/**
+ * El fondo morado con la "J" recortada. La placa tiene el agujero; los cuatro
+ * bordes cubren el resto del viewport; el telón tapa el agujero durante la
+ * entrada, cuando las piezas todavía no están para taparlo.
+ */
+function Ventana() {
+  const { x, y, ancho, alto } = BRAND_CAJA;
+  const s = SOLAPE_PLACA;
+  // Un solo trazado: el rectángulo y las cuatro piezas. Con `evenodd`, dentro
+  // de una pieza el punto queda cubierto dos veces y se vacía. El gancho es un
+  // único contorno, así que no hay contraformas que se vuelvan a llenar.
+  const rectangulo = `M${x - s} ${y - s}H${x + ancho + s}V${y + alto + s}H${x - s}Z`;
+  const d = [rectangulo, ...BRAND_PATHS.map((p) => p.d)].join(" ");
+
+  return (
+    <div
+      className="page-loader__ventana"
+      style={
+        {
+          "--placa-x": pct(-s / ancho),
+          "--placa-y": pct(-s / alto),
+          "--placa-ancho": pct((ancho + 2 * s) / ancho),
+          "--placa-alto": pct((alto + 2 * s) / alto),
+        } as CSSProperties
+      }
+    >
+      <span className="page-loader__telon" />
+      {BORDES.map((lado) => (
+        <span key={lado} className={`page-loader__borde page-loader__borde--${lado}`} />
+      ))}
+      <svg viewBox={`${-s} ${-s} ${ancho + 2 * s} ${alto + 2 * s}`} className="page-loader__placa">
+        <g transform={BRAND_FLIP_Y}>
+          <path fillRule="evenodd" d={d} />
+        </g>
+      </svg>
+    </div>
+  );
+}
+
+function Pieza({ className, fill, fillRule, d }: (typeof BRAND_PATHS)[number]) {
+  const esGancho = className === "brand-mark__hook";
+  const a = esGancho ? AIRE_GANCHO : 0;
+  const c = cajaDePieza(d);
+  const ancho = c.ancho + 2 * a;
+  const alto = c.alto + 2 * a;
+
+  const ubicacion: Record<string, string> = {
+    "--pieza-x": pct((c.izquierda - a) / BRAND_CAJA.ancho),
+    "--pieza-y": pct((c.arriba - a) / BRAND_CAJA.alto),
+    "--pieza-ancho": pct(ancho / BRAND_CAJA.ancho),
+    "--pieza-alto": pct(alto / BRAND_CAJA.alto),
+  };
+
+  if (esGancho) {
+    // La cortina gira sobre el centro del borde superior del gancho, así que
+    // tiene que alcanzar la esquina más lejana de la caja desde ese punto. El
+    // +1 es margen para que el borde de la cortina nunca pase por adentro.
+    const radio = Math.hypot(ancho / 2, alto) + 1;
+    ubicacion["--cortina-ancho"] = pct((2 * radio) / ancho);
+    ubicacion["--cortina-alto"] = pct(radio / alto);
+  }
+
+  // Lleva la pieza del PDF a su propia caja: el borde izquierdo al aire, el
+  // borde superior -el Y más alto, porque el PDF crece hacia arriba- también.
+  const bordeIzquierdo = BRAND_CAJA.x + c.izquierda;
+  const bordeSuperior = BRAND_CAJA.y + BRAND_CAJA.alto - c.arriba;
+
+  return (
+    <div className={`page-loader__pieza ${className}`} style={ubicacion as CSSProperties}>
+      <svg viewBox={`0 0 ${ancho} ${alto}`}>
+        <g transform={`translate(${a - bordeIzquierdo} ${a + bordeSuperior}) scale(1 -1)`}>
+          <path fill={fill} fillRule={fillRule} d={d} />
+        </g>
+      </svg>
+      {esGancho && <span className="page-loader__cortina" />}
     </div>
   );
 }
