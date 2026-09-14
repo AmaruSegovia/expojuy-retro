@@ -390,6 +390,13 @@ Resumen:
 31. **El script de arranque marca `data-loader` en todas las rutas** - el
     bloqueo de scroll dejó `/sistema-de-diseno` sin scroll táctil. Va
     `html[data-loader]:has(.page-loader)`
+32. **`push service error` es del navegador, no del sitio** - Brave trae
+    apagado el servicio push de Google. Se explica con un aviso
+33. **`pointer-events: none` e `inert` se heredan hasta un `<dialog>`** aunque
+    esté en la capa superior. El aviso va fuera del envoltorio que se oculta y
+    con `pointer-events: auto`
+34. **El Chrome de las pruebas comparte perfil con el de Leandro** - permisos y
+    suscripciones incluidos. Lo que los toca se prueba en contexto aislado
 
 ## Para la memoria descriptiva
 

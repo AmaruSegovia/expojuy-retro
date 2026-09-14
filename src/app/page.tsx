@@ -3,7 +3,7 @@ import { PageLoader } from "@/shared/components/brand/page-loader";
 import { ScrollProgress } from "@/shared/components/layout/scroll-progress";
 import { SiteHeader } from "@/shared/components/layout/site-header";
 import { SectionRail } from "@/shared/components/layout/section-rail";
-import { BackToTop } from "@/shared/components/layout/back-to-top";
+import { AccionesFlotantes } from "@/shared/components/layout/acciones-flotantes";
 import { SiteFooter } from "@/shared/components/layout/site-footer";
 import { HeroSection } from "@/features/hero/components/hero-section";
 import { AboutSection } from "@/features/about/components/about-section";
@@ -87,7 +87,7 @@ export default function HomePage() {
       </main>
 
       <SiteFooter />
-      <BackToTop />
+      <AccionesFlotantes />
     </>
   );
 }

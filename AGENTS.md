@@ -399,6 +399,23 @@ Cosas que costaron tiempo. No repetirlas:
   de scroll- dejó esa página sin scroll táctil toda la sesión. Toda regla que
   dependa de `data-loader` exige además que el loader exista:
   `html[data-loader]:has(.page-loader)`.
+- **`AbortError: Registration failed - push service error` no es un error del
+  sitio.** Es la respuesta de Chromium cuando SU servicio push no deja
+  suscribir. Pasó en Brave, que trae apagado el servicio push de Google,
+  mientras el mismo código funcionaba en Chrome de PC y en un Samsung A13. Se
+  captura, se registra como advertencia -un `console.error` además levanta el
+  overlay de Next en desarrollo- y la interfaz lo explica con un aviso.
+- **`pointer-events: none` se hereda hasta un `<dialog>` modal**, aunque esté
+  en la capa superior y se vea encima de todo. La pila flotante no captura
+  toques y el aviso de notificaciones vive adentro: sin `pointer-events: auto`
+  en el propio diálogo, sus botones no responden.
+- **Un ancestro con `inert` vuelve inerte a un `<dialog>` modal que tenga
+  adentro.** El aviso y el anuncio de estado van FUERA del envoltorio que se
+  oculta, no dentro.
+- **El Chrome de las pruebas automatizadas comparte perfil con el de Leandro.**
+  Tiene sus permisos y su suscripción push de `localhost:3000`: tocar el
+  interruptor ahí da de baja la suya. Toda prueba que cambie permisos,
+  suscripciones o almacenamiento va en una pestaña con contexto aislado.
 
 ## Contenido
 
